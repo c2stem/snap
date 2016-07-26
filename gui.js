@@ -1010,6 +1010,7 @@ IDE_Morph.prototype.createStage = function () {
             )
         );
         this.stage.add(this.currentSprite);
+        this.stage.physics.addSprite(this.currentSprite);
     }
     this.add(this.stage);
 };
@@ -1994,6 +1995,7 @@ IDE_Morph.prototype.addNewSprite = function () {
     this.sprites.add(sprite);
     this.corral.addSprite(sprite);
     this.selectSprite(sprite);
+    this.stage.physics.addSprite(sprite);
 };
 
 IDE_Morph.prototype.paintNewSprite = function () {
@@ -2017,6 +2019,7 @@ IDE_Morph.prototype.paintNewSprite = function () {
             sprite.wearCostume(cos);
         }
     );
+    this.stage.physics.addSprite(sprite);
 };
 
 IDE_Morph.prototype.duplicateSprite = function (sprite) {
@@ -2029,6 +2032,7 @@ IDE_Morph.prototype.duplicateSprite = function (sprite) {
 };
 
 IDE_Morph.prototype.removeSprite = function (sprite) {
+    this.stage.physics.removeSprite(sprite);
     var idx, myself = this;
     sprite.parts.forEach(function (part) {myself.removeSprite(part); });
     idx = this.sprites.asArray().indexOf(sprite) + 1;
@@ -3992,7 +3996,7 @@ IDE_Morph.prototype.saveFileAs = function (
 IDE_Morph.prototype.saveCanvasAs = function (canvas, fileName, newWindow) {
     // Export a Canvas object as a PNG image
     // Note: This commented out due to poor browser support.
-    // cavas.toBlob() is currently supported in Firefox, IE, Chrome but 
+    // cavas.toBlob() is currently supported in Firefox, IE, Chrome but
     // browsers prevent easily saving the generated files.
     // Do not re-enable without revisiting issue #1191
     // if (canvas.toBlob) {
@@ -4002,7 +4006,7 @@ IDE_Morph.prototype.saveCanvasAs = function (canvas, fileName, newWindow) {
     //     });
     //     return;
     // }
-    
+
     this.saveFileAs(canvas.toDataURL(), 'image/png', fileName, newWindow);
 };
 
@@ -7518,7 +7522,7 @@ PaletteHandleMorph.prototype.mouseEnter
 
 PaletteHandleMorph.prototype.mouseLeave
     = StageHandleMorph.prototype.mouseLeave;
-    
+
 PaletteHandleMorph.prototype.mouseDoubleClick = function () {
     this.target.parentThatIsA(IDE_Morph).setPaletteWidth(200);
 };

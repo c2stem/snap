@@ -25,7 +25,7 @@
             delta = (time - this.lastUpdated)/1000;  // TODO: fix the scaling
         this.lastUpdated = time;
 
-        this.world.step(delta);
+        this.world.step(delta > 1.0 ? 1.0 : delta);
         this.updateUI();
     };
 

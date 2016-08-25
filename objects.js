@@ -2874,6 +2874,9 @@ SpriteMorph.prototype.userMenu = function () {
         menu.addItem('detach all parts', 'detachAllParts');
     }
     menu.addItem("export...", 'exportSprite');
+    if (this.debug) {
+        menu.addItem('debug', 'debug');
+    }
     return menu;
 };
 
@@ -6249,6 +6252,9 @@ StageMorph.prototype.userMenu = function () {
         },
         'open a new window\nwith a picture of the stage'
     );
+    if (this.debug) {
+        menu.addItem("debug", 'debug');
+    }
     if (shiftClicked) {
         menu.addLine();
         menu.addItem(

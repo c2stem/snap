@@ -6217,6 +6217,11 @@ SpriteIconMorph.prototype.userMenu = function () {
             },
             'open a new window\nwith a picture of the stage'
         );
+        if (this.object.debug) {
+            menu.addItem('debug', function () {
+                myself.object.debug()
+            });
+        }
         return menu;
     }
     if (!(this.object instanceof SpriteMorph)) {return null; }
@@ -6241,6 +6246,11 @@ SpriteIconMorph.prototype.userMenu = function () {
         );
     }
     menu.addItem("export...", 'exportSprite');
+    if (this.object.debug) {
+        menu.addItem('debug', function () {
+            myself.object.debug()
+        });
+    }
     return menu;
 };
 

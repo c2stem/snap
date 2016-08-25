@@ -4,12 +4,11 @@
 // stage and the matterjs physics engine
 (function(globals) {
     'use strict';
-    var World = p2.World,
-        CLONE_ID = 0;
+    var CLONE_ID = 0;
 
     var PhysicsEngine = function() {
-        this.world = new World({
-            gravity: [0, 2]
+        this.world = new p2.World({
+            gravity: [0, 9.8]
         });
         this.sprites = {};
         this.clones = {};
@@ -17,18 +16,16 @@
         this.ground = null;
 
         this.enableGround();
-        this.fixedStepSize = 1/60;
-        this.lastUpdated = Date.now()/100;
+        this.lastUpdated = Date.now();
         this.lastDelta = 0;
     };
 
     PhysicsEngine.prototype.step = function() {
-        var time = Date.now()/1000,  // TODO: Fix the interval...
-            delta = time - this.lastUpdated;
-
-        this.world.step(this.fixedStepSize, delta);
-
+        var time = Date.now(),
+            delta = (time - this.lastUpdated)/1000;  // TODO: fix the scaling
         this.lastUpdated = time;
+
+        this.world.step(delta);
         this.updateUI();
     };
 
@@ -107,7 +104,9 @@
     PhysicsEngine.prototype.setDirection = function(sprite, degrees) {
         var name = this._getSpriteName(sprite),
             body = this.bodies[name];
-        body.angle = radians(degrees);
+        if (body) {
+            body.angle = radians(degrees);
+        }
     };
 
     PhysicsEngine.prototype.updateSize = function(sprite) {
@@ -170,6 +169,10 @@
             col = 0,
             index,
             isEmpty;
+
+        console.log(sprite);
+        console.log(sprite.constume);
+        console.log(sprite.image);
 
         // Get the left most points for every row of pixels
         while (row < height) {
@@ -255,18 +258,24 @@
     };
 
     PhysicsEngine.prototype.updateSpriteName = function(oldName, newName) {
-        this.bodies[newName] = this.bodies[oldName];
-        delete this.bodies[oldName];
+        console.log('updateSpriteName', oldName, newName);
+        console.log(new Error().stack);
+        if (oldName !== newName) {
+            this.bodies[newName] = this.bodies[oldName];
+            delete this.bodies[oldName];
 
-        this.sprites[newName] = this.sprites[oldName];
-        delete this.sprites[oldName];
+            this.sprites[newName] = this.sprites[oldName];
+            delete this.sprites[oldName];
+        }
     };
 
 
     PhysicsEngine.prototype.setPosition = function(sprite, x, y) {
         var name = this._getSpriteName(sprite),
             body = this.bodies[name];
-        body.position = [x, -y];
+        if (body) {
+            body.position = [x, -y];
+        }
     };
 
     PhysicsEngine.prototype.applyForce = function(sprite, amt, angle) {
@@ -379,6 +388,7 @@
 
     var oldStep = StageMorph.prototype.step;
     StageMorph.prototype.step = function() {
+        // console.log(new Error().stack);
         oldStep.call(this);
         this.physics.step();
     };
@@ -432,4 +442,15 @@
         var stage = this.parentThatIsA(StageMorph);
         stage.physics.angularForceLeft(this, amt);
     };
+
+    StageMorph.prototype.debug = function() {
+        console.log('physics bodies:', this.physics.bodies);
+        console.log('physics sprites:', this.physics.sprites);
+    };
+
+    SpriteMorph.prototype.debug = function() {
+        console.log('costume', this.costume);
+        console.log('image', this.image);
+    }
+
 })(this);

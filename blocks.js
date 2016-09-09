@@ -8720,7 +8720,8 @@ SymbolMorph.prototype.names = [
     'arrowDownOutline',
     'arrowRight',
     'arrowRightOutline',
-    'robot'
+    'robot',
+    'atom'
 ];
 
 // SymbolMorph instance creation:
@@ -8884,6 +8885,8 @@ SymbolMorph.prototype.symbolCanvasColored = function (aColor) {
         return this.drawSymbolArrowRightOutline(canvas, aColor);
     case 'robot':
         return this.drawSymbolRobot(canvas, aColor);
+    case 'atom':
+        return this.drawSymbolAtom(canvas, aColor);
     default:
         return canvas;
     }
@@ -9947,6 +9950,31 @@ SymbolMorph.prototype.drawSymbolRobot = function (canvas, color) {
 
     return canvas;
 };
+
+SymbolMorph.prototype.drawSymbolAtom = function (canvas, color) {
+    // answer a canvas showing an atom
+    var ctx = canvas.getContext('2d'),
+        w2 = canvas.width / 2,
+        h2 = canvas.height / 2,
+        r = 0.5 * Math.min(canvas.width, canvas.height),
+        l = Math.max(canvas.width / 20, 0.5);
+
+    ctx.fillStyle = color.toString();
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = l * 2;
+
+    ctx.beginPath();
+    ctx.ellipse(w2, h2, r/2, r, radians(60), 0, radians(360));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(w2, h2, r/2, r, radians(-30), 0, radians(360));
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(w2, h2, r/4, r/4, 0, 0, radians(360));
+    ctx.fill();
+
+    return canvas;
+}
 
 // ColorSlotMorph //////////////////////////////////////////////////////
 

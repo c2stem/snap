@@ -544,6 +544,7 @@ IDE_Morph.prototype.createControlBar = function () {
         stageSizeButton,
         appModeButton,
         cloudButton,
+        physicsButton,
         x,
         colors = [
             this.groupColor,
@@ -718,6 +719,35 @@ IDE_Morph.prototype.createControlBar = function () {
     this.controlBar.add(startButton);
     this.controlBar.startButton = startButton;
 
+    // physicsButton
+    button = new ToggleButtonMorph(
+        null, // colors
+        this, // the IDE is the target
+        'togglePhysics',
+        [
+            new SymbolMorph('atom', 14),
+            new SymbolMorph('atom', 14)
+        ],
+        'isPhysicsEngaged'
+    );
+    button.corner = 12;
+    button.color = colors[0];
+    button.highlightColor = colors[1];
+    button.pressColor = colors[2];
+    button.labelMinExtent = new Point(36, 18);
+    button.padding = 0;
+    button.labelShadowOffset = new Point(-1, -1);
+    button.labelShadowColor = colors[1];
+    button.labelColor = new Color(200, 200, 255);
+    button.contrast = this.buttonContrast;
+    button.drawNew();
+    // button.hint = '(dis)engage physics';
+    button.fixLayout();
+    button.refresh();
+    physicsButton = button;
+    this.controlBar.add(physicsButton);
+    this.controlBar.physicsButton = physicsButton; // for refreshing
+
     // projectButton
     button = new PushButtonMorph(
         this,
@@ -791,7 +821,7 @@ IDE_Morph.prototype.createControlBar = function () {
 
     this.controlBar.fixLayout = function () {
         x = this.right() - padding;
-        [stopButton, pauseButton, startButton].forEach(
+        [stopButton, pauseButton, startButton, physicsButton].forEach(
             function (button) {
                 button.setCenter(myself.controlBar.center());
                 button.setRight(x);
@@ -1801,6 +1831,17 @@ IDE_Morph.prototype.isPaused = function () {
     if (!this.stage) {return false; }
     return this.stage.threads.isPaused();
 };
+
+IDE_Morph.prototype.togglePhysics = function () {
+    var physics = this.stage && this.stage.physics;
+    if (physics) {
+        physics.engaged = !physics.engaged;
+    }
+}
+
+IDE_Morph.prototype.isPhysicsEngaged = function () {
+    return this.stage && this.stage.physics && this.stage.physics.engaged;
+}
 
 IDE_Morph.prototype.stopAllScripts = function () {
     if (this.stage.enableCustomHatBlocks) {

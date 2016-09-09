@@ -21,11 +21,11 @@
     };
 
     PhysicsEngine.prototype.step = function() {
-        var time = Date.now(),
-            delta = (time - this.lastUpdated)/1000;  // TODO: fix the scaling
+        var time = Date.now(),  // in milliseconds
+            delta = (time - this.lastUpdated) * 0.001;  // in seconds
         this.lastUpdated = time;
 
-        this.world.step(delta > 1.0 ? 1.0 : delta);
+        this.world.step(delta > 1.0 ? 0.0 : delta);
         this.updateUI();
     };
 
@@ -52,7 +52,6 @@
 
         for (var i = names.length; i--;) {
             this._updateSpritePosition(this.sprites[names[i]], this.bodies[names[i]]);
-            //this._updateSpriteDirection(this.sprites[names[i]], this.bodies[names[i]]);
             // TODO
         }
 
@@ -69,6 +68,8 @@
             oldY,
             angle,
             direction;
+
+        // console.log('update', body);
 
         if (!sprite.isPickedUp()) {
             point = body.position;
@@ -390,7 +391,9 @@
     StageMorph.prototype.step = function() {
         // console.log(new Error().stack);
         oldStep.call(this);
-        this.physics.step();
+        if (this.physics.engaged) {
+            this.physics.step();
+        }
     };
 
     var superFn = SpriteMorph.prototype.setPosition;

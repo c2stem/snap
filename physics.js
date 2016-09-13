@@ -12,7 +12,7 @@ var CLONE_ID = 0;
 
 PhysicsEngine = function() {
     this.world = new p2.World({
-        gravity: [0, 9.8]
+        gravity: [0, -9.78]
     });
     this.sprites = {};
     this.clones = {};
@@ -44,7 +44,7 @@ PhysicsEngine.prototype.enableGround = function() {
 
     this.ground = new p2.Body({
         mass: 0,
-        position: [0, 180+height/2]
+        position: [0, -height/2-180]
     });
 
     this.ground.addShape(shape);
@@ -78,7 +78,7 @@ PhysicsEngine.prototype._updateSpritePosition = function(sprite, body) {
     if (!sprite.isPickedUp()) {
         point = body.position;
         newX = point[0];
-        newY = -point[1];  // engine is inverted; stage is not
+        newY = point[1];
 
         oldX = sprite.xPosition();
         oldY = sprite.yPosition();
@@ -129,14 +129,11 @@ PhysicsEngine.prototype.updateSize = function(sprite) {
 };
 
 PhysicsEngine.prototype.addSprite = function(sprite) {
-    var x = sprite.xPosition(),
-        y = -sprite.yPosition(),  // engine is inverted; stage is not
-        // TODO: Make this shape match the costume...
-        // TODO: Set the mass to a reasonable amount
-        shape = this.getShape(sprite),
+    var shape = this.getShape(sprite),
         body = new p2.Body({
             mass: 1,
-            position: [x, y]
+            position: [sprite.xPosition(), sprite.yPosition()],
+            angle: radians(sprite.direction())
         }),
         name = this._getSpriteName(sprite);
 
@@ -279,7 +276,7 @@ PhysicsEngine.prototype.setPosition = function(sprite, x, y) {
     var name = this._getSpriteName(sprite),
         body = this.bodies[name];
     if (body) {
-        body.position = [x, -y];
+        body.position = [x, y];
     }
 };
 
@@ -338,6 +335,11 @@ StageMorph.prototype.step = function() {
     if (this.physics.engaged) {
         this.physics.step();
     }
+};
+
+StageMorph.prototype.debug = function() {
+    console.log('physics bodies:', this.physics.bodies);
+    console.log('physics sprites:', this.physics.sprites);
 };
 
 // ------- StageMorph -------
@@ -452,12 +454,13 @@ SpriteMorph.prototype.angularForceLeft = function(amt) {
     stage.physics.angularForceLeft(this, amt);
 };
 
-StageMorph.prototype.debug = function() {
-    console.log('physics bodies:', this.physics.bodies);
-    console.log('physics sprites:', this.physics.sprites);
-};
-
 SpriteMorph.prototype.debug = function() {
     console.log('costume', this.costume);
     console.log('image', this.image);
+
+    var stage = this.parentThatIsA(StageMorph),
+        name = stage.physics._getSpriteName(this),
+        body = stage.physics.bodies[name];
+    // console.log('body', body);
+    console.log('body.position', body.position);
 }

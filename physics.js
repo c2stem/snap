@@ -8,6 +8,7 @@
 modules.physics = '2016-September-1';
 
 var PhysicsEngine;
+var PhysicsMorph;
 var CLONE_ID = 0;
 
 PhysicsEngine = function() {
@@ -17,6 +18,7 @@ PhysicsEngine = function() {
     this.sprites = {};
     this.clones = {};
     this.bodies = {};
+    this.morphs = {};
     this.ground = null;
 
     this.enableGround();
@@ -55,7 +57,7 @@ PhysicsEngine.prototype.updateUI = function() {
     var names = Object.keys(this.sprites);
 
     for (var i = names.length; i--;) {
-        this._updateSpritePosition(this.sprites[names[i]], this.bodies[names[i]]);
+        this._updateSpritePosition(this.sprites[names[i]], this.bodies[names[i]], this.morphs[names[i]]);
         // TODO
     }
 
@@ -64,7 +66,7 @@ PhysicsEngine.prototype.updateUI = function() {
     // TODO
 };
 
-PhysicsEngine.prototype._updateSpritePosition = function(sprite, body) {
+PhysicsEngine.prototype._updateSpritePosition = function(sprite, body, morph) {
     var point,
         newX,
         newY,
@@ -87,6 +89,8 @@ PhysicsEngine.prototype._updateSpritePosition = function(sprite, body) {
         if (newX !== oldX || newY !== oldY) {
             sprite._gotoXY(newX, newY);
         }
+
+        morph.gotoXY(newX, newY);
 
         // Set the rotation for each sprite
         angle = body.angle % (2 * Math.PI);
@@ -151,6 +155,12 @@ PhysicsEngine.prototype.addSprite = function(sprite) {
     console.log('sprite added', name);
     this.sprites[name] = sprite;
     this.bodies[name] = body;
+
+    var morph = new PhysicsMorph();
+    this.morphs[name] = morph;
+    var stage = sprite.parentThatIsA(StageMorph);
+    stage.add(morph);
+    morph.gotoXY(sprite.xPosition(), sprite.yPosition());
 
     this.world.addBody(body);
 };
@@ -236,6 +246,7 @@ PhysicsEngine.prototype.removeSprite = function(sprite) {
     this.world.removeBody(this.bodies[name]);
     delete this.bodies[name];
     delete this.sprites[name];
+    delete this.morphs[name];
 
     console.log('sprite removed', name);
 };
@@ -274,9 +285,11 @@ PhysicsEngine.prototype.updateSpriteName = function(oldName, newName) {
 
 PhysicsEngine.prototype.setPosition = function(sprite, x, y) {
     var name = this._getSpriteName(sprite),
-        body = this.bodies[name];
+        body = this.bodies[name],
+        morph = this.morphs[name];
     if (body) {
         body.position = [x, y];
+        morph.gotoXY(x, y);
     }
 };
 
@@ -324,6 +337,45 @@ PhysicsEngine.prototype.angularForceLeft = function(sprite, amt) {
     var name = this._getSpriteName(sprite),
         body = this.bodies[name];
     body.angularForce += -amt;
+};
+
+// ------- PhysicsMorph -------
+
+PhysicsMorph.prototype = new Morph();
+PhysicsMorph.prototype.constructor = PhysicsMorph;
+PhysicsMorph.uber = PenMorph.prototype;
+
+function PhysicsMorph() {
+    this.init();
+}
+
+PhysicsMorph.init = function() {
+    PhysicsMorph.uber.init.call(this);
+}
+
+PhysicsMorph.prototype.drawNew = function() {
+    console.log('PhysicsMorph.drawNew', this);
+
+    var context;
+    this.image = newCanvas(this.extent());
+    context = this.image.getContext('2d');
+    context.stle = new Color(0, 0, 0);
+    context.rect(0, 0, this.width(), this.height());
+    context.stroke();
+};
+
+PhysicsMorph.prototype.gotoXY = function (x, y) {
+    var stage = this.parentThatIsA(StageMorph),
+        newX,
+        newY,
+        dest;
+
+    if (stage) {
+        newX = stage.center().x + (+x || 0) * stage.scale;
+        newY = stage.center().y - (+y || 0) * stage.scale;
+        dest = new Point(newX, newY).subtract(this.extent().divideBy(2));
+        this.setPosition(dest, false);
+    }
 };
 
 // ------- StageMorph -------

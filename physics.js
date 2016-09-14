@@ -11,7 +11,7 @@ var PhysicsEngine;
 var PhysicsMorph;
 var CLONE_ID = 0;
 
-PhysicsEngine = function() {
+PhysicsEngine = function(stage) {
     this.world = new p2.World({
         gravity: [0, -9.78]
     });
@@ -20,45 +20,54 @@ PhysicsEngine = function() {
     this.bodies = {};
     this.morphs = {};
     this.ground = null;
+    this.stage = stage;
 
     this.enableGround();
     this.lastUpdated = Date.now();
-    this.lastDelta = 0;
 };
 
 PhysicsEngine.prototype.step = function() {
     var time = Date.now(),  // in milliseconds
         delta = (time - this.lastUpdated) * 0.001;  // in seconds
-    this.lastUpdated = time;
 
-    this.world.step(delta > 1.0 ? 0.0 : delta);
+    this.lastUpdated = time;
+    this.world.step(delta > 0.1 ? 0.0 : delta);
     this.updateUI();
 };
 
 PhysicsEngine.prototype.enableGround = function() {
-    var height = 100,
-        shape;
+    var shape;
 
     shape = new p2.Box({
-        width: 5000,
-        height: height
+        width: 200,
+        height: 50
     });
 
     this.ground = new p2.Body({
         mass: 0,
-        position: [0, -height/2-180]
+        position: [0, -100]
     });
 
     this.ground.addShape(shape);
     this.world.addBody(this.ground);
+
+    var morph = new PhysicsMorph(this.ground);
+    this.morphs['ground'] = morph;
+    this.stage.add(morph);
+    morph.updatePosition();
 };
 
 PhysicsEngine.prototype.updateUI = function() {
     var names = Object.keys(this.sprites);
 
     for (var i = names.length; i--;) {
-        this._updateSpritePosition(this.sprites[names[i]], this.bodies[names[i]], this.morphs[names[i]]);
+        this._updateSpritePosition(this.sprites[names[i]], this.bodies[names[i]]);
         // TODO
+    }
+
+    names = Object.keys(this.morphs);
+    for (var i = names.length; i--;) {
+        this.morphs[names[i]].updatePosition();
     }
 
     // Update positions for each clone
@@ -89,8 +98,6 @@ PhysicsEngine.prototype._updateSpritePosition = function(sprite, body, morph) {
         if (newX !== oldX || newY !== oldY) {
             sprite._gotoXY(newX, newY);
         }
-
-        morph.gotoXY(newX, newY);
 
         // Set the rotation for each sprite
         angle = body.angle % (2 * Math.PI);
@@ -155,14 +162,14 @@ PhysicsEngine.prototype.addSprite = function(sprite) {
     console.log('sprite added', name);
     this.sprites[name] = sprite;
     this.bodies[name] = body;
-
-    var morph = new PhysicsMorph();
-    this.morphs[name] = morph;
-    var stage = sprite.parentThatIsA(StageMorph);
-    stage.add(morph);
-    morph.gotoXY(sprite.xPosition(), sprite.yPosition());
-
     this.world.addBody(body);
+
+    var stage = sprite.parentThatIsA(StageMorph);
+
+    var morph = new PhysicsMorph(body);
+    this.morphs[name] = morph;
+    stage.add(morph);
+    morph.updatePosition();
 };
 
 PhysicsEngine.prototype.getShape = function(sprite) {
@@ -272,7 +279,6 @@ PhysicsEngine.prototype._getSpriteName = function(sprite) {
 
 PhysicsEngine.prototype.updateSpriteName = function(oldName, newName) {
     console.log('updateSpriteName', oldName, newName);
-    console.log(new Error().stack);
     if (oldName !== newName) {
         this.bodies[newName] = this.bodies[oldName];
         delete this.bodies[oldName];
@@ -289,7 +295,7 @@ PhysicsEngine.prototype.setPosition = function(sprite, x, y) {
         morph = this.morphs[name];
     if (body) {
         body.position = [x, y];
-        morph.gotoXY(x, y);
+        morph.updatePosition();
     }
 };
 
@@ -343,39 +349,64 @@ PhysicsEngine.prototype.angularForceLeft = function(sprite, amt) {
 
 PhysicsMorph.prototype = new Morph();
 PhysicsMorph.prototype.constructor = PhysicsMorph;
-PhysicsMorph.uber = PenMorph.prototype;
+PhysicsMorph.uber = Morph.prototype;
 
-function PhysicsMorph() {
-    this.init();
-}
+function PhysicsMorph(body) {
+    this.init(body);
+};
 
-PhysicsMorph.init = function() {
+PhysicsMorph.prototype.init = function(body) {
+    this.body = body;
     PhysicsMorph.uber.init.call(this);
-}
+};
 
 PhysicsMorph.prototype.drawNew = function() {
-    console.log('PhysicsMorph.drawNew', this);
+    var stage = this.parentThatIsA(StageMorph);
+    if (stage) {
+        var aabb = this.body.getAABB();
+        this.silentSetExtent(new Point(stage.scale * (aabb.upperBound[0] - aabb.lowerBound[0]),
+            stage.scale * (aabb.upperBound[1] - aabb.lowerBound[1])));
+    }
 
-    var context;
+    console.log('body', this.body.position);
+
     this.image = newCanvas(this.extent());
-    context = this.image.getContext('2d');
-    context.stle = new Color(0, 0, 0);
+    var context = this.image.getContext('2d');
+    context.strokeStyle = new Color(255, 0, 0);
+    this.body.shapes.forEach(function(shape) {
+        var v = shape.vertices,
+            p = shape.position;
+
+        console.log('shape', shape.position);
+
+        context.beginPath();
+        context.moveTo(p[0] + v[0][0], p[1] + v[0][1]);
+        for (var i = 1; i < v.length; i++) {
+            context.lineTo(p[0] + v[i][0], p[1] + v[i][1]);
+        }
+        context.closePath();
+        context.fill();
+    });
     context.rect(0, 0, this.width(), this.height());
     context.stroke();
 };
 
-PhysicsMorph.prototype.gotoXY = function (x, y) {
-    var stage = this.parentThatIsA(StageMorph),
-        newX,
-        newY,
-        dest;
-
-    if (stage) {
-        newX = stage.center().x + (+x || 0) * stage.scale;
-        newY = stage.center().y - (+y || 0) * stage.scale;
-        dest = new Point(newX, newY).subtract(this.extent().divideBy(2));
-        this.setPosition(dest, false);
+PhysicsMorph.prototype.updatePosition = function() {
+    var stage = this.parentThatIsA(StageMorph);
+    if (!stage) {
+        return;
     }
+
+    var aabb = this.body.getAABB(),
+        center = stage.center(),
+        scale = stage.scale;
+
+    // console.log('pos', aabb.lowerBound[0], aabb.lowerBound[1], aabb.upperBound[0], aabb.upperBound[1]);
+
+    this.setPosition(new Point(center.x + aabb.lowerBound[0] * scale,
+        center.y - aabb.upperBound[1] * scale));
+    this.setExtent(new Point(scale * (aabb.upperBound[0] - aabb.lowerBound[0]),
+        scale * (aabb.upperBound[1] - aabb.lowerBound[1])));
 };
 
 // ------- StageMorph -------
@@ -454,13 +485,6 @@ SpriteMorph.prototype.gotoXY = function(x, y, justMe) {
 
     stage.physics.setPosition(this, x, y);
     this._gotoXY(x, y, justMe);
-};
-
-var superFn = SpriteMorph.prototype.setPosition;
-SpriteMorph.prototype.setPosition = function(pos) {
-    superFn.call(this, pos);
-    // Update the physics engine
-    // TODO
 };
 
 SpriteMorph.prototype._wearCostume = SpriteMorph.prototype.wearCostume;

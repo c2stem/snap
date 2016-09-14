@@ -5152,7 +5152,6 @@ StageMorph.prototype.init = function (globals) {
     this.name = localize('Stage');
     this.threads = new ThreadManager();
     this.variables = new VariableFrame(globals || null, this);
-    this.physics = new PhysicsEngine();
     this.scripts = new ScriptsMorph(this);
     this.customBlocks = [];
     this.globalBlocks = [];
@@ -5201,6 +5200,8 @@ StageMorph.prototype.init = function (globals) {
     this.acceptsDrops = false;
     this.setColor(new Color(255, 255, 255));
     this.fps = this.frameRate;
+
+    this.physics = new PhysicsEngine(this);
 };
 
 // StageMorph scaling

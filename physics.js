@@ -31,8 +31,10 @@ PhysicsEngine.prototype.step = function() {
         delta = (time - this.lastUpdated) * 0.001;  // in seconds
 
     this.lastUpdated = time;
-    this.world.step(delta > 0.1 ? 0.0 : delta);
-    this.updateUI();
+    if (delta < 0.1) {
+        this.world.step(delta);
+        this.updateUI();
+    }
 };
 
 PhysicsEngine.prototype.enableGround = function() {
@@ -45,7 +47,8 @@ PhysicsEngine.prototype.enableGround = function() {
 
     this.ground = new p2.Body({
         mass: 0,
-        position: [0, -100]
+        position: [-110, -100],
+        angle: -0.1
     });
 
     this.ground.addShape(shape);
@@ -53,7 +56,7 @@ PhysicsEngine.prototype.enableGround = function() {
 
     var morph = new PhysicsMorph(this.ground);
     this.morphs['ground'] = morph;
-    this.stage.add(morph);
+    this.stage.addBack(morph);
     morph.updatePosition();
 };
 
@@ -168,7 +171,7 @@ PhysicsEngine.prototype.addSprite = function(sprite) {
 
     var morph = new PhysicsMorph(body);
     this.morphs[name] = morph;
-    stage.add(morph);
+    stage.addBack(morph);
     morph.updatePosition();
 };
 
@@ -361,32 +364,50 @@ PhysicsMorph.prototype.init = function(body) {
 };
 
 PhysicsMorph.prototype.drawNew = function() {
-    var stage = this.parentThatIsA(StageMorph);
+    var stage = this.parentThatIsA(StageMorph),
+        scale = 1;
     if (stage) {
+        scale = stage.scale;
         var aabb = this.body.getAABB();
-        this.silentSetExtent(new Point(stage.scale * (aabb.upperBound[0] - aabb.lowerBound[0]),
-            stage.scale * (aabb.upperBound[1] - aabb.lowerBound[1])));
+        this.silentSetExtent(new Point(scale * (aabb.upperBound[0] - aabb.lowerBound[0]),
+            scale * (aabb.upperBound[1] - aabb.lowerBound[1])));
     }
 
-    console.log('body', this.body.position);
+    // console.log('body', this.body.position);
 
     this.image = newCanvas(this.extent());
-    var context = this.image.getContext('2d');
-    context.strokeStyle = new Color(255, 0, 0);
+    var context = this.image.getContext('2d'),
+        bodyAngle = this.body.angle,
+//        bodySin = Math.sin(bodyAngle),
+//        bodyCos = Math.cos(bodyAngle),
+        bodyPos = this.body.position,
+        aabb = this.body.getAABB(),
+        xOffset = bodyPos[0] - aabb.lowerBound[0],
+        yOffset = aabb.upperBound[1] - bodyPos[1];
+
+    context.fillStyle = new Color(0, 255, 0, 0.1);
+    context.strokeStyle = new Color(0, 0, 0, 0.7);
     this.body.shapes.forEach(function(shape) {
         var v = shape.vertices,
-            p = shape.position;
+            x = xOffset + shape.position[0],
+            y = yOffset + shape.position[1],
+            s = Math.sin(bodyAngle + shape.angle),
+            c = Math.cos(bodyAngle + shape.angle);
 
-        console.log('shape', shape.position);
+        // console.log('shape', shape.position);
 
         context.beginPath();
-        context.moveTo(p[0] + v[0][0], p[1] + v[0][1]);
+        context.moveTo(scale * (x + c*v[0][0] + s*v[0][1]), scale * (y - s*v[0][0] + c*v[0][1]));
         for (var i = 1; i < v.length; i++) {
-            context.lineTo(p[0] + v[i][0], p[1] + v[i][1]);
+            context.lineTo(scale * (x + c*v[i][0] + s*v[i][1]), scale * (y - s*v[i][0] + c*v[i][1]));
         }
         context.closePath();
         context.fill();
+        context.stroke();
     });
+
+    context.strokeStyle = new Color(255, 0, 0, 0.5);
+    context.beginPath();
     context.rect(0, 0, this.width(), this.height());
     context.stroke();
 };
@@ -401,12 +422,10 @@ PhysicsMorph.prototype.updatePosition = function() {
         center = stage.center(),
         scale = stage.scale;
 
-    // console.log('pos', aabb.lowerBound[0], aabb.lowerBound[1], aabb.upperBound[0], aabb.upperBound[1]);
-
     this.setPosition(new Point(center.x + aabb.lowerBound[0] * scale,
         center.y - aabb.upperBound[1] * scale));
-    this.setExtent(new Point(scale * (aabb.upperBound[0] - aabb.lowerBound[0]),
-        scale * (aabb.upperBound[1] - aabb.lowerBound[1])));
+    this.drawNew();
+    this.changed();
 };
 
 // ------- StageMorph -------

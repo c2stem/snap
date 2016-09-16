@@ -2874,9 +2874,6 @@ SpriteMorph.prototype.userMenu = function () {
         menu.addItem('detach all parts', 'detachAllParts');
     }
     menu.addItem("export...", 'exportSprite');
-    if (this.debug) {
-        menu.addItem('debug', 'debug');
-    }
     return menu;
 };
 
@@ -3638,7 +3635,6 @@ SpriteMorph.prototype.justDropped = function () {
     var stage = this.parentThatIsA(StageMorph);
     if (stage) {
         stage.enableCustomHatBlocks = true;
-        stage.physics.setPosition(this, this.xPosition(), this.yPosition());
     }
     this.restoreLayers();
     this.positionTalkBubble();
@@ -5200,8 +5196,6 @@ StageMorph.prototype.init = function (globals) {
     this.acceptsDrops = false;
     this.setColor(new Color(255, 255, 255));
     this.fps = this.frameRate;
-
-    this.physics = new PhysicsEngine(this);
 };
 
 // StageMorph scaling
@@ -6253,9 +6247,6 @@ StageMorph.prototype.userMenu = function () {
         },
         'open a new window\nwith a picture of the stage'
     );
-    if (this.debug) {
-        menu.addItem("debug", 'debug');
-    }
     if (shiftClicked) {
         menu.addLine();
         menu.addItem(

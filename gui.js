@@ -4037,7 +4037,7 @@ IDE_Morph.prototype.saveFileAs = function (
 IDE_Morph.prototype.saveCanvasAs = function (canvas, fileName, newWindow) {
     // Export a Canvas object as a PNG image
     // Note: This commented out due to poor browser support.
-    // cavas.toBlob() is currently supported in Firefox, IE, Chrome but
+    // cavas.toBlob() is currently supported in Firefox, IE, Chrome but 
     // browsers prevent easily saving the generated files.
     // Do not re-enable without revisiting issue #1191
     // if (canvas.toBlob) {
@@ -4047,7 +4047,7 @@ IDE_Morph.prototype.saveCanvasAs = function (canvas, fileName, newWindow) {
     //     });
     //     return;
     // }
-
+    
     this.saveFileAs(canvas.toDataURL(), 'image/png', fileName, newWindow);
 };
 
@@ -6260,11 +6260,6 @@ SpriteIconMorph.prototype.userMenu = function () {
             },
             'open a new window\nwith a picture of the stage'
         );
-        if (this.object.debug) {
-            menu.addItem('debug', function () {
-                myself.object.debug()
-            });
-        }
         return menu;
     }
     if (!(this.object instanceof SpriteMorph)) {return null; }
@@ -6289,11 +6284,6 @@ SpriteIconMorph.prototype.userMenu = function () {
         );
     }
     menu.addItem("export...", 'exportSprite');
-    if (this.object.debug) {
-        menu.addItem('debug', function () {
-            myself.object.debug()
-        });
-    }
     return menu;
 };
 
@@ -7575,7 +7565,7 @@ PaletteHandleMorph.prototype.mouseEnter
 
 PaletteHandleMorph.prototype.mouseLeave
     = StageHandleMorph.prototype.mouseLeave;
-
+    
 PaletteHandleMorph.prototype.mouseDoubleClick = function () {
     this.target.parentThatIsA(IDE_Morph).setPaletteWidth(200);
 };

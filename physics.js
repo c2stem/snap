@@ -120,14 +120,6 @@ PhysicsEngine.prototype.round = function(num, places) {
     return Math.round(num * mult)/mult;
 };
 
-PhysicsEngine.prototype.setDirection = function(sprite, degrees) {
-    var name = this._getSpriteName(sprite),
-        body = this.bodies[name];
-    if (body) {
-        body.angle = radians(degrees);
-    }
-};
-
 PhysicsEngine.prototype.updateSize = function(sprite) {
     var name = this._getSpriteName(sprite),
         body = this.bodies[name];
@@ -311,6 +303,14 @@ PhysicsEngine.prototype.setPosition = function(sprite, x, y) {
     }
 };
 
+PhysicsEngine.prototype.setDirection = function(sprite, degrees) {
+    var name = this._getSpriteName(sprite),
+        body = this.bodies[name];
+    if (body) {
+        body.angle = radians(degrees);
+    }
+};
+
 PhysicsEngine.prototype.applyForce = function(sprite, amt, angle) {
     var name = this._getSpriteName(sprite),
         body = this.bodies[name],
@@ -443,6 +443,7 @@ SpriteMorph.prototype.updatePhysics = function() {
     var stage = this.parentThatIsA(StageMorph);
     if (stage) {
         stage.physics.setPosition(this, this.xPosition(), this.yPosition());
+        stage.physics.setDirection(this, -this.direction());
     }
 }
 
@@ -455,6 +456,12 @@ SpriteMorph.prototype.justDropped = function () {
 SpriteMorph.prototype.prePhysicsGotoXY = SpriteMorph.prototype.gotoXY;
 SpriteMorph.prototype.gotoXY = function(x, y, justMe) {
     this.prePhysicsGotoXY(x, y, justMe);
+    this.updatePhysics();
+};
+
+SpriteMorph.prototype.prePhysicsSetHeading = SpriteMorph.prototype.setHeading;
+SpriteMorph.prototype.setHeading = function(degrees) {
+    this.prePhysicsSetHeading(degrees);
     this.updatePhysics();
 };
 
@@ -489,13 +496,6 @@ SpriteMorph.prototype.silentSetHeading = function(degrees) {
         }
         part.prePhysicsGotoXY(trg.x, trg.y);
     });
-};
-
-SpriteMorph.prototype._setHeading = SpriteMorph.prototype.setHeading;
-SpriteMorph.prototype.setHeading = function(degrees) {
-    var stage = this.parentThatIsA(StageMorph);
-    // Update the physics engine
-    stage.physics.setDirection(this, degrees);
 };
 
 SpriteMorph.prototype._setName = SpriteMorph.prototype.setName;

@@ -17,7 +17,6 @@ PhysicsEngine = function(stage) {
     this.ground = null;
     this.stage = stage;
 
-    this.enableGround();
     this.lastUpdated = Date.now();
 };
 
@@ -39,13 +38,13 @@ PhysicsEngine.prototype.step = function() {
 
 PhysicsEngine.prototype.enableGround = function() {
     var shape = new p2.Box({
-            width: 200,
-            height: 50
+            width: 2000,
+            height: 15
         }),
         body = new p2.Body({
             mass: 0,
-            position: [-110, -100],
-            angle: -0.1
+            position: [0, -170],
+            angle: 0
         });
     body.addShape(shape);
     this.world.addBody(body);
@@ -200,8 +199,8 @@ SpriteMorph.prototype.getPhysicsShape = function() {
         index,
         isEmpty;
 
-    console.log(this.constume);
-    console.log(this.image);
+    // console.log(this.constume);
+    // console.log(this.image);
 
     // Get the left most points for every row of pixels
     while (row < height) {
@@ -260,7 +259,7 @@ SpriteMorph.prototype.updatePhysics = function() {
 
     body.position[0] = this.xPosition();
     body.position[1] = this.yPosition();
-    body.aabbNeedsUpdate = true; 
+    body.aabbNeedsUpdate = true;
     body.angle = radians(-this.direction() + 90);
 
     if (body.morph) {
@@ -357,7 +356,21 @@ SpriteMorph.prototype.debug = function() {
     console.log('body.position', this.physicsBody.position);
 };
 
+// ------- IDE_Morph -------
+
+IDE_Morph.prototype.prePhysicsCreateStage = IDE_Morph.prototype.createStage;
+IDE_Morph.prototype.createStage = function() {
+	this.prePhysicsCreateStage();
+	this.stage.physics.enableGround();
+}
+
 // ------- StageMorph -------
+
+StageMorph.prototype.prePhysicsInit = StageMorph.prototype.init;
+StageMorph.prototype.init = function(globals) {
+    this.prePhysicsInit(globals);
+    this.physics = new PhysicsEngine(this);
+};
 
 StageMorph.prototype.updateMorphic = function() {
     this.children.forEach(function (morph) {
@@ -367,13 +380,6 @@ StageMorph.prototype.updateMorphic = function() {
     });
 };
 
-StageMorph.prototype.prePhysicsInit = StageMorph.prototype.init;
-StageMorph.prototype.init = function(globals) {
-    this.prePhysicsInit(globals);
-    this.physics = new PhysicsEngine(this);
-};
-
-
 StageMorph.prototype.prePhysicsStep = StageMorph.prototype.step;
 StageMorph.prototype.step = function() {
     this.prePhysicsStep();
@@ -381,8 +387,6 @@ StageMorph.prototype.step = function() {
         this.physics.step(this);
     }
 };
-
-// ------- IDE_Morph -------
 
 // ------- SpriteIconMorph -------
 

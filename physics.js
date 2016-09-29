@@ -26,14 +26,31 @@ PhysicsEngine = function(stage) {
     this.lastUpdated = Date.now();
 };
 
+PhysicsEngine.prototype.addSprite = function(sprite) {
+    sprite.addPhysicsBody(this.world);
+
+    var name = this._getSpriteName(sprite);
+    this.sprites[name] = sprite;
+}
+
 PhysicsEngine.prototype.step = function() {
     var time = Date.now(),  // in milliseconds
-        delta = (time - this.lastUpdated) * 0.001;  // in seconds
+        delta = (time - this.lastUpdated) * 0.001,
+        names;  // in seconds
 
     this.lastUpdated = time;
     if (delta < 0.1) {
         this.world.step(delta);
-        this.updateUI();
+
+        names = Object.keys(this.sprites);
+        for (var i = names.length; i--;) {
+            this.sprites[names[i]].updateMorphic();
+        }
+
+        names = Object.keys(this.morphs);
+        for (var i = names.length; i--;) {
+            this.morphs[names[i]].updateMorphic();
+        }
     }
 };
 
@@ -58,190 +75,6 @@ PhysicsEngine.prototype.enableGround = function() {
     this.morphs['_ground'] = morph;
     this.stage.addBack(morph);
     morph.updateMorphic();
-};
-
-PhysicsEngine.prototype.updateUI = function() {
-    var names = Object.keys(this.sprites);
-
-    for (var i = names.length; i--;) {
-        this._updateSpritePosition(this.sprites[names[i]], this.bodies[names[i]]);
-        // TODO
-    }
-
-    names = Object.keys(this.morphs);
-    for (var i = names.length; i--;) {
-        this.morphs[names[i]].updateMorphic();
-    }
-
-    // Update positions for each clone
-    names = Object.keys(this.clones);
-    // TODO
-};
-
-PhysicsEngine.prototype._updateSpritePosition = function(sprite, body, morph) {
-    var point,
-        newX,
-        newY,
-        oldX,
-        oldY,
-        angle,
-        direction;
-
-    // console.log('update', body);
-
-    if (!sprite.isPickedUp()) {
-        point = body.position;
-        newX = point[0];
-        newY = point[1];
-
-        oldX = sprite.xPosition();
-        oldY = sprite.yPosition();
-
-        // Set the center and rotation for each sprite
-        if (newX !== oldX || newY !== oldY) {
-            sprite.prePhysicsGotoXY(newX, newY);
-        }
-
-        // Set the rotation for each sprite
-        angle = -body.angle % (2 * Math.PI);
-        if (angle < 0) {
-            angle += 2 * Math.PI;
-        }
-        direction = degrees(angle);
-        if (this.round(sprite.direction(), 2) !== this.round(direction, 2)) {
-            sprite.silentSetHeading(direction);
-        }
-    }
-};
-
-PhysicsEngine.prototype.round = function(num, places) {
-    places = places || 0;
-    var mult = Math.pow(10, places);
-    return Math.round(num * mult)/mult;
-};
-
-PhysicsEngine.prototype.updateSize = function(sprite) {
-    var name = this._getSpriteName(sprite),
-        body = this.bodies[name];
-
-    // Remove the old shape
-    for (var i = body.shapes.length; i--;) {
-        body.removeShape(body.shapes[0]);
-    }
-
-    // Add the new shape
-    var shape = this.getShape(sprite);
-    body.addShape(shape);
-};
-
-PhysicsEngine.prototype.addSprite = function(sprite) {
-    var shape = this.getShape(sprite),
-        body = new p2.Body({
-            mass: 1,
-            position: [sprite.xPosition(), sprite.yPosition()],
-            angle: -radians(sprite.direction())
-        }),
-        name = this._getSpriteName(sprite);
-
-    body.addShape(shape);
-    shape = new p2.Box({
-        width: 30,
-        height: 10
-    });
-    body.addShape(shape);
-    shape.position[0] = 45; // something is not right
-
-    if (sprite.isClone) {
-        // Create a unique id for the sprite
-        name = this._getCloneName();
-        this.clones[name] = sprite;
-    }
-
-    if (this.bodies[name]) {
-        this.world.removeBody(this.bodies[name]);
-    }
-
-    console.log('sprite added', name);
-    this.sprites[name] = sprite;
-    this.bodies[name] = body;
-    this.world.addBody(body);
-
-    var stage = sprite.parentThatIsA(StageMorph);
-
-    var morph = new PhysicsMorph(body);
-    this.morphs[name] = morph;
-    stage.addBack(morph);
-    morph.updateMorphic();
-};
-
-PhysicsEngine.prototype.getShape = function(sprite) {
-    var cxt = sprite.image.getContext('2d'),
-        //width = sprite.image.width,
-        //height = sprite.image.height,
-        // FIXME: Add the precise bounding box support
-        image = sprite.costume || sprite.image,
-        width = sprite.costume ? sprite.costume.width() : sprite.image.width,
-        height = sprite.costume ? sprite.costume.height() : sprite.image.height,
-        data = cxt.getImageData(1, 1, width, height).data,
-        granularity = 1,
-        vertices = [],
-        shape,
-        row = 0,
-        col = 0,
-        index,
-        isEmpty;
-
-    console.log(sprite);
-    console.log(sprite.constume);
-    console.log(sprite.image);
-
-    // Get the left most points for every row of pixels
-    while (row < height) {
-
-        // get the first non-zero column
-        col = -1;
-        isEmpty = true;
-        while (col < width && isEmpty) {
-            col++;
-            index = row*width*4 + col*4;
-            isEmpty = !(data[index] + data[index+1] + data[index+2] + data[index+3]);
-        }
-        if (!isEmpty) {
-            vertices.unshift([col, row]);
-        }
-
-        row += granularity;
-    }
-
-    // Get the right most points for every row of pixels
-    row = height - 1;
-    while (row > 0) {
-
-        // get the last non-zero place
-        col = width;
-        isEmpty = true;
-        while (col > 0 && isEmpty) {
-            col--;
-            index = row*width*4 + col*4;
-            isEmpty = !(data[index] + data[index+1] + data[index+2] + data[index+3]);
-        }
-        if (!isEmpty) {
-            vertices.unshift([col, row]);
-        }
-
-        row -= granularity;
-    }
-
-    // Create a custom shape from this
-    shape = new p2.Convex({
-        vertices: vertices
-    });
-
-    //return shape;
-    return new p2.Box({
-        width: height,
-        height: width
-    });
 };
 
 PhysicsEngine.prototype.removeSprite = function(sprite) {
@@ -288,73 +121,6 @@ PhysicsEngine.prototype.updateSpriteName = function(oldName, newName) {
         this.sprites[newName] = this.sprites[oldName];
         delete this.sprites[oldName];
     }
-};
-
-
-PhysicsEngine.prototype.setPosition = function(sprite, x, y) {
-    console.log('physicsEngine.setPosition');
-    var name = this._getSpriteName(sprite),
-        body = this.bodies[name],
-        morph = this.morphs[name];
-    if (body) {
-        body.position = [x, y];
-        body.aabbNeedsUpdate = true;
-        morph.updateMorphic();
-    }
-};
-
-PhysicsEngine.prototype.setDirection = function(sprite, degrees) {
-    var name = this._getSpriteName(sprite),
-        body = this.bodies[name];
-    if (body) {
-        body.angle = radians(degrees);
-    }
-};
-
-PhysicsEngine.prototype.applyForce = function(sprite, amt, angle) {
-    var name = this._getSpriteName(sprite),
-        body = this.bodies[name],
-        rads;
-
-    angle = -angle + 90;  // correct angle
-    rads = radians(angle);
-    // Get the direction
-    body.applyForce([amt*Math.cos(rads), -amt*Math.sin(rads)]);
-};
-
-PhysicsEngine.prototype.setGravity = function(amt) {
-    if (amt === 0 && this.ground) {
-        this.world.removeBody(this.ground);
-        this.ground = null;
-    } else if (!this.ground){
-        this.enableGround();
-    }
-    this.world.gravity = [0, amt];
-};
-
-PhysicsEngine.prototype.setMass = function(sprite, amt) {
-    var name = this._getSpriteName(sprite),
-        body = this.bodies[name];
-
-    body.mass = +amt;
-    body.updateMassProperties();
-};
-
-PhysicsEngine.prototype.getMass = function(sprite) {
-    var name = this._getSpriteName(sprite);
-    return this.bodies[name].mass;
-};
-
-PhysicsEngine.prototype.angularForce = function(sprite, amt) {
-    var name = this._getSpriteName(sprite),
-        body = this.bodies[name];
-    body.angularForce += +amt;
-};
-
-PhysicsEngine.prototype.angularForceLeft = function(sprite, amt) {
-    var name = this._getSpriteName(sprite),
-        body = this.bodies[name];
-    body.angularForce += -amt;
 };
 
 // ------- PhysicsMorph -------
@@ -439,12 +205,128 @@ PhysicsMorph.prototype.updateMorphic = function() {
 
 // ------- SpriteMorph -------
 
-SpriteMorph.prototype.updatePhysics = function() {
-    var stage = this.parentThatIsA(StageMorph);
-    if (stage) {
-        stage.physics.setPosition(this, this.xPosition(), this.yPosition());
-        stage.physics.setDirection(this, -this.direction());
+SpriteMorph.prototype.addPhysicsBody = function(world) {
+    var shape = this.getPhysicsShape(),
+        body = new p2.Body({
+            mass: 1,
+            position: [this.xPosition(), this.yPosition()],
+            angle: radians(-this.direction() + 90)
+        });
+
+    body.addShape(shape);
+    shape = new p2.Box({
+        width: 30,
+        height: 10
+    });
+    body.addShape(shape);
+    shape.position[0] = 45;
+
+    console.log('sprite added', name);
+    this.physicsBody = body;
+    world.addBody(body);
+
+    var morph = new PhysicsMorph(body);
+    this.parentThatIsA(StageMorph).addBack(morph);
+    morph.updateMorphic();
+
+    body.morph = morph;
+};
+
+SpriteMorph.prototype.getPhysicsShape = function() {
+    var cxt = this.image.getContext('2d'),
+        //width = this.image.width,
+        //height = this.image.height,
+        // FIXME: Add the precise bounding box support
+        image = this.costume || this.image,
+        width = this.costume ? this.costume.width() : this.image.width,
+        height = this.costume ? this.costume.height() : this.image.height,
+        data = cxt.getImageData(1, 1, width, height).data,
+        granularity = 1,
+        vertices = [],
+        shape,
+        row = 0,
+        col = 0,
+        index,
+        isEmpty;
+
+    console.log(this.constume);
+    console.log(this.image);
+
+    // Get the left most points for every row of pixels
+    while (row < height) {
+
+        // get the first non-zero column
+        col = -1;
+        isEmpty = true;
+        while (col < width && isEmpty) {
+            col++;
+            index = row*width*4 + col*4;
+            isEmpty = !(data[index] + data[index+1] + data[index+2] + data[index+3]);
+        }
+        if (!isEmpty) {
+            vertices.unshift([col, row]);
+        }
+
+        row += granularity;
     }
+
+    // Get the right most points for every row of pixels
+    row = height - 1;
+    while (row > 0) {
+
+        // get the last non-zero place
+        col = width;
+        isEmpty = true;
+        while (col > 0 && isEmpty) {
+            col--;
+            index = row*width*4 + col*4;
+            isEmpty = !(data[index] + data[index+1] + data[index+2] + data[index+3]);
+        }
+        if (!isEmpty) {
+            vertices.unshift([col, row]);
+        }
+
+        row -= granularity;
+    }
+
+    // Create a custom shape from this
+    shape = new p2.Convex({
+        vertices: vertices
+    });
+
+    //return shape;
+    return new p2.Box({
+        width: height,
+        height: width
+    });
+};
+
+SpriteMorph.prototype.updatePhysics = function() {
+    var body = this.physicsBody;
+    if (!body) {
+        return;
+    }
+
+    body.position[0] = this.xPosition();
+    body.position[1] = this.yPosition();
+    body.aabbNeedsUpdate = true; 
+    body.angle = radians(-this.direction() + 90);
+
+    if (body.morph) {
+        body.morph.updateMorphic();
+    }
+}
+
+SpriteMorph.prototype.updateMorphic = function() {
+    if (this.isPickedUp()) {
+        return;
+    }
+
+    var position = this.physicsBody.position,
+        angle = this.physicsBody.angle;
+
+    this.prePhysicsGotoXY(position[0], position[1]);
+    this.prePhysicsSetHeading(-degrees(angle) + 90);
 }
 
 SpriteMorph.prototype.prePhysicsJustDropped = SpriteMorph.prototype.justDropped;
@@ -465,37 +347,10 @@ SpriteMorph.prototype.setHeading = function(degrees) {
     this.updatePhysics();
 };
 
-// Overrides for SpriteMorph
-SpriteMorph.prototype.silentSetHeading = function(degrees) {
-    // Bypass any position setting in the physics engine
-    var x = this.xPosition(),
-        y = this.yPosition(),
-        dir = (+degrees || 0),
-        turn = dir - this.heading;
-
-    // apply to myself
-    if (this.rotationStyle) {  // optimization, only redraw if rotatable
-        this.changed();
-        SpriteMorph.uber.setHeading.call(this, dir);
-
-        var penState = this.isDown;
-        this.isDown = false;
-        this.prePhysicsGotoXY(x, y, true);  // just me
-        this.isDown = penState;
-        this.positionTalkBubble();
-    } else {
-        this.heading = parseFloat(degrees) % 360;
-    }
-
-    // propagate to my parts
-    this.parts.forEach(function (part) {
-        var pos = new Point(part.xPosition(), part.yPosition()),
-            trg = pos.rotateBy(radians(turn), new Point(x, y));
-        if (part.rotatesWithAnchor) {
-            part.turn(turn);
-        }
-        part.prePhysicsGotoXY(trg.x, trg.y);
-    });
+SpriteMorph.prototype.prePhysicsForward = SpriteMorph.prototype.forward;
+SpriteMorph.prototype.forward = function(steps) {
+    this.prePhysicsForward(steps);
+    this.updatePhysics();
 };
 
 SpriteMorph.prototype._setName = SpriteMorph.prototype.setName;
@@ -509,47 +364,30 @@ SpriteMorph.prototype.setName = function(name) {
     stage.physics.updateSpriteName(oldName, name);
 };
 
-SpriteMorph.prototype._wearCostume = SpriteMorph.prototype.wearCostume;
-SpriteMorph.prototype.xwearCostume = function(costume) {
-    this._wearCostume(costume);
-    // Update the shape
-    var stage = this.parentThatIsA(StageMorph);
-    stage.physics.updateSize(this);
+SpriteMorph.prototype.mass = function() {
+    return this.physicsBody.mass;
 };
 
-SpriteMorph.prototype.setGravity = function(amt) {
-    var stage = this.parentThatIsA(StageMorph);
-    stage.physics.setGravity(amt);
+SpriteMorph.prototype.setMass = function(mass) {
+    this.physicsBody.mass = +mass;
+    this.physicsBody.updateMassProperties();
 };
 
-SpriteMorph.prototype.applyForce = function(amt, angle) {
-    var stage = this.parentThatIsA(StageMorph);
-    stage.physics.applyForce(this, amt, angle);
+SpriteMorph.prototype.applyForce = function(force, direction) {
+    var r = radians(-direction + 90);
+    this.physicsBody.applyForce([force*Math.cos(r), force*Math.sin(r)]);
 };
 
-SpriteMorph.prototype.applyForceForward = function(amt) {
-    var stage = this.parentThatIsA(StageMorph);
-    stage.physics.applyForce(this, amt, this.direction());
+SpriteMorph.prototype.applyForceForward = function(force) {
+    this.applyForce(force, this.direction());
 };
 
-SpriteMorph.prototype.mass = function(amt) {
-    var stage = this.parentThatIsA(StageMorph);
-    return stage.physics.getMass(this, amt);
+SpriteMorph.prototype.angularForce = function(torque) {
+    this.physicsBody.angularForce -= +torque;
 };
 
-SpriteMorph.prototype.setMass = function(amt) {
-    var stage = this.parentThatIsA(StageMorph);
-    stage.physics.setMass(this, amt);
-};
-
-SpriteMorph.prototype.angularForce = function(amt) {
-    var stage = this.parentThatIsA(StageMorph);
-    stage.physics.angularForce(this, amt);
-};
-
-SpriteMorph.prototype.angularForceLeft = function(amt) {
-    var stage = this.parentThatIsA(StageMorph);
-    stage.physics.angularForceLeft(this, amt);
+SpriteMorph.prototype.angularForceLeft = function(torque) {
+    this.angularForce(-torque);
 };
 
 SpriteMorph.prototype.prePhysicsUserMenu = SpriteMorph.prototype.userMenu;
@@ -585,18 +423,6 @@ StageMorph.prototype.step = function() {
     if (this.physics.engaged) {
         this.physics.step();
     }
-};
-
-StageMorph.prototype.prePhysicsUserMenu = StageMorph.prototype.userMenu;
-StageMorph.prototype.userMenu = function() {
-    var menu = this.prePhysicsUserMenu();
-    menu.addItem("debug", "debug");
-    return menu;
-}
-
-StageMorph.prototype.debug = function() {
-    console.log('physics bodies:', this.physics.bodies);
-    console.log('physics sprites:', this.physics.sprites);
 };
 
 // ------- SpriteIconMorph -------

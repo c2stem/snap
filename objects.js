@@ -1239,13 +1239,6 @@ SpriteMorph.prototype.initBlocks = function () {
             spec: 'set mass to %n',
             defaults: [200]
         },
-        setGravity: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'motion',
-            spec: 'set gravity to %n',
-            defaults: [9.8]
-        },
         mass: {
             only: SpriteMorph,
             type: 'reporter',

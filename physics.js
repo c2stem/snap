@@ -23,7 +23,7 @@ PhysicsEngine = function(stage) {
 
 PhysicsEngine.prototype.addSprite = function(sprite) {
     sprite.addPhysicsBody(this.world);
-}
+};
 
 PhysicsEngine.prototype.step = function() {
     var time = Date.now(),  // in milliseconds
@@ -47,7 +47,6 @@ PhysicsEngine.prototype.enableGround = function() {
             position: [-110, -100],
             angle: -0.1
         });
-
     body.addShape(shape);
     this.world.addBody(body);
     this.ground = new PhysicsMorph(body);
@@ -133,6 +132,27 @@ PhysicsMorph.prototype.updateMorphic = function() {
         center.y - aabb.upperBound[1] * scale));
     this.drawNew();
     this.changed();
+};
+
+PhysicsMorph.prototype.destroy = function() {
+    var body = this.physicsBody;
+    if (body && body.world) {
+        body.world.removeBody(body);
+    }
+
+    PhysicsMorph.uber.destroy.call(this);
+};
+
+PhysicsMorph.prototype.userMenu = function () {
+    var ide = this.parentThatIsA(IDE_Morph),
+        menu = new MenuMorph(this);
+
+    menu.addItem("delete", 'destroy');
+    menu.addItem("redraw", 'drawNew');
+    menu.addItem("update morphic", "updateMorphic");
+    menu.addItem("update physics", "updatePhisics");
+
+    return menu;
 };
 
 // ------- SpriteMorph -------
@@ -246,7 +266,21 @@ SpriteMorph.prototype.updatePhysics = function() {
     if (body.morph) {
         body.morph.updateMorphic();
     }
-}
+};
+
+SpriteMorph.prototype.prePhysicsDestroy = SpriteMorph.prototype.destroy;
+SpriteMorph.prototype.destroy = function() {
+    var body = this.physicsBody;
+    if (body && body.world) {
+        body.world.removeBody(body);
+
+        if (body.morph) {
+            body.morph.destroy();
+        }
+    }
+
+    this.prePhysicsDestroy();
+};
 
 SpriteMorph.prototype.updateMorphic = function() {
     if (this.isPickedUp()) {
@@ -258,7 +292,7 @@ SpriteMorph.prototype.updateMorphic = function() {
 
     this.prePhysicsGotoXY(position[0], position[1]);
     this.prePhysicsSetHeading(-degrees(angle) + 90);
-}
+};
 
 SpriteMorph.prototype.prePhysicsJustDropped = SpriteMorph.prototype.justDropped;
 SpriteMorph.prototype.justDropped = function () {
@@ -315,13 +349,13 @@ SpriteMorph.prototype.userMenu = function() {
     var menu = this.prePhysicsUserMenu();
     menu.addItem("debug", "debug");
     return menu;
-}
+};
 
 SpriteMorph.prototype.debug = function() {
     console.log('costume', this.costume);
     console.log('image', this.image);
     console.log('body.position', this.physicsBody.position);
-}
+};
 
 // ------- StageMorph -------
 
@@ -348,6 +382,8 @@ StageMorph.prototype.step = function() {
     }
 };
 
+// ------- IDE_Morph -------
+
 // ------- SpriteIconMorph -------
 
 SpriteIconMorph.prototype.prePhysicsUserMenu = SpriteIconMorph.prototype.userMenu;
@@ -355,7 +391,7 @@ SpriteIconMorph.prototype.userMenu = function() {
     var menu = this.prePhysicsUserMenu(),
         object = this.object;
 
-    if (object instanceof StageMorph || object instanceof SpriteMorph) {
+    if (object instanceof SpriteMorph) {
         menu.addItem("debug", function() {
             object.debug();
         });

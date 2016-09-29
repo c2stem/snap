@@ -2073,7 +2073,6 @@ IDE_Morph.prototype.duplicateSprite = function (sprite) {
 };
 
 IDE_Morph.prototype.removeSprite = function (sprite) {
-    this.stage.physics.removeSprite(sprite);
     var idx, myself = this;
     sprite.parts.forEach(function (part) {myself.removeSprite(part); });
     idx = this.sprites.asArray().indexOf(sprite) + 1;

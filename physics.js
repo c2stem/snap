@@ -9,16 +9,11 @@ modules.physics = '2016-September-1';
 
 var PhysicsEngine;
 var PhysicsMorph;
-var CLONE_ID = 0;
 
 PhysicsEngine = function(stage) {
     this.world = new p2.World({
         gravity: [0, -9.78]
     });
-    this.sprites = {};
-    this.clones = {};
-    this.bodies = {};
-    this.morphs = {};
     this.ground = null;
     this.stage = stage;
 
@@ -28,99 +23,36 @@ PhysicsEngine = function(stage) {
 
 PhysicsEngine.prototype.addSprite = function(sprite) {
     sprite.addPhysicsBody(this.world);
-
-    var name = this._getSpriteName(sprite);
-    this.sprites[name] = sprite;
 }
 
 PhysicsEngine.prototype.step = function() {
     var time = Date.now(),  // in milliseconds
-        delta = (time - this.lastUpdated) * 0.001,
-        names;  // in seconds
+        delta = (time - this.lastUpdated) * 0.001;
 
     this.lastUpdated = time;
     if (delta < 0.1) {
         this.world.step(delta);
 
-        names = Object.keys(this.sprites);
-        for (var i = names.length; i--;) {
-            this.sprites[names[i]].updateMorphic();
-        }
-
-        names = Object.keys(this.morphs);
-        for (var i = names.length; i--;) {
-            this.morphs[names[i]].updateMorphic();
-        }
+        this.stage.updateMorphic();
     }
 };
 
 PhysicsEngine.prototype.enableGround = function() {
-    var shape;
+    var shape = new p2.Box({
+            width: 200,
+            height: 50
+        }),
+        body = new p2.Body({
+            mass: 0,
+            position: [-110, -100],
+            angle: -0.1
+        });
 
-    shape = new p2.Box({
-        width: 200,
-        height: 50
-    });
-
-    this.ground = new p2.Body({
-        mass: 0,
-        position: [-110, -100],
-        angle: -0.1
-    });
-
-    this.ground.addShape(shape);
-    this.world.addBody(this.ground);
-
-    var morph = new PhysicsMorph(this.ground);
-    this.morphs['_ground'] = morph;
-    this.stage.addBack(morph);
-    morph.updateMorphic();
-};
-
-PhysicsEngine.prototype.removeSprite = function(sprite) {
-    var name = this._getSpriteName(sprite);
-
-    // remove clone if necessary
-    if (this.sprites[name].isClone) {
-        delete this.clones[name];
-    }
-
-    this.world.removeBody(this.bodies[name]);
-    delete this.bodies[name];
-    delete this.sprites[name];
-    delete this.morphs[name];
-
-    console.log('sprite removed', name);
-};
-
-PhysicsEngine.prototype._getCloneName = function(/*sprite*/) {
-    return '__clone__' + (++CLONE_ID);
-};
-
-PhysicsEngine.prototype._getSpriteName = function(sprite) {
-    if (!sprite.isClone) {
-        return sprite.name;
-    }
-    // Compare to the values in the clones list
-    // ... if only js supported non-hash maps
-    var names = Object.keys(this.clones);
-    for (var i = names.length; i--;) {
-        if (this.clones[names[i]] === sprite) {
-            return names[i];
-        }
-    }
-    return null;
-};
-
-PhysicsEngine.prototype.updateSpriteName = function(oldName, newName) {
-    // console.log('updateSpriteName', oldName, newName);
-    if (oldName !== newName) {
-        this.bodies[newName] = this.bodies[oldName];
-        delete this.bodies[oldName];
-
-        this.sprites[newName] = this.sprites[oldName];
-        delete this.sprites[oldName];
-    }
+    body.addShape(shape);
+    this.world.addBody(body);
+    this.ground = new PhysicsMorph(body);
+    this.stage.addBack(this.ground);
+    this.ground.updateMorphic();
 };
 
 // ------- PhysicsMorph -------
@@ -221,7 +153,6 @@ SpriteMorph.prototype.addPhysicsBody = function(world) {
     body.addShape(shape);
     shape.position[0] = 45;
 
-    console.log('sprite added', name);
     this.physicsBody = body;
     world.addBody(body);
 
@@ -353,17 +284,6 @@ SpriteMorph.prototype.forward = function(steps) {
     this.updatePhysics();
 };
 
-SpriteMorph.prototype._setName = SpriteMorph.prototype.setName;
-SpriteMorph.prototype.setName = function(name) {
-    var oldName = this.name,
-        stage = this.parentThatIsA(StageMorph);
-
-    this._setName(name);
-
-    // Update the PhysicsEngine
-    stage.physics.updateSpriteName(oldName, name);
-};
-
 SpriteMorph.prototype.mass = function() {
     return this.physicsBody.mass;
 };
@@ -400,15 +320,18 @@ SpriteMorph.prototype.userMenu = function() {
 SpriteMorph.prototype.debug = function() {
     console.log('costume', this.costume);
     console.log('image', this.image);
-
-    var stage = this.parentThatIsA(StageMorph),
-        name = stage.physics._getSpriteName(this),
-        body = stage.physics.bodies[name];
-    // console.log('body', body);
-    console.log('body.position', body.position);
+    console.log('body.position', this.physicsBody.position);
 }
 
 // ------- StageMorph -------
+
+StageMorph.prototype.updateMorphic = function() {
+    this.children.forEach(function (morph) {
+        if (morph.updateMorphic) {
+            morph.updateMorphic();
+        }
+    });
+};
 
 StageMorph.prototype.prePhysicsInit = StageMorph.prototype.init;
 StageMorph.prototype.init = function(globals) {
@@ -421,7 +344,7 @@ StageMorph.prototype.prePhysicsStep = StageMorph.prototype.step;
 StageMorph.prototype.step = function() {
     this.prePhysicsStep();
     if (this.physics.engaged) {
-        this.physics.step();
+        this.physics.step(this);
     }
 };
 

@@ -1223,7 +1223,7 @@ SpriteMorph.prototype.initBlocks = function () {
             type: 'command',
             category: 'motion',
             spec: 'apply force of %n',
-            defaults: [500]
+            defaults: [2000]
         },
         applyForce: {
             only: SpriteMorph,

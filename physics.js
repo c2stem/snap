@@ -21,7 +21,7 @@ PhysicsEngine = function(stage) {
 };
 
 PhysicsEngine.prototype.addSprite = function(sprite) {
-    sprite.addPhysicsBody(this.world);
+    sprite.enablePhysics(this.world);
 };
 
 PhysicsEngine.prototype.step = function() {
@@ -39,11 +39,11 @@ PhysicsEngine.prototype.step = function() {
 PhysicsEngine.prototype.enableGround = function() {
     var shape = new p2.Box({
             width: 2000,
-            height: 15
+            height: 20
         }),
         body = new p2.Body({
             mass: 0,
-            position: [0, -170],
+            position: [0, -175],
             angle: 0
         });
     body.addShape(shape);
@@ -109,10 +109,10 @@ PhysicsMorph.prototype.drawNew = function() {
         context.stroke();
     });
 
-    context.strokeStyle = new Color(255, 0, 0, 0.5);
-    context.beginPath();
-    context.rect(0, 0, this.width(), this.height());
-    context.stroke();
+    // context.strokeStyle = new Color(255, 0, 0, 0.5);
+    // context.beginPath();
+    // context.rect(0, 0, this.width(), this.height());
+    // context.stroke();
 };
 
 PhysicsMorph.prototype.updateMorphic = function() {
@@ -156,24 +156,15 @@ PhysicsMorph.prototype.userMenu = function () {
 
 // ------- SpriteMorph -------
 
-SpriteMorph.prototype.addPhysicsBody = function(world) {
-    var shape = this.getPhysicsShape(),
-        body = new p2.Body({
-            mass: 1,
-            position: [this.xPosition(), this.yPosition()],
-            angle: radians(-this.direction() + 90)
-        });
+SpriteMorph.prototype.enablePhysics = function() {
+    var stage = this.parentThatIsA(StageMorph);
+    if (!stage || this.physicsBody) {
+        return;
+    }
 
-    body.addShape(shape);
-    shape = new p2.Box({
-        width: 30,
-        height: 10
-    });
-    body.addShape(shape);
-    shape.position[0] = 45;
-
+    var body = this.getPhysicsContour();
     this.physicsBody = body;
-    world.addBody(body);
+    stage.physics.world.addBody(body);
 
     var morph = new PhysicsMorph(body);
     this.parentThatIsA(StageMorph).addBack(morph);
@@ -182,73 +173,39 @@ SpriteMorph.prototype.addPhysicsBody = function(world) {
     body.morph = morph;
 };
 
-SpriteMorph.prototype.getPhysicsShape = function() {
-    var cxt = this.image.getContext('2d'),
-        //width = this.image.width,
-        //height = this.image.height,
-        // FIXME: Add the precise bounding box support
-        image = this.costume || this.image,
-        width = this.costume ? this.costume.width() : this.image.width,
-        height = this.costume ? this.costume.height() : this.image.height,
-        data = cxt.getImageData(1, 1, width, height).data,
-        granularity = 1,
-        vertices = [],
-        shape,
-        row = 0,
-        col = 0,
-        index,
-        isEmpty;
+SpriteMorph.prototype.disablePhysics = function() {
+    var body = this.physicsBody;
+    if (body && body.world) {
+        body.world.removeBody(body);
 
-    // console.log(this.constume);
-    // console.log(this.image);
-
-    // Get the left most points for every row of pixels
-    while (row < height) {
-
-        // get the first non-zero column
-        col = -1;
-        isEmpty = true;
-        while (col < width && isEmpty) {
-            col++;
-            index = row*width*4 + col*4;
-            isEmpty = !(data[index] + data[index+1] + data[index+2] + data[index+3]);
+        if (body.morph) {
+            body.morph.destroy();
         }
-        if (!isEmpty) {
-            vertices.unshift([col, row]);
-        }
-
-        row += granularity;
     }
+    this.physicsBody = null;
+};
 
-    // Get the right most points for every row of pixels
-    row = height - 1;
-    while (row > 0) {
-
-        // get the last non-zero place
-        col = width;
-        isEmpty = true;
-        while (col > 0 && isEmpty) {
-            col--;
-            index = row*width*4 + col*4;
-            isEmpty = !(data[index] + data[index+1] + data[index+2] + data[index+3]);
-        }
-        if (!isEmpty) {
-            vertices.unshift([col, row]);
-        }
-
-        row -= granularity;
-    }
-
-    // Create a custom shape from this
-    shape = new p2.Convex({
-        vertices: vertices
+// TODO: we need updateShapes
+SpriteMorph.prototype.getPhysicsContour = function() {
+    var body = new p2.Body({
+        mass: 1,
+        position: [this.xPosition(), this.yPosition()],
+        angle: radians(-this.direction() + 90)
     });
 
-    //return shape;
-    return new p2.Box({
-        width: height,
-        height: width
-    });
+    if (this.costume && typeof this.costume.loaded !== 'function') {
+        body.addShape(new p2.Box({
+            width: this.costume.width(),
+            height: this.costume.height()
+        }));
+    }
+    else {
+        body.addShape(new p2.Convex({
+            vertices: [[0,0],[-30,8],[-30,-8]]
+        }));
+    }
+
+    return body;
 };
 
 SpriteMorph.prototype.updatePhysics = function() {
@@ -267,22 +224,8 @@ SpriteMorph.prototype.updatePhysics = function() {
     }
 };
 
-SpriteMorph.prototype.prePhysicsDestroy = SpriteMorph.prototype.destroy;
-SpriteMorph.prototype.destroy = function() {
-    var body = this.physicsBody;
-    if (body && body.world) {
-        body.world.removeBody(body);
-
-        if (body.morph) {
-            body.morph.destroy();
-        }
-    }
-
-    this.prePhysicsDestroy();
-};
-
 SpriteMorph.prototype.updateMorphic = function() {
-    if (this.isPickedUp()) {
+    if (this.isPickedUp() || !this.physicsBody) {
         return;
     }
 
@@ -291,6 +234,19 @@ SpriteMorph.prototype.updateMorphic = function() {
 
     this.prePhysicsGotoXY(position[0], position[1]);
     this.prePhysicsSetHeading(-degrees(angle) + 90);
+};
+
+SpriteMorph.prototype.prePhysicsWearCostume = SpriteMorph.prototype.wearCostume;
+SpriteMorph.prototype.wearCostume = function(costume) {
+    this.disablePhysics();
+    this.prePhysicsWearCostume(costume);
+    this.enablePhysics();
+};
+
+SpriteMorph.prototype.prePhysicsDestroy = SpriteMorph.prototype.destroy;
+SpriteMorph.prototype.destroy = function() {
+    this.disablePhysics();
+    this.prePhysicsDestroy();
 };
 
 SpriteMorph.prototype.prePhysicsJustDropped = SpriteMorph.prototype.justDropped;
@@ -347,6 +303,8 @@ SpriteMorph.prototype.prePhysicsUserMenu = SpriteMorph.prototype.userMenu;
 SpriteMorph.prototype.userMenu = function() {
     var menu = this.prePhysicsUserMenu();
     menu.addItem("debug", "debug");
+    menu.addItem("enable physics", "enablePhysics");
+    menu.addItem("disable physics", "disablePhysics");
     return menu;
 };
 
@@ -360,8 +318,8 @@ SpriteMorph.prototype.debug = function() {
 
 IDE_Morph.prototype.prePhysicsCreateStage = IDE_Morph.prototype.createStage;
 IDE_Morph.prototype.createStage = function() {
-	this.prePhysicsCreateStage();
-	this.stage.physics.enableGround();
+    this.prePhysicsCreateStage();
+    this.stage.physics.enableGround();
 }
 
 // ------- StageMorph -------

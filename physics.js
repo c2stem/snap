@@ -346,6 +346,10 @@ StageMorph.prototype.step = function() {
     }
 };
 
+StageMorph.prototype.addPhysicsFloor = function() {
+    this.physics.enableGround();
+};
+
 // ------- SpriteIconMorph -------
 
 SpriteIconMorph.prototype.prePhysicsUserMenu = SpriteIconMorph.prototype.userMenu;
@@ -356,6 +360,17 @@ SpriteIconMorph.prototype.userMenu = function() {
     if (object instanceof SpriteMorph) {
         menu.addItem("debug", function() {
             object.debug();
+        });
+        menu.addItem("enable physics", function() {
+            object.enablePhysics();
+        });
+        menu.addItem("disable physics", function() {
+            object.disablePhysics();
+        });
+    }
+    else if (object instanceof StageMorph) {
+        menu.addItem("add floor", function() {
+            object.addPhysicsFloor();
         });
     }
     return menu;

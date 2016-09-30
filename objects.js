@@ -1244,8 +1244,12 @@ SpriteMorph.prototype.initBlocks = function () {
             type: 'reporter',
             category: 'motion',
             spec: 'mass'
+        },
+        elapsedTime: {
+            type: 'reporter',
+            category: 'motion',
+            spec: 'Δt'
         }
-
     };
 };
 
@@ -1831,6 +1835,8 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('direction'));
         blocks.push(watcherToggle('mass'));
         blocks.push(block('mass'));
+        blocks.push(watcherToggle('elapsedTime'));
+        blocks.push(block('elapsedTime'));
 
     } else if (cat === 'looks') {
 

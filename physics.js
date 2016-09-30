@@ -17,6 +17,7 @@ PhysicsEngine = function(stage) {
     this.ground = null;
     this.stage = stage;
 
+    this.elapsed = 0;
     this.lastUpdated = Date.now();
 };
 
@@ -31,8 +32,11 @@ PhysicsEngine.prototype.step = function() {
     this.lastUpdated = time;
     if (delta < 0.1) {
         this.world.step(delta);
-
         this.stage.updateMorphic();
+        this.elapsed = delta;
+    }
+    else {
+        this.elapsed = 0;
     }
 };
 
@@ -297,6 +301,15 @@ SpriteMorph.prototype.angularForce = function(torque) {
 
 SpriteMorph.prototype.angularForceLeft = function(torque) {
     this.angularForce(-torque);
+};
+
+SpriteMorph.prototype.elapsedTime = function() {
+    var stage = this.parentThatIsA(StageMorph);
+    if (stage && stage.physics) {
+        return stage.physics.elapsed;
+    }
+    else
+        return 0;
 };
 
 SpriteMorph.prototype.prePhysicsUserMenu = SpriteMorph.prototype.userMenu;

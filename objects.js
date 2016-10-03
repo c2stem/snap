@@ -1200,55 +1200,6 @@ SpriteMorph.prototype.initBlocks = function () {
             type: 'reporter',
             category: 'other',
             spec: 'code of %cmdRing'
-        },
-
-        // Physics Blocks
-
-        angularForce: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'motion',
-            spec: 'apply %clockwise torque of %n',
-            defaults: [2000]
-        },
-        angularForceLeft: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'motion',
-            spec: 'apply %counterclockwise torque of %n',
-            defaults: [2000]
-        },
-        applyForceForward: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'motion',
-            spec: 'apply force of %n',
-            defaults: [2000]
-        },
-        applyForce: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'motion',
-            spec: 'apply force %n in direction %dir',
-            defaults: [50]
-        },
-        setMass: {
-            only: SpriteMorph,
-            type: 'command',
-            category: 'motion',
-            spec: 'set mass to %n',
-            defaults: [200]
-        },
-        mass: {
-            only: SpriteMorph,
-            type: 'reporter',
-            category: 'motion',
-            spec: 'mass'
-        },
-        elapsedTime: {
-            type: 'reporter',
-            category: 'motion',
-            spec: 'Δt'
         }
     };
 };
@@ -1807,12 +1758,6 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('turn'));
         blocks.push(block('turnLeft'));
         blocks.push('-');
-        blocks.push(block('applyForceForward'));
-        blocks.push(block('applyForce'));
-        blocks.push(block('angularForce'));
-        blocks.push(block('angularForceLeft'));
-        blocks.push(block('setMass'));
-        blocks.push('-');
         blocks.push(block('setHeading'));
         blocks.push(block('doFaceTowards'));
         blocks.push('-');
@@ -1833,6 +1778,15 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('yPosition'));
         blocks.push(watcherToggle('direction'));
         blocks.push(block('direction'));
+
+    } else if (cat === 'physics' ) {
+
+        blocks.push(block('applyForceForward'));
+        blocks.push(block('applyForce'));
+        blocks.push(block('angularForce'));
+        blocks.push(block('angularForceLeft'));
+        blocks.push(block('setMass'));
+        blocks.push('-');
         blocks.push(watcherToggle('mass'));
         blocks.push(block('mass'));
         blocks.push(watcherToggle('elapsedTime'));

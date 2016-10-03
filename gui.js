@@ -738,7 +738,7 @@ IDE_Morph.prototype.createControlBar = function () {
     button.padding = 0;
     button.labelShadowOffset = new Point(-1, -1);
     button.labelShadowColor = colors[1];
-    button.labelColor = new Color(200, 200, 255);
+    button.labelColor = SpriteMorph.prototype.blockColor.physics;
     button.contrast = this.buttonContrast;
     button.drawNew();
     // button.hint = '(dis)engage physics';

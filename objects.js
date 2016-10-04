@@ -1781,6 +1781,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
 
     } else if (cat === 'physics' ) {
 
+        blocks.push(block('updateDeltaT'));
         blocks.push(block('applyForceForward'));
         blocks.push(block('applyForce'));
         blocks.push(block('angularForce'));

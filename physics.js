@@ -213,7 +213,13 @@ SpriteMorph.prototype.init = function(globals) {
     p.blocks.elapsedTime = {
         type: 'reporter',
         category: 'physics',
-        spec: 'Δt'
+        spec: 'old Δt'
+    };
+    p.blocks.updateDeltaT = {
+        type: 'command',
+        category: 'physics',
+        spec: 'simulate for %upvar %c',
+        defaults: ['Δt']
     };
 }
 

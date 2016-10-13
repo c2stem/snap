@@ -4,60 +4,9 @@
 
 modules.physics = '2016-September-1';
 
-var PhysicsEngine;
-var PhysicsMorph;
-
-// ------- PhysicsEngine -------
-
-PhysicsEngine = function (stage) {
-    this.world = new p2.World({
-        gravity: [0, -9.78]
-    });
-    this.ground = null;
-    this.stage = stage;
-
-    this.elapsed = 0;
-    this.lastUpdated = Date.now();
-};
-
-PhysicsEngine.prototype.addSprite = function (sprite) {
-    sprite.enablePhysics(this.world);
-};
-
-PhysicsEngine.prototype.step = function () {
-    var time = Date.now(), // in milliseconds
-        delta = (time - this.lastUpdated) * 0.001;
-
-    this.lastUpdated = time;
-    if (delta < 0.1) {
-        this.world.step(delta);
-        this.stage.updateMorphic();
-        this.elapsed = delta;
-    } else {
-        this.elapsed = 0;
-    }
-};
-
-PhysicsEngine.prototype.enableGround = function () {
-    var shape = new p2.Box({
-            width: 2000,
-            height: 20
-        }),
-        body = new p2.Body({
-            mass: 0,
-            position: [0, -175],
-            angle: 0
-        });
-    body.addShape(shape);
-    this.world.addBody(body);
-    this.ground = new PhysicsMorph(body);
-    this.stage.addBack(this.ground);
-    this.ground.updateMorphic();
-};
-
 // ------- PhysicsMorph -------
 
-PhysicsMorph = function (physicsBody) {
+function PhysicsMorph(physicsBody) {
     this.init(physicsBody);
 };
 
@@ -233,7 +182,7 @@ SpriteMorph.prototype.enablePhysics = function () {
 
     var body = this.getPhysicsContour();
     this.physicsBody = body;
-    stage.physics.world.addBody(body);
+    stage.physicsWorld.addBody(body);
 
     var morph = new PhysicsMorph(body);
     this.parentThatIsA(StageMorph).addBack(morph);
@@ -373,10 +322,7 @@ SpriteMorph.prototype.angularForceLeft = function (torque) {
 
 SpriteMorph.prototype.elapsedTime = function () {
     var stage = this.parentThatIsA(StageMorph);
-    if (stage && stage.physics) {
-        return stage.physics.elapsed;
-    } else
-        return 0;
+    return (stage && stage.physicsElapsed) || 0;
 };
 
 SpriteMorph.prototype.phyUserMenu = SpriteMorph.prototype.userMenu;
@@ -397,7 +343,7 @@ SpriteMorph.prototype.debug = function () {
 IDE_Morph.prototype.phyCreateStage = IDE_Morph.prototype.createStage;
 IDE_Morph.prototype.createStage = function () {
     this.phyCreateStage();
-    this.stage.physics.enableGround();
+    this.stage.addPhysicsFloor();
 }
 
 IDE_Morph.prototype.phyCreateSpriteBar = IDE_Morph.prototype.createSpriteBar;
@@ -446,7 +392,30 @@ IDE_Morph.prototype.createSpriteBar = function () {
 StageMorph.prototype.phyInit = StageMorph.prototype.init;
 StageMorph.prototype.init = function (globals) {
     this.phyInit(globals);
-    this.physics = new PhysicsEngine(this);
+
+    this.physicsWorld = new p2.World({
+        gravity: [0, -9.78]
+    });
+    this.physicsElapsed = 0;
+    this.physicsUpdated = Date.now();
+    this.physicsGround = null;
+};
+
+StageMorph.prototype.addPhysicsFloor = function () {
+    var shape = new p2.Box({
+            width: 2000,
+            height: 20
+        }),
+        body = new p2.Body({
+            mass: 0,
+            position: [0, -175],
+            angle: 0
+        });
+    body.addShape(shape);
+    this.physicsWorld.addBody(body);
+    this.physicsGround = new PhysicsMorph(body);
+    this.addBack(this.physicsGround);
+    this.physicsGround.updateMorphic();
 };
 
 StageMorph.prototype.updateMorphic = function () {
@@ -460,13 +429,27 @@ StageMorph.prototype.updateMorphic = function () {
 StageMorph.prototype.phyStep = StageMorph.prototype.step;
 StageMorph.prototype.step = function () {
     this.phyStep();
-    if (this.physics.engaged) {
-        this.physics.step(this);
+    if (this.physicsEngaged) {
+        var time = Date.now(), // in milliseconds
+            delta = (time - this.physicsUpdated) * 0.001;
+
+        this.physicsUpdated = time;
+        if (delta < 0.1) {
+            this.physicsWorld.step(delta);
+            this.updateMorphic();
+            this.physicsElapsed = delta;
+        } else {
+            this.physicsElapsed = 0;
+        }
     }
 };
 
-StageMorph.prototype.addPhysicsFloor = function () {
-    this.physics.enableGround();
+StageMorph.prototype.phyAdd = StageMorph.prototype.add;
+StageMorph.prototype.add = function (morph) {
+    this.phyAdd(morph);
+    if (morph instanceof SpriteMorph) {
+        morph.enablePhysics();
+    }
 };
 
 // ------- SpriteIconMorph -------

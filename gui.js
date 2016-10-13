@@ -1040,7 +1040,6 @@ IDE_Morph.prototype.createStage = function () {
             )
         );
         this.stage.add(this.currentSprite);
-        this.stage.physics.addSprite(this.currentSprite);
     }
     this.add(this.stage);
 };
@@ -1833,14 +1832,11 @@ IDE_Morph.prototype.isPaused = function () {
 };
 
 IDE_Morph.prototype.togglePhysics = function () {
-    var physics = this.stage && this.stage.physics;
-    if (physics) {
-        physics.engaged = !physics.engaged;
-    }
+    this.stage.physicsEngaged = !this.stage.physicsEngaged;
 }
 
 IDE_Morph.prototype.isPhysicsEngaged = function () {
-    return this.stage && this.stage.physics && this.stage.physics.engaged;
+    return this.stage && this.stage.physicsEngaged;
 }
 
 IDE_Morph.prototype.stopAllScripts = function () {
@@ -2025,7 +2021,6 @@ IDE_Morph.prototype.addNewSprite = function () {
     sprite.name = this.newSpriteName(sprite.name);
     sprite.setCenter(this.stage.center());
     this.stage.add(sprite);
-    this.stage.physics.addSprite(sprite);
 
     // randomize sprite properties
     sprite.setHue(rnd.call(this, 0, 100));
@@ -2060,7 +2055,6 @@ IDE_Morph.prototype.paintNewSprite = function () {
             sprite.wearCostume(cos);
         }
     );
-    this.stage.physics.addSprite(sprite);
 };
 
 IDE_Morph.prototype.duplicateSprite = function (sprite) {

@@ -850,7 +850,7 @@ Process.prototype.expectReport = function () {
 // Process Exception Handling
 
 Process.prototype.handleError = function (error, element) {
-    console.log(error, element);
+    console.log(error, error.stack, element);
     var m = element;
     this.stop();
     this.errorFlag = true;

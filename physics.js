@@ -111,6 +111,7 @@ SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;
 SpriteMorph.prototype.init = function (globals) {
     this.phyInit(globals);
 
+    this.simulationUpdated = Date.now();
     var p = SpriteMorph.prototype;
 
     p.categories.push('physics');
@@ -162,10 +163,10 @@ SpriteMorph.prototype.init = function (globals) {
         category: 'physics',
         spec: 'old Δt'
     };
-    p.blocks.updateDeltaT = {
+    p.blocks.doSimulationStep = {
         type: 'command',
         category: 'physics',
-        spec: 'simulate for %upvar %c',
+        spec: 'simulation step %upvar %cl',
         defaults: ['Δt']
     };
 }
@@ -387,6 +388,26 @@ IDE_Morph.prototype.createSpriteBar = function () {
     }
 }
 
+// ------- Process -------
+
+Process.prototype.doSimulationStep = function (upvar, script) {
+    var sprite = this.homeContext.receiver;
+    if (sprite instanceof SpriteMorph) {
+        var time = Date.now(), // in milliseconds
+            delta = (time - sprite.simulationUpdated) * 0.001;
+
+        sprite.simulationUpdated = time;
+        if (delta > 0.1) 
+            delta = 0.0;
+
+        // this.cumulative = (this.cumulative || 0) + delta;
+        // console.log("simulation", delta, this.cumulative);
+        this.context.outerContext.variables.addVar(upvar);
+        this.context.outerContext.variables.setVar(upvar, delta);
+        this.evaluate(script, new List(), true);
+    }
+}
+
 // ------- StageMorph -------
 
 StageMorph.prototype.phyInit = StageMorph.prototype.init;
@@ -394,7 +415,7 @@ StageMorph.prototype.init = function (globals) {
     this.phyInit(globals);
 
     this.physicsWorld = new p2.World({
-        gravity: [0, -9.78]
+        gravity: [0, -9.81]
     });
     this.physicsElapsed = 0;
     this.physicsUpdated = Date.now();
@@ -435,6 +456,8 @@ StageMorph.prototype.step = function () {
 
         this.physicsUpdated = time;
         if (delta < 0.1) {
+            // this.cumulative = (this.cumulative || 0) + delta;
+            // console.log("phyengine", delta, this.cumulative);
             this.physicsWorld.step(delta);
             this.updateMorphic();
             this.physicsElapsed = delta;

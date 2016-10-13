@@ -2025,6 +2025,7 @@ IDE_Morph.prototype.addNewSprite = function () {
     sprite.name = this.newSpriteName(sprite.name);
     sprite.setCenter(this.stage.center());
     this.stage.add(sprite);
+    this.stage.physics.addSprite(sprite);
 
     // randomize sprite properties
     sprite.setHue(rnd.call(this, 0, 100));
@@ -2036,7 +2037,6 @@ IDE_Morph.prototype.addNewSprite = function () {
     this.sprites.add(sprite);
     this.corral.addSprite(sprite);
     this.selectSprite(sprite);
-    this.stage.physics.addSprite(sprite);
 };
 
 IDE_Morph.prototype.paintNewSprite = function () {

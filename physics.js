@@ -1,7 +1,4 @@
-/* global p2, Point, Morph, SpriteMorph, radians, StageMorph, IDE_Morph, degrees */
-// This file defines the physics engine that is used in netsblox.
-// That is, this is the netsblox object that interfaces with the
-// stage and the matterjs physics engine
+/* This file defines the physics engine extending Snap */
 
 "use strict";
 
@@ -10,7 +7,9 @@ modules.physics = '2016-September-1';
 var PhysicsEngine;
 var PhysicsMorph;
 
-PhysicsEngine = function(stage) {
+// ------- PhysicsEngine -------
+
+PhysicsEngine = function (stage) {
     this.world = new p2.World({
         gravity: [0, -9.78]
     });
@@ -21,12 +20,12 @@ PhysicsEngine = function(stage) {
     this.lastUpdated = Date.now();
 };
 
-PhysicsEngine.prototype.addSprite = function(sprite) {
+PhysicsEngine.prototype.addSprite = function (sprite) {
     sprite.enablePhysics(this.world);
 };
 
-PhysicsEngine.prototype.step = function() {
-    var time = Date.now(),  // in milliseconds
+PhysicsEngine.prototype.step = function () {
+    var time = Date.now(), // in milliseconds
         delta = (time - this.lastUpdated) * 0.001;
 
     this.lastUpdated = time;
@@ -34,13 +33,12 @@ PhysicsEngine.prototype.step = function() {
         this.world.step(delta);
         this.stage.updateMorphic();
         this.elapsed = delta;
-    }
-    else {
+    } else {
         this.elapsed = 0;
     }
 };
 
-PhysicsEngine.prototype.enableGround = function() {
+PhysicsEngine.prototype.enableGround = function () {
     var shape = new p2.Box({
             width: 2000,
             height: 20
@@ -59,20 +57,20 @@ PhysicsEngine.prototype.enableGround = function() {
 
 // ------- PhysicsMorph -------
 
+PhysicsMorph = function (physicsBody) {
+    this.init(physicsBody);
+};
+
 PhysicsMorph.prototype = new Morph();
 PhysicsMorph.prototype.constructor = PhysicsMorph;
 PhysicsMorph.uber = Morph.prototype;
 
-function PhysicsMorph(physicsBody) {
-    this.init(physicsBody);
-};
-
-PhysicsMorph.prototype.init = function(physicsBody) {
+PhysicsMorph.prototype.init = function (physicsBody) {
     this.physicsBody = physicsBody;
     PhysicsMorph.uber.init.call(this);
 };
 
-PhysicsMorph.prototype.drawNew = function() {
+PhysicsMorph.prototype.drawNew = function () {
     var stage = this.parentThatIsA(StageMorph),
         scale = 1;
     if (stage) {
@@ -94,19 +92,19 @@ PhysicsMorph.prototype.drawNew = function() {
 
     context.fillStyle = new Color(0, 255, 0, 0.1);
     context.strokeStyle = new Color(0, 0, 0, 0.7);
-    this.physicsBody.shapes.forEach(function(shape) {
+    this.physicsBody.shapes.forEach(function (shape) {
         // console.log(shape.position, bodyAngle);
 
         var v = shape.vertices,
-            x = xOffset + bodyCos*shape.position[0] + bodySin*shape.position[1],
-            y = yOffset - bodySin*shape.position[0] + bodyCos*shape.position[1],
+            x = xOffset + bodyCos * shape.position[0] + bodySin * shape.position[1],
+            y = yOffset - bodySin * shape.position[0] + bodyCos * shape.position[1],
             s = Math.sin(bodyAngle + shape.angle),
             c = Math.cos(bodyAngle + shape.angle);
 
         context.beginPath();
-        context.moveTo(scale * (x + c*v[0][0] + s*v[0][1]), scale * (y - s*v[0][0] + c*v[0][1]));
+        context.moveTo(scale * (x + c * v[0][0] + s * v[0][1]), scale * (y - s * v[0][0] + c * v[0][1]));
         for (var i = 1; i < v.length; i++) {
-            context.lineTo(scale * (x + c*v[i][0] + s*v[i][1]), scale * (y - s*v[i][0] + c*v[i][1]));
+            context.lineTo(scale * (x + c * v[i][0] + s * v[i][1]), scale * (y - s * v[i][0] + c * v[i][1]));
         }
         context.closePath();
         context.fill();
@@ -119,7 +117,7 @@ PhysicsMorph.prototype.drawNew = function() {
     // context.stroke();
 };
 
-PhysicsMorph.prototype.updateMorphic = function() {
+PhysicsMorph.prototype.updateMorphic = function () {
     var stage = this.parentThatIsA(StageMorph);
     if (!stage) {
         return;
@@ -137,7 +135,7 @@ PhysicsMorph.prototype.updateMorphic = function() {
     this.changed();
 };
 
-PhysicsMorph.prototype.destroy = function() {
+PhysicsMorph.prototype.destroy = function () {
     var body = this.physicsBody;
     if (body && body.world) {
         body.world.removeBody(body);
@@ -161,7 +159,7 @@ PhysicsMorph.prototype.userMenu = function () {
 // ------- SpriteMorph -------
 
 SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;
-SpriteMorph.prototype.init = function(globals) {
+SpriteMorph.prototype.init = function (globals) {
     this.phyInit(globals);
 
     var p = SpriteMorph.prototype;
@@ -223,7 +221,11 @@ SpriteMorph.prototype.init = function(globals) {
     };
 }
 
-SpriteMorph.prototype.enablePhysics = function() {
+SpriteMorph.prototype.isPhysicsEnabled = function () {
+    return this.physicsBody;
+};
+
+SpriteMorph.prototype.enablePhysics = function () {
     var stage = this.parentThatIsA(StageMorph);
     if (!stage || this.physicsBody) {
         return;
@@ -240,7 +242,7 @@ SpriteMorph.prototype.enablePhysics = function() {
     body.morph = morph;
 };
 
-SpriteMorph.prototype.disablePhysics = function() {
+SpriteMorph.prototype.disablePhysics = function () {
     var body = this.physicsBody;
     if (body && body.world) {
         body.world.removeBody(body);
@@ -253,7 +255,7 @@ SpriteMorph.prototype.disablePhysics = function() {
 };
 
 // TODO: we need updateShapes
-SpriteMorph.prototype.getPhysicsContour = function() {
+SpriteMorph.prototype.getPhysicsContour = function () {
     var body = new p2.Body({
         mass: 1,
         position: [this.xPosition(), this.yPosition()],
@@ -265,17 +267,20 @@ SpriteMorph.prototype.getPhysicsContour = function() {
             width: this.costume.width(),
             height: this.costume.height()
         }));
-    }
-    else {
+    } else {
         body.addShape(new p2.Convex({
-            vertices: [[0,0],[-30,8],[-30,-8]]
+            vertices: [
+                [1, 0],
+                [-30, 8],
+                [-30, -8]
+            ]
         }));
     }
 
     return body;
 };
 
-SpriteMorph.prototype.updatePhysics = function() {
+SpriteMorph.prototype.updatePhysics = function () {
     var body = this.physicsBody;
     if (!body) {
         return;
@@ -291,7 +296,7 @@ SpriteMorph.prototype.updatePhysics = function() {
     }
 };
 
-SpriteMorph.prototype.updateMorphic = function() {
+SpriteMorph.prototype.updateMorphic = function () {
     if (this.isPickedUp() || !this.physicsBody) {
         return;
     }
@@ -304,14 +309,14 @@ SpriteMorph.prototype.updateMorphic = function() {
 };
 
 SpriteMorph.prototype.phyWearCostume = SpriteMorph.prototype.wearCostume;
-SpriteMorph.prototype.wearCostume = function(costume) {
+SpriteMorph.prototype.wearCostume = function (costume) {
     this.disablePhysics();
     this.phyWearCostume(costume);
     this.enablePhysics();
 };
 
 SpriteMorph.prototype.phyDestroy = SpriteMorph.prototype.destroy;
-SpriteMorph.prototype.destroy = function() {
+SpriteMorph.prototype.destroy = function () {
     this.disablePhysics();
     this.phyDestroy();
 };
@@ -323,68 +328,65 @@ SpriteMorph.prototype.justDropped = function () {
 };
 
 SpriteMorph.prototype.phyGotoXY = SpriteMorph.prototype.gotoXY;
-SpriteMorph.prototype.gotoXY = function(x, y, justMe) {
+SpriteMorph.prototype.gotoXY = function (x, y, justMe) {
     this.phyGotoXY(x, y, justMe);
     this.updatePhysics();
 };
 
 SpriteMorph.prototype.phySetHeading = SpriteMorph.prototype.setHeading;
-SpriteMorph.prototype.setHeading = function(degrees) {
+SpriteMorph.prototype.setHeading = function (degrees) {
     this.phySetHeading(degrees);
     this.updatePhysics();
 };
 
 SpriteMorph.prototype.phyForward = SpriteMorph.prototype.forward;
-SpriteMorph.prototype.forward = function(steps) {
+SpriteMorph.prototype.forward = function (steps) {
     this.phyForward(steps);
     this.updatePhysics();
 };
 
-SpriteMorph.prototype.mass = function() {
+SpriteMorph.prototype.mass = function () {
     return this.physicsBody.mass;
 };
 
-SpriteMorph.prototype.setMass = function(mass) {
+SpriteMorph.prototype.setMass = function (mass) {
     this.physicsBody.mass = +mass;
     this.physicsBody.updateMassProperties();
 };
 
-SpriteMorph.prototype.applyForce = function(force, direction) {
+SpriteMorph.prototype.applyForce = function (force, direction) {
     var r = radians(-direction + 90);
-    this.physicsBody.applyForce([force*Math.cos(r), force*Math.sin(r)]);
+    this.physicsBody.applyForce([force * Math.cos(r), force * Math.sin(r)]);
 };
 
-SpriteMorph.prototype.applyForceForward = function(force) {
+SpriteMorph.prototype.applyForceForward = function (force) {
     this.applyForce(force, this.direction());
 };
 
-SpriteMorph.prototype.angularForce = function(torque) {
+SpriteMorph.prototype.angularForce = function (torque) {
     this.physicsBody.angularForce -= +torque;
 };
 
-SpriteMorph.prototype.angularForceLeft = function(torque) {
+SpriteMorph.prototype.angularForceLeft = function (torque) {
     this.angularForce(-torque);
 };
 
-SpriteMorph.prototype.elapsedTime = function() {
+SpriteMorph.prototype.elapsedTime = function () {
     var stage = this.parentThatIsA(StageMorph);
     if (stage && stage.physics) {
         return stage.physics.elapsed;
-    }
-    else
+    } else
         return 0;
 };
 
 SpriteMorph.prototype.phyUserMenu = SpriteMorph.prototype.userMenu;
-SpriteMorph.prototype.userMenu = function() {
+SpriteMorph.prototype.userMenu = function () {
     var menu = this.phyUserMenu();
     menu.addItem("debug", "debug");
-    menu.addItem("enable physics", "enablePhysics");
-    menu.addItem("disable physics", "disablePhysics");
     return menu;
 };
 
-SpriteMorph.prototype.debug = function() {
+SpriteMorph.prototype.debug = function () {
     console.log('costume', this.costume);
     console.log('image', this.image);
     console.log('body.position', this.physicsBody.position);
@@ -393,20 +395,61 @@ SpriteMorph.prototype.debug = function() {
 // ------- IDE_Morph -------
 
 IDE_Morph.prototype.phyCreateStage = IDE_Morph.prototype.createStage;
-IDE_Morph.prototype.createStage = function() {
+IDE_Morph.prototype.createStage = function () {
     this.phyCreateStage();
     this.stage.physics.enableGround();
+}
+
+IDE_Morph.prototype.phyCreateSpriteBar = IDE_Morph.prototype.createSpriteBar;
+IDE_Morph.prototype.createSpriteBar = function () {
+    this.phyCreateSpriteBar();
+
+    var myself = this,
+        physics = new ToggleMorph(
+            'checkbox',
+            null,
+            function () {
+                var sprite = myself.currentSprite;
+                if (sprite.isPhysicsEnabled()) {
+                    sprite.disablePhysics();
+                } else {
+                    sprite.enablePhysics();
+                }
+            },
+            localize('enable physics'),
+            function () {
+                return myself.currentSprite instanceof SpriteMorph &&
+                    myself.currentSprite.isPhysicsEnabled();
+            }
+        );
+    physics.label.isBold = false;
+    physics.label.setColor(this.buttonLabelColor);
+    physics.color = this.tabColors[2];
+    physics.highlightColor = this.tabColors[0];
+    physics.pressColor = this.tabColors[1];
+    physics.tick.shadowOffset = MorphicPreferences.isFlat ?
+        new Point() : new Point(-1, -1);
+    physics.tick.shadowColor = new Color();
+    physics.tick.color = this.buttonLabelColor;
+    physics.tick.isBold = false;
+    physics.tick.drawNew();
+    physics.setPosition(this.spriteBar.position().add(new Point(210, 8)));
+    physics.drawNew();
+    this.spriteBar.add(physics);
+    if (this.currentSprite instanceof StageMorph) {
+        physics.hide();
+    }
 }
 
 // ------- StageMorph -------
 
 StageMorph.prototype.phyInit = StageMorph.prototype.init;
-StageMorph.prototype.init = function(globals) {
+StageMorph.prototype.init = function (globals) {
     this.phyInit(globals);
     this.physics = new PhysicsEngine(this);
 };
 
-StageMorph.prototype.updateMorphic = function() {
+StageMorph.prototype.updateMorphic = function () {
     this.children.forEach(function (morph) {
         if (morph.updateMorphic) {
             morph.updateMorphic();
@@ -415,37 +458,30 @@ StageMorph.prototype.updateMorphic = function() {
 };
 
 StageMorph.prototype.phyStep = StageMorph.prototype.step;
-StageMorph.prototype.step = function() {
+StageMorph.prototype.step = function () {
     this.phyStep();
     if (this.physics.engaged) {
         this.physics.step(this);
     }
 };
 
-StageMorph.prototype.addPhysicsFloor = function() {
+StageMorph.prototype.addPhysicsFloor = function () {
     this.physics.enableGround();
 };
 
 // ------- SpriteIconMorph -------
 
 SpriteIconMorph.prototype.phyUserMenu = SpriteIconMorph.prototype.userMenu;
-SpriteIconMorph.prototype.userMenu = function() {
+SpriteIconMorph.prototype.userMenu = function () {
     var menu = this.phyUserMenu(),
         object = this.object;
 
     if (object instanceof SpriteMorph) {
-        menu.addItem("debug", function() {
+        menu.addItem("debug", function () {
             object.debug();
         });
-        menu.addItem("enable physics", function() {
-            object.enablePhysics();
-        });
-        menu.addItem("disable physics", function() {
-            object.disablePhysics();
-        });
-    }
-    else if (object instanceof StageMorph) {
-        menu.addItem("add floor", function() {
+    } else if (object instanceof StageMorph) {
+        menu.addItem("add floor", function () {
             object.addPhysicsFloor();
         });
     }

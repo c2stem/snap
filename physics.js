@@ -172,7 +172,7 @@ SpriteMorph.prototype.init = function (globals) {
 }
 
 SpriteMorph.prototype.isPhysicsEnabled = function () {
-    return this.physicsBody;
+    return !!this.physicsBody;
 };
 
 SpriteMorph.prototype.enablePhysics = function () {

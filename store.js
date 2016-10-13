@@ -646,6 +646,10 @@ SnapSerializer.prototype.loadSprites = function (xmlString, ide) {
             model.attributes.rotation || '1'
         );
         sprite.isDraggable = model.attributes.draggable !== 'false';
+        console.log("haha", model);
+        if (model.attributes.physics !== 'true') {
+            sprite.disablePhysics();
+        }
         sprite.isVisible = model.attributes.hidden !== 'true';
         sprite.heading = parseFloat(model.attributes.heading) || 0;
         sprite.drawNew();
@@ -1239,6 +1243,10 @@ SnapSerializer.prototype.loadValue = function (model) {
             model.attributes.rotation || '1'
         );
         v.isDraggable = model.attributes.draggable !== 'false';
+        console.log("hihi", model);
+        if (model.attributes.physics !== 'true') {
+            v.disablePhysics();
+        }
         v.isVisible = model.attributes.hidden !== 'true';
         v.heading = parseFloat(model.attributes.heading) || 0;
         v.drawNew();
@@ -1557,6 +1565,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
             ' rotation="@"' +
             ' draggable="@"' +
             '%' +
+            '%' +
             ' costume="@" color="@,@,@" pen="@" ~>' +
             '%' + // inheritance info
             '%' + // nesting info
@@ -1574,6 +1583,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
         this.scale,
         this.rotationStyle,
         this.isDraggable,
+        this.isPhysicsEnabled() ? ' physics="true"' : '',
         this.isVisible ? '' : ' hidden="true"',
         this.getCostumeIdx(),
         this.color.r,

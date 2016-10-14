@@ -3248,7 +3248,7 @@ IDE_Morph.prototype.newProject = function () {
     this.createStage();
     this.add(this.stage);
     this.createCorral();
-    this.selectSprite(this.stage.children[0]);
+    this.selectSprite(this.currentSprite);
     this.fixLayout();
 };
 

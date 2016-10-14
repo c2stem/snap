@@ -167,6 +167,11 @@ SpriteMorph.prototype.initBlocks = function (globals) {
         spec: 'simulation step %upvar %cl',
         defaults: ['Δt']
     };
+    blocks.doSimulationStep2 = {
+        type: 'hat',
+        category: 'physics',
+        spec: 'simulation step'
+    };
 }
 
 SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;

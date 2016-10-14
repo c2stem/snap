@@ -1781,6 +1781,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
 
     } else if (cat === 'physics' ) {
 
+        blocks.push(block('doSimulationStep2'));
         blocks.push(block('doSimulationStep'));
         blocks.push(block('applyForceForward'));
         blocks.push(block('applyForce'));

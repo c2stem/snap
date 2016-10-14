@@ -573,6 +573,7 @@ SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
         }
     });
     this.objects = {};
+    project.stage.addPhysicsFloor();
     return project;
 };
 

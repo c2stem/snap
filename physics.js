@@ -355,6 +355,12 @@ SpriteMorph.prototype.debug = function () {
 
 // ------- IDE_Morph -------
 
+IDE_Morph.prototype.phyCreateStage = IDE_Morph.prototype.createStage;
+IDE_Morph.prototype.createStage = function () {
+    this.phyCreateStage();
+    this.stage.addPhysicsFloor();
+}
+
 IDE_Morph.prototype.phyCreateSpriteBar = IDE_Morph.prototype.createSpriteBar;
 IDE_Morph.prototype.createSpriteBar = function () {
     this.phyCreateSpriteBar();
@@ -486,7 +492,7 @@ StageMorph.prototype.add = function (morph) {
 StageMorph.prototype.phySetExtent = StageMorph.prototype.setExtent;
 StageMorph.prototype.setExtent = function (aPoint, silently) {
     this.phySetExtent(aPoint, silently);
-    this.addPhysicsFloor();
+    // this.addPhysicsFloor();
 }
 
 

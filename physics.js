@@ -107,68 +107,72 @@ PhysicsMorph.prototype.userMenu = function () {
 
 // ------- SpriteMorph -------
 
-SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;
-SpriteMorph.prototype.init = function (globals) {
-    this.phyInit(globals);
+SpriteMorph.prototype.categories.push('physics');
+SpriteMorph.prototype.blockColor.physics = new Color(100, 140, 250);
 
-    this.simulationUpdated = Date.now();
-    var p = SpriteMorph.prototype;
+SpriteMorph.prototype.phyInitBlocks = SpriteMorph.prototype.initBlocks;
+SpriteMorph.prototype.initBlocks = function (globals) {
+    this.phyInitBlocks(globals);
 
-    p.categories.push('physics');
-    p.blockColor.physics = new Color(100, 140, 250);
-
-    p.blocks.angularForce = {
+    var blocks = SpriteMorph.prototype.blocks;
+    blocks.angularForce = {
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
         spec: 'apply %clockwise torque of %n',
         defaults: [2000]
     };
-    p.blocks.angularForceLeft = {
+    blocks.angularForceLeft = {
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
         spec: 'apply %counterclockwise torque of %n',
         defaults: [2000]
     };
-    p.blocks.applyForceForward = {
+    blocks.applyForceForward = {
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
         spec: 'apply force of %n',
         defaults: [2000]
     };
-    p.blocks.applyForce = {
+    blocks.applyForce = {
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
         spec: 'apply force %n in direction %dir',
         defaults: [50]
     };
-    p.blocks.setMass = {
+    blocks.setMass = {
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
         spec: 'set mass to %n',
         defaults: [200]
     };
-    p.blocks.mass = {
+    blocks.mass = {
         only: SpriteMorph,
         type: 'reporter',
         category: 'physics',
         spec: 'mass'
     };
-    p.blocks.elapsedTime = {
+    blocks.elapsedTime = {
         type: 'reporter',
         category: 'physics',
         spec: 'old Δt'
     };
-    p.blocks.doSimulationStep = {
+    blocks.doSimulationStep = {
         type: 'command',
         category: 'physics',
         spec: 'simulation step %upvar %cl',
         defaults: ['Δt']
     };
+}
+
+SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;
+SpriteMorph.prototype.init = function (globals) {
+    this.phyInit(globals);
+    this.simulationUpdated = Date.now();
 }
 
 SpriteMorph.prototype.isPhysicsEnabled = function () {

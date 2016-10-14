@@ -177,31 +177,32 @@ SpriteMorph.prototype.isPhysicsEnabled = function () {
 
 SpriteMorph.prototype.enablePhysics = function () {
     var stage = this.parentThatIsA(StageMorph);
-    if (!stage || this.physicsBody) {
-        return;
+    if (!stage) {
+        this.physicsBody = true;
+    } else if (!this.physicsBody) {
+        this.disablePhysics();
+        var body = this.getPhysicsContour();
+        this.physicsBody = body;
+        stage.physicsWorld.addBody(body);
+
+        var morph = new PhysicsMorph(body);
+        this.parentThatIsA(StageMorph).addBack(morph);
+        morph.updateMorphic();
+
+        body.morph = morph;
     }
-
-    var body = this.getPhysicsContour();
-    this.physicsBody = body;
-    stage.physicsWorld.addBody(body);
-
-    var morph = new PhysicsMorph(body);
-    this.parentThatIsA(StageMorph).addBack(morph);
-    morph.updateMorphic();
-
-    body.morph = morph;
 };
 
 SpriteMorph.prototype.disablePhysics = function () {
     var body = this.physicsBody;
-    if (body && body.world) {
+    if (body instanceof p2.Body && body.world) {
         body.world.removeBody(body);
 
         if (body.morph) {
             body.morph.destroy();
         }
     }
-    this.physicsBody = null;
+    this.physicsBody = false;
 };
 
 // TODO: we need updateShapes
@@ -209,7 +210,8 @@ SpriteMorph.prototype.getPhysicsContour = function () {
     var body = new p2.Body({
         mass: 1,
         position: [this.xPosition(), this.yPosition()],
-        angle: radians(-this.direction() + 90)
+        angle: radians(-this.direction() + 90),
+        damping: 0
     });
 
     if (this.costume && typeof this.costume.loaded !== 'function') {
@@ -260,9 +262,12 @@ SpriteMorph.prototype.updateMorphic = function () {
 
 SpriteMorph.prototype.phyWearCostume = SpriteMorph.prototype.wearCostume;
 SpriteMorph.prototype.wearCostume = function (costume) {
+    var enabled = this.isPhysicsEnabled();
     this.disablePhysics();
     this.phyWearCostume(costume);
-    this.enablePhysics();
+    if (enabled) {
+        this.enablePhysics();
+    }
 };
 
 SpriteMorph.prototype.phyDestroy = SpriteMorph.prototype.destroy;
@@ -397,7 +402,7 @@ Process.prototype.doSimulationStep = function (upvar, script) {
             delta = (time - sprite.simulationUpdated) * 0.001;
 
         sprite.simulationUpdated = time;
-        if (delta > 0.1) 
+        if (delta > 0.1)
             delta = 0.0;
 
         // this.cumulative = (this.cumulative || 0) + delta;
@@ -470,7 +475,7 @@ StageMorph.prototype.step = function () {
 StageMorph.prototype.phyAdd = StageMorph.prototype.add;
 StageMorph.prototype.add = function (morph) {
     this.phyAdd(morph);
-    if (morph instanceof SpriteMorph) {
+    if (morph instanceof SpriteMorph && morph.isPhysicsEnabled()) {
         morph.enablePhysics();
     }
 };

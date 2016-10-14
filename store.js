@@ -646,9 +646,8 @@ SnapSerializer.prototype.loadSprites = function (xmlString, ide) {
             model.attributes.rotation || '1'
         );
         sprite.isDraggable = model.attributes.draggable !== 'false';
-        console.log("haha", model);
-        if (model.attributes.physics !== 'true') {
-            sprite.disablePhysics();
+        if (model.attributes.physics === 'true') {
+            sprite.enablePhysics();
         }
         sprite.isVisible = model.attributes.hidden !== 'true';
         sprite.heading = parseFloat(model.attributes.heading) || 0;
@@ -1243,9 +1242,8 @@ SnapSerializer.prototype.loadValue = function (model) {
             model.attributes.rotation || '1'
         );
         v.isDraggable = model.attributes.draggable !== 'false';
-        console.log("hihi", model);
-        if (model.attributes.physics !== 'true') {
-            v.disablePhysics();
+        if (model.attributes.physics === 'true') {
+            v.enablePhysics();
         }
         v.isVisible = model.attributes.hidden !== 'true';
         v.heading = parseFloat(model.attributes.heading) || 0;

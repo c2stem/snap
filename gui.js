@@ -5055,7 +5055,6 @@ IDE_Morph.prototype.getURL = function (url) {
     var request = new XMLHttpRequest(),
         myself = this;
     try {
-        console.log("url", url);
         request.open('GET', url, false);
         request.send();
         if (request.status === 200) {

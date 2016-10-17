@@ -401,6 +401,12 @@ IDE_Morph.prototype.createSpriteBar = function () {
     }
 }
 
+SpriteMorph.prototype.allHatBlocksForSimulation = function () {
+    return this.scripts.children.filter(function (morph) {
+        return morph.selector === 'doSimulationStep2';
+    });
+}
+
 // ------- Process -------
 
 Process.prototype.doSimulationStep = function (upvar, script) {
@@ -467,15 +473,32 @@ StageMorph.prototype.step = function () {
         var time = Date.now(), // in milliseconds
             delta = (time - this.physicsUpdated) * 0.001;
 
-        this.physicsUpdated = time;
-        if (delta < 0.1) {
-            // this.cumulative = (this.cumulative || 0) + delta;
-            // console.log("phyengine", delta, this.cumulative);
-            this.physicsWorld.step(delta);
-            this.updateMorphic();
-            this.physicsElapsed = delta;
+        if (delta < 0.5) {
+            var active = false,
+                hats = this.allHatBlocksForSimulation();
+
+            this.children.forEach(function (morph) {
+                if (morph.allHatBlocksForSimulation)
+                    hats = hats.concat(morph.allHatBlocksForSimulation());
+            });
+
+            for (var i = 0; !active && i < hats.length; i++) {
+                active = this.threads.findProcess(hats[i]);
+            }
+
+            if (!active) {
+                this.physicsWorld.step(delta);
+                this.updateMorphic();
+                this.physicsElapsed = delta;
+                this.physicsUpdated = time;
+
+                for (var i = 0; i < hats.length; i++) {
+                    this.threads.startProcess(hats[i], this.isThreadSafe);
+                }
+            }
         } else {
             this.physicsElapsed = 0;
+            this.physicsUpdated = time;
         }
     }
 };
@@ -494,6 +517,7 @@ StageMorph.prototype.setExtent = function (aPoint, silently) {
     // this.addPhysicsFloor();
 }
 
+StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlocksForSimulation;
 
 // ------- SpriteIconMorph -------
 

@@ -110,10 +110,7 @@ PhysicsMorph.prototype.userMenu = function () {
 SpriteMorph.prototype.categories.push('physics');
 SpriteMorph.prototype.blockColor.physics = new Color(100, 140, 250);
 
-SpriteMorph.prototype.phyInitBlocks = SpriteMorph.prototype.initBlocks;
-SpriteMorph.prototype.initBlocks = function (globals) {
-    this.phyInitBlocks(globals);
-
+SpriteMorph.prototype.initPhysicsBlocks = function () {
     var blocks = SpriteMorph.prototype.blocks;
     blocks.angularForce = {
         only: SpriteMorph,
@@ -167,12 +164,14 @@ SpriteMorph.prototype.initBlocks = function (globals) {
         spec: 'simulation step %upvar %cl',
         defaults: ['Δt']
     };
-//    blocks.doSimulationStep2 = {
-//        type: 'hat',
-//        category: 'physics',
-//        spec: 'simulation step'
-//    };
+    blocks.doSimulationStep2 = {
+        type: 'hat',
+        category: 'physics',
+        spec: 'simulation step'
+    };
 }
+
+SpriteMorph.prototype.initPhysicsBlocks();
 
 SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;
 SpriteMorph.prototype.init = function (globals) {

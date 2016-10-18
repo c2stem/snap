@@ -640,6 +640,7 @@ SnapSerializer.prototype.loadSprites = function (xmlString, ide) {
         if (model.attributes.pen) {
             sprite.penPoint = model.attributes.pen;
         }
+        sprite.isPhysicsEnabled = model.attributes.physics === 'true';
         project.stage.add(sprite);
         ide.sprites.add(sprite);
         sprite.scale = parseFloat(model.attributes.scale || '1');
@@ -647,9 +648,6 @@ SnapSerializer.prototype.loadSprites = function (xmlString, ide) {
             model.attributes.rotation || '1'
         );
         sprite.isDraggable = model.attributes.draggable !== 'false';
-        if (model.attributes.physics === 'true') {
-            sprite.enablePhysics();
-        }
         sprite.isVisible = model.attributes.hidden !== 'true';
         sprite.heading = parseFloat(model.attributes.heading) || 0;
         sprite.drawNew();
@@ -1237,15 +1235,13 @@ SnapSerializer.prototype.loadValue = function (model) {
         if (model.attributes.pen) {
             v.penPoint = model.attributes.pen;
         }
+        v.isPhysicsEnabled = model.attributes.physics === 'true';
         myself.project.stage.add(v);
         v.scale = parseFloat(model.attributes.scale || '1');
         v.rotationStyle = parseFloat(
             model.attributes.rotation || '1'
         );
         v.isDraggable = model.attributes.draggable !== 'false';
-        if (model.attributes.physics === 'true') {
-            v.enablePhysics();
-        }
         v.isVisible = model.attributes.hidden !== 'true';
         v.heading = parseFloat(model.attributes.heading) || 0;
         v.drawNew();

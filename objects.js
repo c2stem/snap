@@ -1782,13 +1782,14 @@ SpriteMorph.prototype.blockTemplates = function (category) {
     } else if (cat === 'physics' ) {
 
         blocks.push(block('doSimulationStep'));
-        blocks.push(watcherToggle('elapsedTime'));
-        blocks.push(block('elapsedTime'));
+        blocks.push(watcherToggle('deltaTime'));
+        blocks.push(block('deltaTime'));
         blocks.push('-');
         blocks.push(block('setMass'));
         blocks.push(watcherToggle('mass'));
         blocks.push(block('mass'));
         blocks.push('-');
+        blocks.push(block('setVelocity'));
         blocks.push(block('setXVelocity'));
         blocks.push(block('setYVelocity'));
         blocks.push(watcherToggle('xVelocity'));

@@ -145,6 +145,19 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
         spec: 'set mass to %n',
         defaults: [200]
     };
+    blocks.mass = {
+        only: SpriteMorph,
+        type: 'reporter',
+        category: 'physics',
+        spec: 'mass'
+    };
+    blocks.setVelocity = {
+        only: SpriteMorph,
+        type: 'command',
+        category: 'physics',
+        spec: 'set velocity to x: %n y: %n',
+        defaults: [0, 0]
+    };
     blocks.setXVelocity = {
         only: SpriteMorph,
         type: 'command',
@@ -159,12 +172,6 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
         spec: 'set y velocity to %n',
         defaults: [0]
     };
-    blocks.mass = {
-        only: SpriteMorph,
-        type: 'reporter',
-        category: 'physics',
-        spec: 'mass'
-    };
     blocks.xVelocity = {
         only: SpriteMorph,
         type: 'reporter',
@@ -177,7 +184,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
         category: 'physics',
         spec: 'y velocity'
     };
-    blocks.elapsedTime = {
+    blocks.deltaTime = {
         type: 'reporter',
         category: 'physics',
         spec: '\u2206t'
@@ -190,6 +197,97 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
 }
 
 SpriteMorph.prototype.initPhysicsBlocks();
+
+SpriteMorph.prototype.deltaTime = function () {
+    var stage = this.parentThatIsA(StageMorph);
+    return (stage && stage.physicsElapsed) || 0;
+};
+
+SpriteMorph.prototype.setMass = function (m) {
+    if (this.physicsBody) {
+        if (+m > 0) {
+            this.physicsBody.style = p2.Body.DYNAMIC;
+            this.physicsBody.mass = +m;
+            this.physicsBody.updateMassProperties();
+        } else {
+            this.physicsBody.style = p2.Body.STATIC;
+            this.physicsBody.mass = 0;
+        }
+    } else {
+        this.physicsMass = +m;
+    }
+};
+
+SpriteMorph.prototype.mass = function () {
+    if (this.physicsBody) {
+        return this.physicsBody.mass;
+    } else {
+        return this.physicsMass || 0;
+    }
+};
+
+SpriteMorph.prototype.setVelocity = function (vx, vy) {
+    if (this.physicsBody) {
+        this.physicsBody.velocity[0] = +vx;
+        this.physicsBody.velocity[1] = +vy;
+    } else {
+        this.physicsXVelocity = +vx;
+        this.physicsYVelocity = +vx;
+    }
+};
+
+SpriteMorph.prototype.setXVelocity = function (v) {
+    if (this.physicsBody) {
+        this.physicsBody.velocity[0] = +v;
+    } else {
+        this.physicsXVelocity = +v;
+    }
+};
+
+SpriteMorph.prototype.setYVelocity = function (v) {
+    if (this.physicsBody) {
+        this.physicsBody.velocity[1] = +v;
+    } else {
+        this.physicsYVelocity = +v;
+    }
+};
+
+SpriteMorph.prototype.xVelocity = function () {
+    if (this.physicsBody) {
+        return this.physicsBody.velocity[0];
+    } else {
+        return this.physicsXVelocity || 0;
+    }
+};
+
+SpriteMorph.prototype.yVelocity = function () {
+    if (this.physicsBody) {
+        return this.physicsBody.velocity[1];
+    } else {
+        return this.physicsYVelocity || 0;
+    }
+};
+
+SpriteMorph.prototype.applyForce = function (force, direction) {
+    if (this.physicsBody) {
+        var r = radians(-direction + 90);
+        this.physicsBody.applyForce([force * Math.cos(r), force * Math.sin(r)]);
+    }
+};
+
+SpriteMorph.prototype.applyForceForward = function (force) {
+    this.applyForce(force, this.direction());
+};
+
+SpriteMorph.prototype.angularForce = function (torque) {
+    if (this.physicsBody) {
+        this.physicsBody.angularForce -= +torque;
+    }
+};
+
+SpriteMorph.prototype.angularForceLeft = function (torque) {
+    this.angularForce(-torque);
+};
 
 SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;
 SpriteMorph.prototype.init = function (globals) {
@@ -205,8 +303,9 @@ SpriteMorph.prototype.fullCopy = function (forClone) {
     return s;
 }
 
-SpriteMorph.prototype.updateBody = function () {
+SpriteMorph.prototype.updatePhysicsBody = function () {
     var body = this.physicsBody;
+    // console.log("body", this.isPhysicsEnabled, !!this.physicsBody, !!this.parentThatIsA(StageMorph));
 
     if (this.isPhysicsEnabled) {
         var stage = this.parentThatIsA(StageMorph);
@@ -289,19 +388,22 @@ SpriteMorph.prototype.updateMorphicPosition = function () {
 
 SpriteMorph.prototype.phyWearCostume = SpriteMorph.prototype.wearCostume;
 SpriteMorph.prototype.wearCostume = function (costume) {
+    var loading = costume && typeof costume.loaded === 'function';
+    // console.log("wearcostume", !!costume, loading, this.isPhysicsEnabled, !!this.physicsBody);
+
     this.phyWearCostume(costume);
-    if (this.isPhysicsEnabled) {
+    if (!loading && this.isPhysicsEnabled) {
         this.isPhysicsEnabled = false;
-        this.updateBody();
+        this.updatePhysicsBody();
         this.isPhysicsEnabled = true;
-        this.updateBody();
+        this.updatePhysicsBody();
     }
 };
 
 SpriteMorph.prototype.phyDestroy = SpriteMorph.prototype.destroy;
 SpriteMorph.prototype.destroy = function () {
     this.isPhysicsEnabled = false;
-    this.updateBody();
+    this.updatePhysicsBody();
     this.phyDestroy();
 };
 
@@ -333,73 +435,6 @@ SpriteMorph.prototype.phyForward = SpriteMorph.prototype.forward;
 SpriteMorph.prototype.forward = function (steps) {
     this.phyForward(steps);
     this.updatePhysicsPosition();
-};
-
-SpriteMorph.prototype.mass = function () {
-    if (typeof this.physicsBody === 'object') {
-        return this.physicsBody.mass;
-    }
-};
-
-SpriteMorph.prototype.setMass = function (mass) {
-    if (typeof this.physicsBody === 'object' && +mass > 0) {
-        this.physicsBody.mass = +mass;
-        this.physicsBody.updateMassProperties();
-    }
-};
-
-SpriteMorph.prototype.setXVelocity = function (v) {
-    if (typeof this.physicsBody === 'object') {
-        this.physicsBody.velocity[0] = +v;
-    }
-};
-
-SpriteMorph.prototype.setYVelocity = function (v) {
-    if (typeof this.physicsBody === 'object') {
-        this.physicsBody.velocity[1] = +v;
-    }
-};
-
-SpriteMorph.prototype.xVelocity = function () {
-    if (typeof this.physicsBody === 'object') {
-        return this.physicsBody.velocity[0];
-    } else {
-        return 0;
-    }
-};
-
-SpriteMorph.prototype.yVelocity = function () {
-    if (typeof this.physicsBody === 'object') {
-        return this.physicsBody.velocity[1];
-    } else {
-        return 0;
-    }
-};
-
-SpriteMorph.prototype.applyForce = function (force, direction) {
-    if (typeof this.physicsBody === 'object') {
-        var r = radians(-direction + 90);
-        this.physicsBody.applyForce([force * Math.cos(r), force * Math.sin(r)]);
-    }
-};
-
-SpriteMorph.prototype.applyForceForward = function (force) {
-    this.applyForce(force, this.direction());
-};
-
-SpriteMorph.prototype.angularForce = function (torque) {
-    if (typeof this.physicsBody === 'object') {
-        this.physicsBody.angularForce -= +torque;
-    }
-};
-
-SpriteMorph.prototype.angularForceLeft = function (torque) {
-    this.angularForce(-torque);
-};
-
-SpriteMorph.prototype.elapsedTime = function () {
-    var stage = this.parentThatIsA(StageMorph);
-    return (stage && stage.physicsElapsed) || 0;
 };
 
 SpriteMorph.prototype.phyUserMenu = SpriteMorph.prototype.userMenu;
@@ -434,7 +469,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
             function () {
                 var sprite = myself.currentSprite;
                 sprite.isPhysicsEnabled = !sprite.isPhysicsEnabled;
-                sprite.updateBody();
+                sprite.updatePhysicsBody();
             },
             localize('enable physics'),
             function () {
@@ -544,9 +579,10 @@ StageMorph.prototype.step = function () {
 
 StageMorph.prototype.phyAdd = StageMorph.prototype.add;
 StageMorph.prototype.add = function (morph) {
+    // console.log("add", morph.isPhysicsEnabled, !!morph.physicsBody);
     this.phyAdd(morph);
-    if (morph.updateBody) {
-        morph.updateBody();
+    if (morph.updatePhysicsBody) {
+        morph.updatePhysicsBody();
     }
 };
 

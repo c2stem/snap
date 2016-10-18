@@ -1582,7 +1582,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
         this.scale,
         this.rotationStyle,
         this.isDraggable,
-        this.isPhysicsEnabled() ? ' physics="true"' : '',
+        this.isPhysicsEnabled ? ' physics="true"' : '',
         this.isVisible ? '' : ' hidden="true"',
         this.getCostumeIdx(),
         this.color.r,

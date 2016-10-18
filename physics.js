@@ -66,7 +66,7 @@ PhysicsMorph.prototype.drawNew = function () {
     // context.stroke();
 };
 
-PhysicsMorph.prototype.updateMorphic = function () {
+PhysicsMorph.prototype.updateMorphicPosition = function () {
     var stage = this.parentThatIsA(StageMorph);
     if (!stage) {
         return;
@@ -75,8 +75,6 @@ PhysicsMorph.prototype.updateMorphic = function () {
     var aabb = this.physicsBody.getAABB(),
         center = stage.center(),
         scale = stage.scale;
-
-    // console.log('PhysicsMorph.updateMorphic', aabb.lowerBound, aabb.upperBound, this.body.position);
 
     this.setPosition(new Point(center.x + aabb.lowerBound[0] * scale,
         center.y - aabb.upperBound[1] * scale));
@@ -99,7 +97,7 @@ PhysicsMorph.prototype.userMenu = function () {
 
     menu.addItem("delete", 'destroy');
     menu.addItem("redraw", 'drawNew');
-    menu.addItem("update morphic", "updateMorphic");
+    menu.addItem("update morphic", "updateMorphicPosition");
     menu.addItem("update physics", "updatePhisics");
 
     return menu;
@@ -196,42 +194,43 @@ SpriteMorph.prototype.initPhysicsBlocks();
 SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;
 SpriteMorph.prototype.init = function (globals) {
     this.phyInit(globals);
-    this.simulationUpdated = Date.now();
+    this.isPhysicsEnabled = true;
+    this.physicsBody = null;
 }
 
-SpriteMorph.prototype.isPhysicsEnabled = function () {
-    return !!this.physicsBody;
-};
+SpriteMorph.prototype.phyFullCopy = SpriteMorph.prototype.fullCopy;
+SpriteMorph.prototype.fullCopy = function (forClone) {
+    var s = this.phyFullCopy();
+    s.physicsBody = null;
+    return s;
+}
 
-SpriteMorph.prototype.enablePhysics = function () {
-    var stage = this.parentThatIsA(StageMorph);
-    if (!stage) {
-        this.physicsBody = true;
-    } else if (!this.physicsBody) {
-        this.disablePhysics();
-        var body = this.getPhysicsContour();
-        this.physicsBody = body;
-        stage.physicsWorld.addBody(body);
-
-        var morph = new PhysicsMorph(body);
-        this.parentThatIsA(StageMorph).addBack(morph);
-        morph.updateMorphic();
-
-        body.morph = morph;
-    }
-};
-
-SpriteMorph.prototype.disablePhysics = function () {
+SpriteMorph.prototype.updateBody = function () {
     var body = this.physicsBody;
-    if (body instanceof p2.Body && body.world) {
-        body.world.removeBody(body);
 
-        if (body.morph) {
-            body.morph.destroy();
+    if (this.isPhysicsEnabled) {
+        var stage = this.parentThatIsA(StageMorph);
+        if (stage && !body) {
+            body = this.getPhysicsContour();
+            stage.physicsWorld.addBody(body);
+            this.physicsBody = body;
+
+            var morph = new PhysicsMorph(body);
+            stage.addBack(morph);
+            morph.updateMorphicPosition();
+            body.morph = morph;
         }
+    } else if (body) {
+        if (body.world) {
+            body.world.removeBody(body);
+
+            if (body.morph) {
+                body.morph.destroy();
+            }
+        }
+        this.physicsBody = null;
     }
-    this.physicsBody = false;
-};
+}
 
 // TODO: we need updateShapes
 SpriteMorph.prototype.getPhysicsContour = function () {
@@ -260,7 +259,7 @@ SpriteMorph.prototype.getPhysicsContour = function () {
     return body;
 };
 
-SpriteMorph.prototype.updatePhysics = function () {
+SpriteMorph.prototype.updatePhysicsPosition = function () {
     var body = this.physicsBody;
     if (!body) {
         return;
@@ -272,11 +271,11 @@ SpriteMorph.prototype.updatePhysics = function () {
     body.angle = radians(-this.direction() + 90);
 
     if (body.morph) {
-        body.morph.updateMorphic();
+        body.morph.updateMorphicPosition();
     }
 };
 
-SpriteMorph.prototype.updateMorphic = function () {
+SpriteMorph.prototype.updateMorphicPosition = function () {
     if (this.isPickedUp() || !this.physicsBody) {
         return;
     }
@@ -290,42 +289,50 @@ SpriteMorph.prototype.updateMorphic = function () {
 
 SpriteMorph.prototype.phyWearCostume = SpriteMorph.prototype.wearCostume;
 SpriteMorph.prototype.wearCostume = function (costume) {
-    var enabled = this.isPhysicsEnabled();
-    this.disablePhysics();
     this.phyWearCostume(costume);
-    if (enabled) {
-        this.enablePhysics();
+    if (this.isPhysicsEnabled) {
+        this.isPhysicsEnabled = false;
+        this.updateBody();
+        this.isPhysicsEnabled = true;
+        this.updateBody();
     }
 };
 
 SpriteMorph.prototype.phyDestroy = SpriteMorph.prototype.destroy;
 SpriteMorph.prototype.destroy = function () {
-    this.disablePhysics();
+    this.isPhysicsEnabled = false;
+    this.updateBody();
     this.phyDestroy();
 };
 
 SpriteMorph.prototype.phyJustDropped = SpriteMorph.prototype.justDropped;
 SpriteMorph.prototype.justDropped = function () {
     this.phyJustDropped();
-    this.updatePhysics();
+    this.updatePhysicsPosition();
 };
 
 SpriteMorph.prototype.phyGotoXY = SpriteMorph.prototype.gotoXY;
 SpriteMorph.prototype.gotoXY = function (x, y, justMe) {
     this.phyGotoXY(x, y, justMe);
-    this.updatePhysics();
+    this.updatePhysicsPosition();
+};
+
+SpriteMorph.prototype.phyKeepWithin = SpriteMorph.prototype.keepWithin;
+SpriteMorph.prototype.keepWithin = function (morph) {
+    this.phyKeepWithin(morph);
+    this.updatePhysicsPosition();
 };
 
 SpriteMorph.prototype.phySetHeading = SpriteMorph.prototype.setHeading;
 SpriteMorph.prototype.setHeading = function (degrees) {
     this.phySetHeading(degrees);
-    this.updatePhysics();
+    this.updatePhysicsPosition();
 };
 
 SpriteMorph.prototype.phyForward = SpriteMorph.prototype.forward;
 SpriteMorph.prototype.forward = function (steps) {
     this.phyForward(steps);
-    this.updatePhysics();
+    this.updatePhysicsPosition();
 };
 
 SpriteMorph.prototype.mass = function () {
@@ -426,16 +433,12 @@ IDE_Morph.prototype.createSpriteBar = function () {
             null,
             function () {
                 var sprite = myself.currentSprite;
-                if (sprite.isPhysicsEnabled()) {
-                    sprite.disablePhysics();
-                } else {
-                    sprite.enablePhysics();
-                }
+                sprite.isPhysicsEnabled = !sprite.isPhysicsEnabled;
+                sprite.updateBody();
             },
             localize('enable physics'),
             function () {
-                return myself.currentSprite instanceof SpriteMorph &&
-                    myself.currentSprite.isPhysicsEnabled();
+                return myself.currentSprite.isPhysicsEnabled;
             }
         );
     physics.label.isBold = false;
@@ -491,13 +494,13 @@ StageMorph.prototype.addPhysicsFloor = function () {
     this.physicsWorld.addBody(body);
     this.physicsGround = new PhysicsMorph(body);
     this.addBack(this.physicsGround);
-    this.physicsGround.updateMorphic();
+    this.physicsGround.updateMorphicPosition();
 };
 
-StageMorph.prototype.updateMorphic = function () {
+StageMorph.prototype.updateMorphicPosition = function () {
     this.children.forEach(function (morph) {
-        if (morph.updateMorphic) {
-            morph.updateMorphic();
+        if (morph.updateMorphicPosition) {
+            morph.updateMorphicPosition();
         }
     });
 };
@@ -524,7 +527,7 @@ StageMorph.prototype.step = function () {
 
             if (!active) {
                 this.physicsWorld.step(delta);
-                this.updateMorphic();
+                this.updateMorphicPosition();
                 this.physicsElapsed = delta;
                 this.physicsUpdated = time;
 
@@ -542,8 +545,8 @@ StageMorph.prototype.step = function () {
 StageMorph.prototype.phyAdd = StageMorph.prototype.add;
 StageMorph.prototype.add = function (morph) {
     this.phyAdd(morph);
-    if (morph instanceof SpriteMorph && morph.isPhysicsEnabled()) {
-        morph.enablePhysics();
+    if (morph.updateBody) {
+        morph.updateBody();
     }
 };
 

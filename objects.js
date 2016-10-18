@@ -1781,18 +1781,25 @@ SpriteMorph.prototype.blockTemplates = function (category) {
 
     } else if (cat === 'physics' ) {
 
-        blocks.push(block('doSimulationStep2'));
         blocks.push(block('doSimulationStep'));
+        blocks.push(watcherToggle('elapsedTime'));
+        blocks.push(block('elapsedTime'));
+        blocks.push('-');
+        blocks.push(block('setMass'));
+        blocks.push(watcherToggle('mass'));
+        blocks.push(block('mass'));
+        blocks.push('-');
+        blocks.push(block('setXVelocity'));
+        blocks.push(block('setYVelocity'));
+        blocks.push(watcherToggle('xVelocity'));
+        blocks.push(block('xVelocity'));
+        blocks.push(watcherToggle('yVelocity'));
+        blocks.push(block('yVelocity'));
+        blocks.push('-');
         blocks.push(block('applyForceForward'));
         blocks.push(block('applyForce'));
         blocks.push(block('angularForce'));
         blocks.push(block('angularForceLeft'));
-        blocks.push(block('setMass'));
-        blocks.push('-');
-        blocks.push(watcherToggle('mass'));
-        blocks.push(block('mass'));
-        blocks.push(watcherToggle('elapsedTime'));
-        blocks.push(block('elapsedTime'));
 
     } else if (cat === 'looks') {
 

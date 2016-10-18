@@ -147,24 +147,44 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
         spec: 'set mass to %n',
         defaults: [200]
     };
+    blocks.setXVelocity = {
+        only: SpriteMorph,
+        type: 'command',
+        category: 'physics',
+        spec: 'set x velocity to %n',
+        defaults: [0]
+    };
+    blocks.setYVelocity = {
+        only: SpriteMorph,
+        type: 'command',
+        category: 'physics',
+        spec: 'set y velocity to %n',
+        defaults: [0]
+    };
     blocks.mass = {
         only: SpriteMorph,
         type: 'reporter',
         category: 'physics',
         spec: 'mass'
     };
+    blocks.xVelocity = {
+        only: SpriteMorph,
+        type: 'reporter',
+        category: 'physics',
+        spec: 'x velocity'
+    };
+    blocks.yVelocity = {
+        only: SpriteMorph,
+        type: 'reporter',
+        category: 'physics',
+        spec: 'y velocity'
+    };
     blocks.elapsedTime = {
         type: 'reporter',
         category: 'physics',
-        spec: 'old Δt'
+        spec: '\u2206t'
     };
     blocks.doSimulationStep = {
-        type: 'command',
-        category: 'physics',
-        spec: 'simulation step %upvar %cl',
-        defaults: ['Δt']
-    };
-    blocks.doSimulationStep2 = {
         type: 'hat',
         category: 'physics',
         spec: 'simulation step'
@@ -309,17 +329,51 @@ SpriteMorph.prototype.forward = function (steps) {
 };
 
 SpriteMorph.prototype.mass = function () {
-    return this.physicsBody.mass;
+    if (typeof this.physicsBody === 'object') {
+        return this.physicsBody.mass;
+    }
 };
 
 SpriteMorph.prototype.setMass = function (mass) {
-    this.physicsBody.mass = +mass;
-    this.physicsBody.updateMassProperties();
+    if (typeof this.physicsBody === 'object' && +mass > 0) {
+        this.physicsBody.mass = +mass;
+        this.physicsBody.updateMassProperties();
+    }
+};
+
+SpriteMorph.prototype.setXVelocity = function (v) {
+    if (typeof this.physicsBody === 'object') {
+        this.physicsBody.velocity[0] = +v;
+    }
+};
+
+SpriteMorph.prototype.setYVelocity = function (v) {
+    if (typeof this.physicsBody === 'object') {
+        this.physicsBody.velocity[1] = +v;
+    }
+};
+
+SpriteMorph.prototype.xVelocity = function () {
+    if (typeof this.physicsBody === 'object') {
+        return this.physicsBody.velocity[0];
+    } else {
+        return 0;
+    }
+};
+
+SpriteMorph.prototype.yVelocity = function () {
+    if (typeof this.physicsBody === 'object') {
+        return this.physicsBody.velocity[1];
+    } else {
+        return 0;
+    }
 };
 
 SpriteMorph.prototype.applyForce = function (force, direction) {
-    var r = radians(-direction + 90);
-    this.physicsBody.applyForce([force * Math.cos(r), force * Math.sin(r)]);
+    if (typeof this.physicsBody === 'object') {
+        var r = radians(-direction + 90);
+        this.physicsBody.applyForce([force * Math.cos(r), force * Math.sin(r)]);
+    }
 };
 
 SpriteMorph.prototype.applyForceForward = function (force) {
@@ -327,7 +381,9 @@ SpriteMorph.prototype.applyForceForward = function (force) {
 };
 
 SpriteMorph.prototype.angularForce = function (torque) {
-    this.physicsBody.angularForce -= +torque;
+    if (typeof this.physicsBody === 'object') {
+        this.physicsBody.angularForce -= +torque;
+    }
 };
 
 SpriteMorph.prototype.angularForceLeft = function (torque) {
@@ -349,7 +405,7 @@ SpriteMorph.prototype.userMenu = function () {
 SpriteMorph.prototype.debug = function () {
     console.log('costume', this.costume);
     console.log('image', this.image);
-    console.log('body.position', this.physicsBody.position);
+    console.log('body', this.physicsBody);
 };
 
 // ------- IDE_Morph -------
@@ -403,28 +459,8 @@ IDE_Morph.prototype.createSpriteBar = function () {
 
 SpriteMorph.prototype.allHatBlocksForSimulation = function () {
     return this.scripts.children.filter(function (morph) {
-        return morph.selector === 'doSimulationStep2';
+        return morph.selector === 'doSimulationStep';
     });
-}
-
-// ------- Process -------
-
-Process.prototype.doSimulationStep = function (upvar, script) {
-    var sprite = this.homeContext.receiver;
-    if (sprite instanceof SpriteMorph) {
-        var time = Date.now(), // in milliseconds
-            delta = (time - sprite.simulationUpdated) * 0.001;
-
-        sprite.simulationUpdated = time;
-        if (delta > 0.1)
-            delta = 0.0;
-
-        // this.cumulative = (this.cumulative || 0) + delta;
-        // console.log("simulation", delta, this.cumulative);
-        this.context.outerContext.variables.addVar(upvar);
-        this.context.outerContext.variables.setVar(upvar, delta);
-        this.evaluate(script, new List(), true);
-    }
 }
 
 // ------- StageMorph -------

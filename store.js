@@ -641,6 +641,7 @@ SnapSerializer.prototype.loadSprites = function (xmlString, ide) {
             sprite.penPoint = model.attributes.pen;
         }
         sprite.isPhysicsEnabled = model.attributes.physics === 'true';
+        sprite.physicsMass = model.attributes.mass || 0;
         project.stage.add(sprite);
         ide.sprites.add(sprite);
         sprite.scale = parseFloat(model.attributes.scale || '1');
@@ -1236,6 +1237,7 @@ SnapSerializer.prototype.loadValue = function (model) {
             v.penPoint = model.attributes.pen;
         }
         v.isPhysicsEnabled = model.attributes.physics === 'true';
+        v.physicsMass = model.attributes.mass || 0;
         myself.project.stage.add(v);
         v.scale = parseFloat(model.attributes.scale || '1');
         v.rotationStyle = parseFloat(
@@ -1560,6 +1562,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
             ' rotation="@"' +
             ' draggable="@"' +
             '%' +
+            ' mass="@"' +
             '%' +
             ' costume="@" color="@,@,@" pen="@" ~>' +
             '%' + // inheritance info
@@ -1579,6 +1582,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
         this.rotationStyle,
         this.isDraggable,
         this.isPhysicsEnabled ? ' physics="true"' : '',
+        this.physicsMass || 0,
         this.isVisible ? '' : ' hidden="true"',
         this.getCostumeIdx(),
         this.color.r,

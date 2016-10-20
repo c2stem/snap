@@ -204,26 +204,22 @@ SpriteMorph.prototype.deltaTime = function () {
 };
 
 SpriteMorph.prototype.setMass = function (m) {
+    this.physicsMass = +m;
     if (this.physicsBody) {
-        if (+m > 0) {
-            this.physicsBody.style = p2.Body.DYNAMIC;
-            this.physicsBody.mass = +m;
-            this.physicsBody.updateMassProperties();
+        if (this.physicsMass > 0) {
+            this.physicsBody.type = p2.Body.DYNAMIC;
+            this.physicsBody.mass = this.physicsMass;
         } else {
-            this.physicsBody.style = p2.Body.STATIC;
-            this.physicsBody.mass = 0;
+            this.physicsBody.type = p2.Body.STATIC;
+            this.physicsBody.velocity[0] = 0;
+            this.physicsBody.velocity[1] = 0;
         }
-    } else {
-        this.physicsMass = +m;
+        this.physicsBody.updateMassProperties();
     }
 };
 
 SpriteMorph.prototype.mass = function () {
-    if (this.physicsBody) {
-        return this.physicsBody.mass;
-    } else {
-        return this.physicsMass || 0;
-    }
+    return this.physicsMass || 0;
 };
 
 SpriteMorph.prototype.setVelocity = function (vx, vy) {
@@ -294,6 +290,7 @@ SpriteMorph.prototype.init = function (globals) {
     this.phyInit(globals);
     this.isPhysicsEnabled = true;
     this.physicsBody = null;
+    this.physicsMass = 100;
 }
 
 SpriteMorph.prototype.phyFullCopy = SpriteMorph.prototype.fullCopy;
@@ -311,13 +308,15 @@ SpriteMorph.prototype.updatePhysicsBody = function () {
         var stage = this.parentThatIsA(StageMorph);
         if (stage && !body) {
             body = this.getPhysicsContour();
-            stage.physicsWorld.addBody(body);
-            this.physicsBody = body;
+            if (body) {
+                stage.physicsWorld.addBody(body);
+                this.physicsBody = body;
 
-            var morph = new PhysicsMorph(body);
-            stage.addBack(morph);
-            morph.updateMorphicPosition();
-            body.morph = morph;
+                var morph = new PhysicsMorph(body);
+                stage.addBack(morph);
+                morph.updateMorphicPosition();
+                body.morph = morph;
+            }
         }
     } else if (body) {
         if (body.world) {
@@ -333,14 +332,19 @@ SpriteMorph.prototype.updatePhysicsBody = function () {
 
 // TODO: we need updateShapes
 SpriteMorph.prototype.getPhysicsContour = function () {
+    if (this.costume && typeof this.costume.loaded === 'function') {
+        return null;
+    }
+
     var body = new p2.Body({
-        mass: 1,
+        mass: this.physicsBody ? this.physicsBody.mass : this.physicsMass,
         position: [this.xPosition(), this.yPosition()],
         angle: radians(-this.direction() + 90),
-        damping: 0
+        damping: 0,
+        type: this.physicsMass > 0 ? p2.Body.DYNAMIC : p2.Body.STATIC 
     });
 
-    if (this.costume && typeof this.costume.loaded !== 'function') {
+    if (this.costume) {
         body.addShape(new p2.Box({
             width: this.costume.width(),
             height: this.costume.height()
@@ -360,7 +364,7 @@ SpriteMorph.prototype.getPhysicsContour = function () {
 
 SpriteMorph.prototype.updatePhysicsPosition = function () {
     var body = this.physicsBody;
-    if (!body) {
+    if (!body || this.phyMorphicUpdating) {
         return;
     }
 
@@ -378,12 +382,14 @@ SpriteMorph.prototype.updateMorphicPosition = function () {
     if (this.isPickedUp() || !this.physicsBody) {
         return;
     }
+    this.phyMorphicUpdating = true;
 
     var position = this.physicsBody.position,
         angle = this.physicsBody.angle;
 
     this.phyGotoXY(position[0], position[1]);
     this.phySetHeading(-degrees(angle) + 90);
+    this.phyMorphicUpdating = false;
 };
 
 SpriteMorph.prototype.phyWearCostume = SpriteMorph.prototype.wearCostume;

@@ -103,6 +103,11 @@ PhysicsMorph.prototype.userMenu = function () {
     return menu;
 };
 
+//PhysicsMorph.prototype.isRetinaEnabled = function() {
+//    console.log("PhysicsMorph.isRetinaEnabled");
+//    return false;
+//}
+
 // ------- SpriteMorph -------
 
 SpriteMorph.prototype.categories.push('physics');
@@ -115,35 +120,35 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
         type: 'command',
         category: 'physics',
         spec: 'apply %clockwise torque of %n',
-        defaults: [2000]
+        defaults: [1000]
     };
     blocks.angularForceLeft = {
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
         spec: 'apply %counterclockwise torque of %n',
-        defaults: [2000]
+        defaults: [1000]
     };
     blocks.applyForceForward = {
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
         spec: 'apply force of %n',
-        defaults: [2000]
+        defaults: [1000]
     };
     blocks.applyForce = {
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
         spec: 'apply force %n in direction %dir',
-        defaults: [50]
+        defaults: [100]
     };
     blocks.setMass = {
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
         spec: 'set mass to %n',
-        defaults: [200]
+        defaults: [100]
     };
     blocks.mass = {
         only: SpriteMorph,
@@ -194,6 +199,12 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
         category: 'physics',
         spec: 'simulation step'
     };
+
+    var labels = SnapSerializer.prototype.watcherLabels;
+    labels.mass = blocks.mass.spec;
+    labels.xVelocity = blocks.xVelocity.spec;
+    labels.yVelocity = blocks.yVelocity.spec;
+    labels.deltaTime = blocks.deltaTime.spec;
 }
 
 SpriteMorph.prototype.initPhysicsBlocks();

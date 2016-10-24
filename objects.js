@@ -5817,6 +5817,12 @@ StageMorph.prototype.blockTemplates = function (category) {
         txt.setColor(this.paletteTextColor);
         blocks.push(txt);
 
+    } else if (cat === 'physics' ) {
+
+        blocks.push(block('doSimulationStep'));
+        blocks.push(watcherToggle('deltaTime'));
+        blocks.push(block('deltaTime'));
+        
     } else if (cat === 'looks') {
 
         blocks.push(block('doSwitchToCostume'));

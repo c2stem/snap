@@ -2,7 +2,7 @@
 
 "use strict";
 
-modules.physics = '2016-September-1';
+modules.physics = '2016-October-1';
 
 // ------- PhysicsMorph -------
 
@@ -352,7 +352,7 @@ SpriteMorph.prototype.getPhysicsContour = function () {
         position: [this.xPosition(), this.yPosition()],
         angle: radians(-this.direction() + 90),
         damping: 0,
-        type: this.physicsMass > 0 ? p2.Body.DYNAMIC : p2.Body.STATIC 
+        type: this.physicsMass > 0 ? p2.Body.DYNAMIC : p2.Body.STATIC
     });
 
     if (this.costume) {
@@ -467,55 +467,25 @@ SpriteMorph.prototype.debug = function () {
     console.log('body', this.physicsBody);
 };
 
-// ------- IDE_Morph -------
-
-IDE_Morph.prototype.phyCreateStage = IDE_Morph.prototype.createStage;
-IDE_Morph.prototype.createStage = function () {
-    this.phyCreateStage();
-    this.stage.addPhysicsFloor();
-}
-
-IDE_Morph.prototype.phyCreateSpriteBar = IDE_Morph.prototype.createSpriteBar;
-IDE_Morph.prototype.createSpriteBar = function () {
-    this.phyCreateSpriteBar();
-
-    var myself = this,
-        physics = new ToggleMorph(
-            'checkbox',
-            null,
-            function () {
-                var sprite = myself.currentSprite;
-                sprite.isPhysicsEnabled = !sprite.isPhysicsEnabled;
-                sprite.updatePhysicsBody();
-            },
-            localize('enable physics'),
-            function () {
-                return myself.currentSprite.isPhysicsEnabled;
-            }
-        );
-    physics.label.isBold = false;
-    physics.label.setColor(this.buttonLabelColor);
-    physics.color = this.tabColors[2];
-    physics.highlightColor = this.tabColors[0];
-    physics.pressColor = this.tabColors[1];
-    physics.tick.shadowOffset = MorphicPreferences.isFlat ?
-        new Point() : new Point(-1, -1);
-    physics.tick.shadowColor = new Color();
-    physics.tick.color = this.buttonLabelColor;
-    physics.tick.isBold = false;
-    physics.tick.drawNew();
-    physics.setPosition(this.spriteBar.position().add(new Point(210, 8)));
-    physics.drawNew();
-    this.spriteBar.add(physics);
-    if (this.currentSprite instanceof StageMorph) {
-        physics.hide();
-    }
-}
-
 SpriteMorph.prototype.allHatBlocksForSimulation = function () {
     return this.scripts.children.filter(function (morph) {
         return morph.selector === 'doSimulationStep';
     });
+}
+
+// ------- SpriteIconMorph -------
+
+SpriteIconMorph.prototype.phyUserMenu = SpriteIconMorph.prototype.userMenu;
+SpriteIconMorph.prototype.userMenu = function () {
+    var menu = this.phyUserMenu(),
+        object = this.object;
+
+    if (object instanceof SpriteMorph) {
+        menu.addItem("debug", function () {
+            object.debug();
+        });
+    }
+    return menu;
 }
 
 // ------- StageMorph -------
@@ -527,12 +497,15 @@ StageMorph.prototype.init = function (globals) {
     this.physicsWorld = new p2.World({
         gravity: [0, -9.81]
     });
+    this.physicsWorld.useFrictionGravityOnZeroGravity = false;
+    this.physicsWorld.setGlobalStiffness(1e18); // make it stiffer
+
     this.physicsElapsed = 0;
     this.physicsUpdated = Date.now();
     this.physicsGround = null;
 };
 
-StageMorph.prototype.addPhysicsFloor = function () {
+StageMorph.prototype.setPhysicsFloor = function (enable) {
     var shape = new p2.Box({
             width: 2000,
             height: 20
@@ -603,29 +576,151 @@ StageMorph.prototype.add = function (morph) {
     }
 };
 
-StageMorph.prototype.phySetExtent = StageMorph.prototype.setExtent;
-StageMorph.prototype.setExtent = function (aPoint, silently) {
-    this.phySetExtent(aPoint, silently);
-    // this.addPhysicsFloor();
-}
-
 StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlocksForSimulation;
 
-// ------- SpriteIconMorph -------
+// ------- PhysicTabMorph -------
 
-SpriteIconMorph.prototype.phyUserMenu = SpriteIconMorph.prototype.userMenu;
-SpriteIconMorph.prototype.userMenu = function () {
-    var menu = this.phyUserMenu(),
-        object = this.object;
+PhysicsTabMorph.prototype = new ScrollFrameMorph();
+PhysicsTabMorph.prototype.constructor = PhysicsTabMorph;
+PhysicsTabMorph.uber = ScrollFrameMorph.prototype;
 
-    if (object instanceof SpriteMorph) {
-        menu.addItem("debug", function () {
-            object.debug();
-        });
-    } else if (object instanceof StageMorph) {
-        menu.addItem("add floor", function () {
-            object.addPhysicsFloor();
-        });
+function PhysicsTabMorph(aSprite, sliderColor) {
+    PhysicsTabMorph.uber.init.call(this, null, null, sliderColor);
+    this.acceptDrops = false;
+    this.padding = 10;
+    this.contents.acceptsDrops = false;
+    var textColor = new Color(255, 255, 255);
+
+    function labelText(string) {
+        var text = new TextMorph(localize(string), 10);
+        text.setColor(textColor);
+        return text;
     }
-    return menu;
+
+    function inputField(object, property, lowerLimit, upperLimit, isReadOnly) {
+        var field = new InputFieldMorph(object[property].toFixed(2), true, null, isReadOnly);
+        field.fixLayout();
+        field.accept = function () {
+            var value = +field.getValue();
+            value = Math.min(Math.max(lowerLimit, value), upperLimit);
+            object[property] = value;
+            field.setContents(object[property].toFixed(2));
+        };
+        return field;
+    }
+
+    if (aSprite instanceof StageMorph) {
+        var world = aSprite.physicsWorld;
+
+        var elems = new AlignmentMorph('column', 4);
+        elems.alignment = 'left';
+        elems.setColor(this.color);
+
+        var entry = new AlignmentMorph('row', 4);
+        entry.alignment = 'left';
+        entry.setColor(this.color);
+        entry.add(labelText('gravity x:'));
+        entry.add(inputField(world.gravity, 0, -100, 100));
+        entry.add(labelText(' y:'));
+        entry.add(inputField(world.gravity, 1, -100, 100));
+        entry.add(labelText('m/s\u00b2'));
+        entry.fixLayout();
+        elems.add(entry);
+
+        entry = new AlignmentMorph('row', 4);
+        entry.alignment = 'left';
+        entry.setColor(this.color);
+        entry.add(labelText('friction:'));
+        entry.add(inputField(world.defaultContactMaterial, 'friction', 0, 1));
+        entry.add(labelText('restitution:'));
+        entry.add(inputField(world.defaultContactMaterial, 'restitution', 0, 1));
+        entry.fixLayout();
+        elems.add(entry);
+
+        entry = new AlignmentMorph('row', 4);
+        entry.alignment = 'left';
+        entry.setColor(this.color);
+        entry.add(new ToggleMorph('checkbox', aSprite, function () {
+            console.log(this);
+        }, null, function () {
+            console.log(this);
+        }));
+        entry.add(labelText('enable floor'));
+        entry.fixLayout();
+        elems.add(entry);
+
+        elems.fixLayout();
+        elems.setPosition(new Point(5, 5));
+
+        this.add(elems);
+    }
+}
+
+// ------- SnapSerializer -------
+
+SnapSerializer.prototype.phyRawLoadProjectModel = SnapSerializer.prototype.rawLoadProjectModel;
+SnapSerializer.prototype.rawLoadProjectModel = function(xmlNode) {
+    var project = this.phyRawLoadProjectModel(xmlNode);
+    project.stage.setPhysicsFloor(true);
+    return project;
+}
+
+// ------- IDE_Morph -------
+
+IDE_Morph.prototype.phyCreateStage = IDE_Morph.prototype.createStage;
+IDE_Morph.prototype.createStage = function () {
+    this.phyCreateStage();
+    this.stage.setPhysicsFloor(true);
+}
+
+IDE_Morph.prototype.phyCreateSpriteBar = IDE_Morph.prototype.createSpriteBar;
+IDE_Morph.prototype.createSpriteBar = function () {
+    this.phyCreateSpriteBar();
+
+    var myself = this,
+        physics = new ToggleMorph(
+            'checkbox',
+            null,
+            function () {
+                var sprite = myself.currentSprite;
+                sprite.isPhysicsEnabled = !sprite.isPhysicsEnabled;
+                sprite.updatePhysicsBody();
+            },
+            localize('enable physics'),
+            function () {
+                return myself.currentSprite.isPhysicsEnabled;
+            }
+        );
+    physics.label.isBold = false;
+    physics.label.setColor(this.buttonLabelColor);
+    physics.color = this.tabColors[2];
+    physics.highlightColor = this.tabColors[0];
+    physics.pressColor = this.tabColors[1];
+    physics.tick.shadowOffset = MorphicPreferences.isFlat ?
+        new Point() : new Point(-1, -1);
+    physics.tick.shadowColor = new Color();
+    physics.tick.color = this.buttonLabelColor;
+    physics.tick.isBold = false;
+    physics.tick.drawNew();
+    physics.setPosition(this.spriteBar.position().add(new Point(210, 8)));
+    physics.drawNew();
+    this.spriteBar.add(physics);
+    if (this.currentSprite instanceof StageMorph) {
+        physics.hide();
+    }
+}
+
+IDE_Morph.prototype.phyCreateSpriteEditor = IDE_Morph.prototype.createSpriteEditor;
+IDE_Morph.prototype.createSpriteEditor = function () {
+    if (this.currentTab === 'physics') {
+        if (this.spriteEditor) {
+            this.spriteEditor.destroy();
+        }
+
+        this.spriteEditor = new PhysicsTabMorph(this.currentSprite, this.sliderColor);
+        this.spriteEditor.color = this.groupColor;
+        this.add(this.spriteEditor);
+    } else {
+        this.phyCreateSpriteEditor();
+    }
 }

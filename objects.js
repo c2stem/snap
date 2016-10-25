@@ -1785,7 +1785,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
         blocks.push('-');
-        blocks.push(block('setMass'));
+        // blocks.push(block('setMass'));
         blocks.push(watcherToggle('mass'));
         blocks.push(block('mass'));
         blocks.push('-');

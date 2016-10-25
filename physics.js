@@ -143,7 +143,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
         spec: 'apply force %n in direction %dir',
         defaults: [100]
     };
-    blocks.setMass = {
+    blocks.setMass = { // not enabled in objects.js
         only: SpriteMorph,
         type: 'command',
         category: 'physics',
@@ -205,7 +205,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     labels.xVelocity = blocks.xVelocity.spec;
     labels.yVelocity = blocks.yVelocity.spec;
     labels.deltaTime = blocks.deltaTime.spec;
-}
+};
 
 SpriteMorph.prototype.initPhysicsBlocks();
 
@@ -302,14 +302,14 @@ SpriteMorph.prototype.init = function (globals) {
     this.isPhysicsEnabled = true;
     this.physicsBody = null;
     this.physicsMass = 100;
-}
+};
 
 SpriteMorph.prototype.phyFullCopy = SpriteMorph.prototype.fullCopy;
 SpriteMorph.prototype.fullCopy = function (forClone) {
     var s = this.phyFullCopy();
     s.physicsBody = null;
     return s;
-}
+};
 
 SpriteMorph.prototype.updatePhysicsBody = function () {
     var body = this.physicsBody;
@@ -339,7 +339,7 @@ SpriteMorph.prototype.updatePhysicsBody = function () {
         }
         this.physicsBody = null;
     }
-}
+};
 
 // TODO: we need updateShapes
 SpriteMorph.prototype.getPhysicsContour = function () {
@@ -471,7 +471,7 @@ SpriteMorph.prototype.allHatBlocksForSimulation = function () {
     return this.scripts.children.filter(function (morph) {
         return morph.selector === 'doSimulationStep';
     });
-}
+};
 
 // ------- SpriteIconMorph -------
 
@@ -486,7 +486,7 @@ SpriteIconMorph.prototype.userMenu = function () {
         });
     }
     return menu;
-}
+};
 
 // ------- StageMorph -------
 
@@ -591,29 +591,40 @@ PhysicsTabMorph.prototype.constructor = PhysicsTabMorph;
 PhysicsTabMorph.uber = ScrollFrameMorph.prototype;
 
 function PhysicsTabMorph(aSprite, sliderColor) {
+    this.init(aSprite, sliderColor);
+};
+
+PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     PhysicsTabMorph.uber.init.call(this, null, null, sliderColor);
     this.acceptDrops = false;
     this.padding = 10;
     this.contents.acceptsDrops = false;
     var textColor = new Color(255, 255, 255);
 
-    function labelText(string) {
+    function inputField(string, object, getter, setter, lowerLimit, upperLimit, unit) {
+        var entry = new AlignmentMorph('row', 4);
+        entry.alignment = 'left';
         var text = new TextMorph(localize(string),
-            10, null, true);
+            10, null, true, null, 'right', 100);
         text.setColor(textColor);
-        return text;
-    }
+        entry.add(text);
 
-    function inputField(object, getter, setter, lowerLimit, upperLimit, isReadOnly) {
+        if (typeof lowerLimit !== 'number') {
+            lowerLimit = Number.MIN_VALUE;
+        }
+        if (typeof upperLimit !== 'number') {
+            upperLimit = Number.MAX_VALUE;
+        }
+
         var value = object[getter];
         if (typeof value === 'function') {
             value = object[getter]();
         }
-        var field = new InputFieldMorph(value.toFixed(2), true, null, isReadOnly);
+        var field = new InputFieldMorph(value.toFixed(2), true, null, !setter);
         field.fixLayout();
         field.accept = function () {
             var value = +field.getValue();
-            value = Math.min(Math.max(lowerLimit, value), upperLimit);
+            value = Math.min(Math.max(value, lowerLimit), upperLimit);
             if (typeof object[setter] === 'function') {
                 object[setter](value);
             } else {
@@ -621,77 +632,64 @@ function PhysicsTabMorph(aSprite, sliderColor) {
             }
             field.setContents(value.toFixed(2));
         };
-        return field;
-    }
+        entry.add(field);
 
-    function toggleField(object, string, onClicked, onQuery) {
-        var field = new ToggleMorph('checkbox', object, onClicked, string, onQuery);
+        if (unit) {
+            var text = new TextMorph(localize(unit),
+                10, null, true);
+            text.setColor(textColor);
+            entry.add(text);
+        }
+
+        entry.fixLayout();
+        return entry;
+    };
+
+    function toggleField(string, object, getter, setter) {
+        var entry = new AlignmentMorph('row', 4);
+        entry.alignment = 'left';
+
+        var getter2 = typeof getter === 'function' ? getter :
+            function () {
+                return this[getter];
+            };
+        var field = new ToggleMorph('checkbox', object, setter, string, getter2);
         field.label.setColor(textColor);
-        return field;
-    }
+        entry.add(field);
+
+        entry.fixLayout();
+        return entry;
+    };
+
+    var elems = new AlignmentMorph('column', 6);
+    elems.alignment = 'left';
+    elems.setColor(this.color);
 
     if (aSprite instanceof StageMorph) {
         var world = aSprite.physicsWorld;
 
-        var elems = new AlignmentMorph('column', 4);
-        elems.alignment = 'left';
-        elems.setColor(this.color);
-
-        var entry = new AlignmentMorph('row', 4);
-        entry.alignment = 'left';
-        entry.setColor(this.color);
-        entry.add(labelText('gravity x:'));
-        entry.add(inputField(world.gravity, 0, 0, -100, 100));
-        entry.add(labelText(' y:'));
-        entry.add(inputField(world.gravity, 1, 1, -100, 100));
-        entry.add(labelText('m/s\u00b2'));
-        entry.fixLayout();
-        elems.add(entry);
-
-        entry = new AlignmentMorph('row', 4);
-        entry.alignment = 'left';
-        entry.setColor(this.color);
-        entry.add(labelText('friction:'));
-        entry.add(inputField(world.defaultContactMaterial,
+        elems.add(inputField('gravity x:', world.gravity, 0, 0, -100, 100, 'm/s\u00b2'));
+        elems.add(inputField('gravity y:', world.gravity, 1, 1, -100, 100, 'm/s\u00b2'));
+        elems.add(inputField('friction:', world.defaultContactMaterial,
             'friction', 'friction', 0, 1));
-        entry.add(labelText('restitution:'));
-        entry.add(inputField(world.defaultContactMaterial,
+        elems.add(inputField('restitution:', world.defaultContactMaterial,
             'restitution', 'restitution', 0, 1));
-        entry.fixLayout();
-        elems.add(entry);
-
-        entry = new AlignmentMorph('row', 4);
-        entry.alignment = 'left';
-        entry.setColor(this.color);
-        entry.add(toggleField(aSprite, "enable ground", function () {
-            this.setPhysicsFloor(!this.physicsFloor);
-        }, function () {
-            return this.physicsFloor;
-        }));
-        entry.fixLayout();
-        elems.add(entry);
-
-        elems.fixLayout();
-        elems.setPosition(new Point(5, 5));
-        this.add(elems);
+        elems.add(toggleField("enable ground", aSprite, 'physicsFloor',
+            function () {
+                this.setPhysicsFloor(!this.physicsFloor);
+            }));
     } else if (aSprite instanceof SpriteMorph) {
-        var elems = new AlignmentMorph('column', 4);
-        elems.alignment = 'left';
-        elems.setColor(this.color);
-
-        var entry = new AlignmentMorph('row', 4);
-        entry.alignment = 'left';
-        entry.setColor(this.color);
-        entry.add(labelText('mass:'));
-        entry.add(inputField(aSprite, 'mass', 'setMass', 0, 100));
-        entry.fixLayout();
-        elems.add(entry);
-
-        elems.fixLayout();
-        elems.setPosition(new Point(5, 5));
-        this.add(elems);
+        elems.add(inputField('mass:', aSprite, 'mass', 'setMass', 0, 100, 'kg'));
     }
-}
+
+    elems.fixLayout();
+    elems.setPosition(new Point(5, 5));
+    this.add(elems);
+};
+
+PhysicsTabMorph.prototype.wantsDropOf = function (morph) {
+    return false;
+};
 
 // ------- SnapSerializer -------
 
@@ -700,7 +698,7 @@ SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
     var project = this.phyRawLoadProjectModel(xmlNode);
     project.stage.setPhysicsFloor(true);
     return project;
-}
+};
 
 // ------- IDE_Morph -------
 
@@ -708,7 +706,7 @@ IDE_Morph.prototype.phyCreateStage = IDE_Morph.prototype.createStage;
 IDE_Morph.prototype.createStage = function () {
     this.phyCreateStage();
     this.stage.setPhysicsFloor(true);
-}
+};
 
 IDE_Morph.prototype.phyCreateSpriteBar = IDE_Morph.prototype.createSpriteBar;
 IDE_Morph.prototype.createSpriteBar = function () {
@@ -745,7 +743,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
     if (this.currentSprite instanceof StageMorph) {
         physics.hide();
     }
-}
+};
 
 IDE_Morph.prototype.phyCreateSpriteEditor = IDE_Morph.prototype.createSpriteEditor;
 IDE_Morph.prototype.createSpriteEditor = function () {
@@ -760,4 +758,4 @@ IDE_Morph.prototype.createSpriteEditor = function () {
     } else {
         this.phyCreateSpriteEditor();
     }
-}
+};

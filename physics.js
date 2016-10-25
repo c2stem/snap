@@ -502,24 +502,30 @@ StageMorph.prototype.init = function (globals) {
 
     this.physicsElapsed = 0;
     this.physicsUpdated = Date.now();
-    this.physicsGround = null;
+    this.physicsFloor = null;
 };
 
 StageMorph.prototype.setPhysicsFloor = function (enable) {
-    var shape = new p2.Box({
-            width: 2000,
-            height: 20
-        }),
-        body = new p2.Body({
+    if (this.physicsFloor) {
+        this.physicsFloor.destroy();
+        this.physicsFloor = null;
+    }
+
+    if (enable) {
+        var body = new p2.Body({
             mass: 0,
             position: [0, -175],
             angle: 0
         });
-    body.addShape(shape);
-    this.physicsWorld.addBody(body);
-    this.physicsGround = new PhysicsMorph(body);
-    this.addBack(this.physicsGround);
-    this.physicsGround.updateMorphicPosition();
+        body.addShape(new p2.Box({
+            width: 2000,
+            height: 20
+        }));
+        this.physicsWorld.addBody(body);
+        this.physicsFloor = new PhysicsMorph(body);
+        this.addBack(this.physicsFloor);
+        this.physicsFloor.updateMorphicPosition();
+    }
 };
 
 StageMorph.prototype.updateMorphicPosition = function () {
@@ -592,20 +598,35 @@ function PhysicsTabMorph(aSprite, sliderColor) {
     var textColor = new Color(255, 255, 255);
 
     function labelText(string) {
-        var text = new TextMorph(localize(string), 10);
+        var text = new TextMorph(localize(string),
+            10, null, true);
         text.setColor(textColor);
         return text;
     }
 
-    function inputField(object, property, lowerLimit, upperLimit, isReadOnly) {
-        var field = new InputFieldMorph(object[property].toFixed(2), true, null, isReadOnly);
+    function inputField(object, getter, setter, lowerLimit, upperLimit, isReadOnly) {
+        var value = object[getter];
+        if (typeof value === 'function') {
+            value = object[getter]();
+        }
+        var field = new InputFieldMorph(value.toFixed(2), true, null, isReadOnly);
         field.fixLayout();
         field.accept = function () {
             var value = +field.getValue();
             value = Math.min(Math.max(lowerLimit, value), upperLimit);
-            object[property] = value;
-            field.setContents(object[property].toFixed(2));
+            if (typeof object[setter] === 'function') {
+                object[setter](value);
+            } else {
+                object[setter] = value;
+            }
+            field.setContents(value.toFixed(2));
         };
+        return field;
+    }
+
+    function toggleField(object, string, onClicked, onQuery) {
+        var field = new ToggleMorph('checkbox', object, onClicked, string, onQuery);
+        field.label.setColor(textColor);
         return field;
     }
 
@@ -620,9 +641,9 @@ function PhysicsTabMorph(aSprite, sliderColor) {
         entry.alignment = 'left';
         entry.setColor(this.color);
         entry.add(labelText('gravity x:'));
-        entry.add(inputField(world.gravity, 0, -100, 100));
+        entry.add(inputField(world.gravity, 0, 0, -100, 100));
         entry.add(labelText(' y:'));
-        entry.add(inputField(world.gravity, 1, -100, 100));
+        entry.add(inputField(world.gravity, 1, 1, -100, 100));
         entry.add(labelText('m/s\u00b2'));
         entry.fixLayout();
         elems.add(entry);
@@ -631,27 +652,43 @@ function PhysicsTabMorph(aSprite, sliderColor) {
         entry.alignment = 'left';
         entry.setColor(this.color);
         entry.add(labelText('friction:'));
-        entry.add(inputField(world.defaultContactMaterial, 'friction', 0, 1));
+        entry.add(inputField(world.defaultContactMaterial,
+            'friction', 'friction', 0, 1));
         entry.add(labelText('restitution:'));
-        entry.add(inputField(world.defaultContactMaterial, 'restitution', 0, 1));
+        entry.add(inputField(world.defaultContactMaterial,
+            'restitution', 'restitution', 0, 1));
         entry.fixLayout();
         elems.add(entry);
 
         entry = new AlignmentMorph('row', 4);
         entry.alignment = 'left';
         entry.setColor(this.color);
-        entry.add(new ToggleMorph('checkbox', aSprite, function () {
-            console.log(this);
-        }, null, function () {
-            console.log(this);
+        entry.add(toggleField(aSprite, "enable ground", function () {
+            this.setPhysicsFloor(!this.physicsFloor);
+        }, function () {
+            return this.physicsFloor;
         }));
-        entry.add(labelText('enable floor'));
         entry.fixLayout();
         elems.add(entry);
 
         elems.fixLayout();
         elems.setPosition(new Point(5, 5));
+        this.add(elems);
+    } else if (aSprite instanceof SpriteMorph) {
+        var elems = new AlignmentMorph('column', 4);
+        elems.alignment = 'left';
+        elems.setColor(this.color);
 
+        var entry = new AlignmentMorph('row', 4);
+        entry.alignment = 'left';
+        entry.setColor(this.color);
+        entry.add(labelText('mass:'));
+        entry.add(inputField(aSprite, 'mass', 'setMass', 0, 100));
+        entry.fixLayout();
+        elems.add(entry);
+
+        elems.fixLayout();
+        elems.setPosition(new Point(5, 5));
         this.add(elems);
     }
 }
@@ -659,7 +696,7 @@ function PhysicsTabMorph(aSprite, sliderColor) {
 // ------- SnapSerializer -------
 
 SnapSerializer.prototype.phyRawLoadProjectModel = SnapSerializer.prototype.rawLoadProjectModel;
-SnapSerializer.prototype.rawLoadProjectModel = function(xmlNode) {
+SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
     var project = this.phyRawLoadProjectModel(xmlNode);
     project.stage.setPhysicsFloor(true);
     return project;

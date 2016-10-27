@@ -74,12 +74,16 @@ PhysicsMorph.prototype.updateMorphicPosition = function () {
 
     var aabb = this.physicsBody.getAABB(),
         center = stage.center(),
-        scale = stage.scale;
+        scale = stage.scale,
+        pos = new Point(center.x + aabb.lowerBound[0] * scale,
+            center.y - aabb.upperBound[1] * scale),
+        delta = pos.subtract(this.topLeft());
 
-    this.setPosition(new Point(center.x + aabb.lowerBound[0] * scale,
-        center.y - aabb.upperBound[1] * scale));
-    this.drawNew();
-    this.changed();
+    if (Math.abs(delta.x) >= 1 || Math.abs(delta.y) >= 1) {
+        this.setPosition(pos);
+        this.drawNew();
+        this.changed();
+    }
 };
 
 PhysicsMorph.prototype.destroy = function () {
@@ -448,10 +452,17 @@ SpriteMorph.prototype.updateMorphicPosition = function () {
     this.phyMorphicUpdating = true;
 
     var position = this.physicsBody.position,
-        angle = this.physicsBody.angle;
+        heading = -degrees(this.physicsBody.angle) + 90;
 
-    this.phyGotoXY(position[0], position[1]);
-    this.phySetHeading(-degrees(angle) + 90);
+    if (Math.abs(position[0] - this.xPosition()) >= 1.0 ||
+        Math.abs(position[1] - this.yPosition()) >= 1.0) {
+        this.phyGotoXY(position[0], position[1]);
+    }
+
+    if (Math.abs(this.heading - heading) >= 2 &&
+        Math.abs(this.heading - heading) <= 358) {
+        this.phySetHeading(heading);
+    }
     this.phyMorphicUpdating = false;
 };
 
@@ -635,6 +646,10 @@ StageMorph.prototype.add = function (morph) {
 };
 
 StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlocksForSimulation;
+StageMorph.prototype.deltaTime = SpriteMorph.prototype.deltaTime;
+StageMorph.prototype.xGravity = SpriteMorph.prototype.xGravity;
+StageMorph.prototype.yGravity = SpriteMorph.prototype.yGravity;
+StageMorph.prototype.friction = SpriteMorph.prototype.friction;
 
 // ------- PhysicTabMorph -------
 
@@ -720,7 +735,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         elems.add(inputField('gravity x:', world.gravity, 0, 0, -100, 100, 'm/s\u00b2'));
         elems.add(inputField('gravity y:', world.gravity, 1, 1, -100, 100, 'm/s\u00b2'));
         elems.add(inputField('friction:', world.defaultContactMaterial,
-            'friction', 'friction', 0, 1));
+            'friction', 'friction', 0, 100));
         elems.add(inputField('restitution:', world.defaultContactMaterial,
             'restitution', 'restitution', 0, 1));
         elems.add(toggleField("enable ground", aSprite, 'physicsFloor',

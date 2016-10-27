@@ -1791,6 +1791,16 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         // blocks.push(watcherToggle('mass'));
         blocks.push(block('mass'));
         blocks.push('-');
+        blocks.push(block('setPhysicsPosition'));
+        blocks.push(block('setPhysicsXPosition'));
+        blocks.push(block('setPhysicsYPosition'));
+        blocks.push(block('changePhysicsXPosition'));
+        blocks.push(block('changePhysicsYPosition'));
+        blocks.push(watcherToggle('physicsXPosition'));
+        blocks.push(block('physicsXPosition'));
+        blocks.push(watcherToggle('physicsYPosition'));
+        blocks.push(block('physicsYPosition'));
+        blocks.push('-');
         blocks.push(block('setVelocity'));
         blocks.push(block('setXVelocity'));
         blocks.push(block('setYVelocity'));

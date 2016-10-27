@@ -79,7 +79,7 @@ PhysicsMorph.prototype.updateMorphicPosition = function () {
             center.y - aabb.upperBound[1] * scale),
         delta = pos.subtract(this.topLeft());
 
-    if (Math.abs(delta.x) >= 1 || Math.abs(delta.y) >= 1) {
+    if (Math.abs(delta.x) >= 0.5 || Math.abs(delta.y) >= 0.5) {
         this.setPosition(pos);
         this.drawNew();
         this.changed();
@@ -263,16 +263,9 @@ SpriteMorph.prototype.friction = function () {
 };
 
 SpriteMorph.prototype.setMass = function (m) {
-    this.physicsMass = +m;
+    this.physicsMass = +m > 0 ? +m : 0.001;
     if (this.physicsBody) {
-        if (this.physicsMass > 0) {
-            this.physicsBody.type = p2.Body.DYNAMIC;
-            this.physicsBody.mass = this.physicsMass;
-        } else {
-            this.physicsBody.type = p2.Body.STATIC;
-            this.physicsBody.velocity[0] = 0;
-            this.physicsBody.velocity[1] = 0;
-        }
+        this.physicsBody.mass = this.physicsMass;
         this.physicsBody.updateMassProperties();
     }
 };
@@ -355,7 +348,7 @@ SpriteMorph.prototype.angularForceLeft = function (torque) {
 SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;
 SpriteMorph.prototype.init = function (globals) {
     this.phyInit(globals);
-    this.isPhysicsEnabled = true;
+    this.physicsMode = '';
     this.physicsBody = null;
     this.physicsMass = 100;
 };
@@ -369,9 +362,9 @@ SpriteMorph.prototype.fullCopy = function (forClone) {
 
 SpriteMorph.prototype.updatePhysicsBody = function () {
     var body = this.physicsBody;
-    // console.log("body", this.isPhysicsEnabled, !!this.physicsBody, !!this.parentThatIsA(StageMorph));
+    // console.log("body", this.physicsMode, !!this.physicsBody, !!this.parentThatIsA(StageMorph));
 
-    if (this.isPhysicsEnabled) {
+    if (this.physicsMode) {
         var stage = this.parentThatIsA(StageMorph);
         if (stage && !body) {
             body = this.getPhysicsContour();
@@ -383,6 +376,21 @@ SpriteMorph.prototype.updatePhysicsBody = function () {
                 stage.addBack(morph);
                 morph.updateMorphicPosition();
                 body.morph = morph;
+            }
+        }
+
+        if (body) {
+            body.type = this.physicsMode === 'dynamic' ? p2.Body.DYNAMIC : p2.Body.STATIC;
+            if (body.type === p2.Body.STATIC) {
+                body.velocity[0] = 0;
+                body.velocity[1] = 0;
+                body.angularVelocity = 0;
+                body.mass = Infinity;
+                body.updateMassProperties();
+            }
+            else {
+                body.mass = this.physicsMass;
+                body.updateMassProperties();
             }
         }
     } else if (body) {
@@ -404,11 +412,9 @@ SpriteMorph.prototype.getPhysicsContour = function () {
     }
 
     var body = new p2.Body({
-        mass: this.physicsBody ? this.physicsBody.mass : this.physicsMass,
         position: [this.xPosition(), this.yPosition()],
         angle: radians(-this.direction() + 90),
-        damping: 0,
-        type: this.physicsMass > 0 ? p2.Body.DYNAMIC : p2.Body.STATIC
+        damping: 0
     });
 
     if (this.costume) {
@@ -454,35 +460,37 @@ SpriteMorph.prototype.updateMorphicPosition = function () {
     var position = this.physicsBody.position,
         heading = -degrees(this.physicsBody.angle) + 90;
 
-    if (Math.abs(position[0] - this.xPosition()) >= 1.0 ||
-        Math.abs(position[1] - this.yPosition()) >= 1.0) {
+    if (Math.abs(position[0] - this.xPosition()) >= 0.5 ||
+        Math.abs(position[1] - this.yPosition()) >= 0.5) {
         this.phyGotoXY(position[0], position[1]);
     }
 
-    if (Math.abs(this.heading - heading) >= 2 &&
-        Math.abs(this.heading - heading) <= 358) {
+    if (Math.abs(this.heading - heading) >= 1 &&
+        Math.abs(this.heading - heading) <= 359) {
         this.phySetHeading(heading);
     }
+
     this.phyMorphicUpdating = false;
 };
 
 SpriteMorph.prototype.phyWearCostume = SpriteMorph.prototype.wearCostume;
 SpriteMorph.prototype.wearCostume = function (costume) {
     var loading = costume && typeof costume.loaded === 'function';
-    // console.log("wearcostume", !!costume, loading, this.isPhysicsEnabled, !!this.physicsBody);
+    // console.log("wearcostume", !!costume, loading, this.physicsMode, !!this.physicsBody);
 
     this.phyWearCostume(costume);
-    if (!loading && this.isPhysicsEnabled) {
-        this.isPhysicsEnabled = false;
+    if (!loading && this.physicsMode) {
+        var mode = this.physicsMode;
+        this.physicsMode = '';
         this.updatePhysicsBody();
-        this.isPhysicsEnabled = true;
+        this.physicsMode = mode;
         this.updatePhysicsBody();
     }
 };
 
 SpriteMorph.prototype.phyDestroy = SpriteMorph.prototype.destroy;
 SpriteMorph.prototype.destroy = function () {
-    this.isPhysicsEnabled = false;
+    this.physicsMode = '';
     this.updatePhysicsBody();
     this.phyDestroy();
 };
@@ -528,6 +536,7 @@ SpriteMorph.prototype.debug = function () {
     console.log('costume', this.costume);
     console.log('image', this.image);
     console.log('body', this.physicsBody);
+    console.log('mode', this.physicsMode);
 };
 
 SpriteMorph.prototype.allHatBlocksForSimulation = function () {
@@ -638,7 +647,7 @@ StageMorph.prototype.step = function () {
 
 StageMorph.prototype.phyAdd = StageMorph.prototype.add;
 StageMorph.prototype.add = function (morph) {
-    // console.log("add", morph.isPhysicsEnabled, !!morph.physicsBody);
+    // console.log("add", morph.physicsMode, !!morph.physicsBody);
     this.phyAdd(morph);
     if (morph.updatePhysicsBody) {
         morph.updatePhysicsBody();
@@ -709,7 +718,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         return entry;
     };
 
-    function toggleField(string, object, getter, setter) {
+    function toggleField(string, object, getter, setter, radio) {
         var entry = new AlignmentMorph('row', 4);
         entry.alignment = 'left';
 
@@ -717,11 +726,13 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
             function () {
                 return this[getter];
             };
-        var field = new ToggleMorph('checkbox', object, setter, string, getter2);
+        var field = new ToggleMorph(radio ? 'radiobutton' : 'checkbox',
+            object, setter, string, getter2);
         field.label.setColor(textColor);
         entry.add(field);
 
         entry.fixLayout();
+        entry.toggle = field;
         return entry;
     };
 
@@ -743,7 +754,45 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
                 this.setPhysicsFloor(!this.physicsFloor);
             }));
     } else if (aSprite instanceof SpriteMorph) {
-        elems.add(inputField('mass:', aSprite, 'mass', 'setMass', 0, 100, 'kg'));
+        elems.add(inputField('mass:', aSprite, 'mass', 'setMass', 0, 1e6, 'kg'));
+
+        var radioDisabled = toggleField("physics disabled", aSprite, function () {
+                    return !this.physicsMode;
+                },
+                function () {
+                    if (this.physicsMode) {
+                        this.physicsMode = '';
+                        radioStatic.toggle.refresh();
+                        radioDynamic.toggle.refresh();
+                        aSprite.updatePhysicsBody();
+                    }
+                }, true),
+            radioStatic = toggleField("static object", aSprite, function () {
+                    return this.physicsMode === 'static'
+                },
+                function () {
+                    if (this.physicsMode !== 'static') {
+                        this.physicsMode = 'static';
+                        radioDisabled.toggle.refresh();
+                        radioDynamic.toggle.refresh();
+                        aSprite.updatePhysicsBody();
+                    }
+                }, true),
+            radioDynamic = toggleField("dynamic object", aSprite, function () {
+                    return this.physicsMode === 'dynamic'
+                },
+                function () {
+                    if (this.physicsMode !== 'dynamic') {
+                        this.physicsMode = 'dynamic';
+                        radioDisabled.toggle.refresh();
+                        radioStatic.toggle.refresh();
+                        aSprite.updatePhysicsBody();
+                    }
+                }, true);
+
+        elems.add(radioDisabled);
+        elems.add(radioStatic);
+        elems.add(radioDynamic);
     }
 
     elems.fixLayout();
@@ -770,43 +819,6 @@ IDE_Morph.prototype.phyCreateStage = IDE_Morph.prototype.createStage;
 IDE_Morph.prototype.createStage = function () {
     this.phyCreateStage();
     this.stage.setPhysicsFloor(true);
-};
-
-IDE_Morph.prototype.phyCreateSpriteBar = IDE_Morph.prototype.createSpriteBar;
-IDE_Morph.prototype.createSpriteBar = function () {
-    this.phyCreateSpriteBar();
-
-    var myself = this,
-        physics = new ToggleMorph(
-            'checkbox',
-            null,
-            function () {
-                var sprite = myself.currentSprite;
-                sprite.isPhysicsEnabled = !sprite.isPhysicsEnabled;
-                sprite.updatePhysicsBody();
-            },
-            localize('enable physics'),
-            function () {
-                return myself.currentSprite.isPhysicsEnabled;
-            }
-        );
-    physics.label.isBold = false;
-    physics.label.setColor(this.buttonLabelColor);
-    physics.color = this.tabColors[2];
-    physics.highlightColor = this.tabColors[0];
-    physics.pressColor = this.tabColors[1];
-    physics.tick.shadowOffset = MorphicPreferences.isFlat ?
-        new Point() : new Point(-1, -1);
-    physics.tick.shadowColor = new Color();
-    physics.tick.color = this.buttonLabelColor;
-    physics.tick.isBold = false;
-    physics.tick.drawNew();
-    physics.setPosition(this.spriteBar.position().add(new Point(210, 8)));
-    physics.drawNew();
-    this.spriteBar.add(physics);
-    if (this.currentSprite instanceof StageMorph) {
-        physics.hide();
-    }
 };
 
 IDE_Morph.prototype.phyCreateSpriteEditor = IDE_Morph.prototype.createSpriteEditor;

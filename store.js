@@ -639,7 +639,7 @@ SnapSerializer.prototype.loadSprites = function (xmlString, ide) {
         if (model.attributes.pen) {
             sprite.penPoint = model.attributes.pen;
         }
-        sprite.isPhysicsEnabled = model.attributes.physics === 'true';
+        sprite.physicsMode = model.attributes.physics || '';
         sprite.physicsMass = parseFloat(model.attributes.mass) || 0;
         project.stage.add(sprite);
         ide.sprites.add(sprite);
@@ -1235,7 +1235,7 @@ SnapSerializer.prototype.loadValue = function (model) {
         if (model.attributes.pen) {
             v.penPoint = model.attributes.pen;
         }
-        v.isPhysicsEnabled = model.attributes.physics === 'true';
+        v.physicsMode = model.attributes.physics || '';
         v.physicsMass = parseFloat(model.attributes.mass) || 0;
         myself.project.stage.add(v);
         v.scale = parseFloat(model.attributes.scale || '1');
@@ -1580,7 +1580,7 @@ SpriteMorph.prototype.toXML = function (serializer) {
         this.scale,
         this.rotationStyle,
         this.isDraggable,
-        this.isPhysicsEnabled ? ' physics="true"' : '',
+        this.physicsMode ? ' physics="' + this.physicsMode + '"': '',
         this.physicsMass || 0,
         this.isVisible ? '' : ' hidden="true"',
         this.getCostumeIdx(),

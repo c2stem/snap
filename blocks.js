@@ -1177,7 +1177,8 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
                     ln : ['ln'],
                     log : ['log'],
                     'e^' : ['e^'],
-                    '10^' : ['10^']
+                    '10^' : ['10^'],
+                    sign: ['sign']
                 },
                 true
             );

@@ -2414,6 +2414,8 @@ Process.prototype.reportMonadic = function (fname, n) {
     case '10^':
         result = Math.pow(10, x);
         break;
+    case 'sign':
+        result = Math.sign(x);
     default:
         nop();
     }

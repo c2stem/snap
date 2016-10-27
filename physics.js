@@ -189,6 +189,20 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
         category: 'physics',
         spec: 'y velocity'
     };
+    blocks.changeXVelocity = {
+        only: SpriteMorph,
+        type: 'command',
+        category: 'physics',
+        spec: 'change x velocity by %n',
+        defaults: [0]
+    };
+    blocks.changeYVelocity = {
+        only: SpriteMorph,
+        type: 'command',
+        category: 'physics',
+        spec: 'change y velocity by %n',
+        defaults: [0]
+    };
     blocks.deltaTime = {
         type: 'reporter',
         category: 'physics',
@@ -199,9 +213,24 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
         category: 'physics',
         spec: 'simulation step'
     };
+    blocks.xGravity = {
+        type: 'reporter',
+        category: 'physics',
+        spec: 'x gravity'
+    };
+    blocks.yGravity = {
+        type: 'reporter',
+        category: 'physics',
+        spec: 'y gravity'
+    };
+    blocks.friction = {
+        type: 'reporter',
+        category: 'physics',
+        spec: 'friction'
+    };
 
     var labels = SnapSerializer.prototype.watcherLabels;
-    labels.mass = blocks.mass.spec;
+    // labels.mass = blocks.mass.spec;
     labels.xVelocity = blocks.xVelocity.spec;
     labels.yVelocity = blocks.yVelocity.spec;
     labels.deltaTime = blocks.deltaTime.spec;
@@ -212,6 +241,21 @@ SpriteMorph.prototype.initPhysicsBlocks();
 SpriteMorph.prototype.deltaTime = function () {
     var stage = this.parentThatIsA(StageMorph);
     return (stage && stage.physicsElapsed) || 0;
+};
+
+SpriteMorph.prototype.xGravity = function () {
+    var stage = this.parentThatIsA(StageMorph);
+    return stage && stage.physicsWorld.gravity[0];
+};
+
+SpriteMorph.prototype.yGravity = function () {
+    var stage = this.parentThatIsA(StageMorph);
+    return stage && stage.physicsWorld.gravity[1];
+};
+
+SpriteMorph.prototype.friction = function () {
+    var stage = this.parentThatIsA(StageMorph);
+    return stage && stage.physicsWorld.defaultContactMaterial.friction;
 };
 
 SpriteMorph.prototype.setMass = function (m) {
@@ -273,6 +317,14 @@ SpriteMorph.prototype.yVelocity = function () {
     } else {
         return this.physicsYVelocity || 0;
     }
+};
+
+SpriteMorph.prototype.changeXVelocity = function (delta) {
+    this.setXVelocity(this.xVelocity() + (+delta || 0));
+};
+
+SpriteMorph.prototype.changeYVelocity = function (delta) {
+    this.setYVelocity(this.yVelocity() + (+delta || 0));
 };
 
 SpriteMorph.prototype.applyForce = function (force, direction) {
@@ -616,10 +668,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
             upperLimit = Number.MAX_VALUE;
         }
 
-        var value = object[getter];
-        if (typeof value === 'function') {
-            value = object[getter]();
-        }
+        var value = typeof object[getter] !== 'function' ? +object[getter] : +object[getter]();
         var field = new InputFieldMorph(value.toFixed(2), true, null, !setter);
         field.fixLayout();
         field.accept = function () {

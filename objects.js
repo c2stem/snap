@@ -1784,14 +1784,18 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('doSimulationStep'));
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
-        blocks.push('-');
+        blocks.push(block('xGravity'));
+        blocks.push(block('yGravity'));
+        blocks.push(block('friction'));
         // blocks.push(block('setMass'));
-        blocks.push(watcherToggle('mass'));
+        // blocks.push(watcherToggle('mass'));
         blocks.push(block('mass'));
         blocks.push('-');
         blocks.push(block('setVelocity'));
         blocks.push(block('setXVelocity'));
         blocks.push(block('setYVelocity'));
+        blocks.push(block('changeXVelocity'));
+        blocks.push(block('changeYVelocity'));
         blocks.push(watcherToggle('xVelocity'));
         blocks.push(block('xVelocity'));
         blocks.push(watcherToggle('yVelocity'));
@@ -5822,6 +5826,9 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('doSimulationStep'));
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
+        blocks.push(block('xGravity'));
+        blocks.push(block('yGravity'));
+        blocks.push(block('friction'));
         
     } else if (cat === 'looks') {
 

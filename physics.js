@@ -42,22 +42,22 @@ PhysicsMorph.prototype.drawNew = function () {
     context.fillStyle = new Color(0, 255, 0, 0.1);
     context.strokeStyle = new Color(0, 0, 0, 0.7);
     this.physicsBody.shapes.forEach(function (shape) {
-        // console.log(shape.position, bodyAngle);
+        if (shape.type == p2.Shape.BOX || shape.type == p2.Shape.CONVEX) {
+            var v = shape.vertices,
+                x = xOffset + bodyCos * shape.position[0] + bodySin * shape.position[1],
+                y = yOffset - bodySin * shape.position[0] + bodyCos * shape.position[1],
+                s = Math.sin(bodyAngle + shape.angle),
+                c = Math.cos(bodyAngle + shape.angle);
 
-        var v = shape.vertices,
-            x = xOffset + bodyCos * shape.position[0] + bodySin * shape.position[1],
-            y = yOffset - bodySin * shape.position[0] + bodyCos * shape.position[1],
-            s = Math.sin(bodyAngle + shape.angle),
-            c = Math.cos(bodyAngle + shape.angle);
-
-        context.beginPath();
-        context.moveTo(scale * (x + c * v[0][0] + s * v[0][1]), scale * (y - s * v[0][0] + c * v[0][1]));
-        for (var i = 1; i < v.length; i++) {
-            context.lineTo(scale * (x + c * v[i][0] + s * v[i][1]), scale * (y - s * v[i][0] + c * v[i][1]));
+            context.beginPath();
+            context.moveTo(scale * (x + c * v[0][0] + s * v[0][1]), scale * (y - s * v[0][0] + c * v[0][1]));
+            for (var i = 1; i < v.length; i++) {
+                context.lineTo(scale * (x + c * v[i][0] + s * v[i][1]), scale * (y - s * v[i][0] + c * v[i][1]));
+            }
+            context.closePath();
+            context.fill();
+            context.stroke();
         }
-        context.closePath();
-        context.fill();
-        context.stroke();
     });
 
     // context.strokeStyle = new Color(255, 0, 0, 0.5);
@@ -670,14 +670,15 @@ StageMorph.prototype.setPhysicsFloor = function (enable) {
     }
 
     if (enable) {
-        var body = new p2.Body({
-            mass: 0,
-            position: [0, -175],
-            angle: 0
-        });
+        var ext = this.extent().multiplyBy(1.0 / this.physicsScale),
+            body = new p2.Body({
+                mass: 0,
+                position: [0, -100 / this.physicsScale - ext.y / 2],
+                angle: 0
+            });
         body.addShape(new p2.Box({
-            width: 2000,
-            height: 20
+            width: ext.x,
+            height: 200 / this.physicsScale
         }));
         this.physicsWorld.addBody(body);
         this.physicsFloor = new PhysicsMorph(body);
@@ -685,6 +686,30 @@ StageMorph.prototype.setPhysicsFloor = function (enable) {
         this.physicsFloor.updateMorphicPosition();
     }
 };
+
+StageMorph.prototype.setPhysicsScale = function (scale) {
+    var rel = this.physicsScale / scale;
+
+    this.physicsWorld.bodies.forEach(function (body) {
+        body.position[0] = body.position[0] * rel;
+        body.position[1] = body.position[1] * rel;
+        body.aabbNeedsUpdate = true;
+
+        body.velocity[0] = body.velocity[0] * rel;
+        body.velocity[1] = body.velocity[1] * rel;
+
+        body.shapes.forEach(function (shape) {
+            if (shape.vertices) {
+                shape.vertices.forEach(function (vertex) {
+                    vertex[0] = vertex[0] * rel;
+                    vertex[1] = vertex[1] * rel;
+                });
+            }
+        });
+    });
+
+    this.physicsScale = scale;
+}
 
 StageMorph.prototype.updateMorphicPosition = function () {
     this.children.forEach(function (morph) {
@@ -779,7 +804,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         }
 
         var value = typeof object[getter] !== 'function' ? +object[getter] : +object[getter]();
-        var field = new InputFieldMorph(value.toFixed(2), true, null, !setter);
+        var field = new InputFieldMorph(value.toFixed(2), true, null, setter !== 0 && !setter);
         field.fixLayout();
         field.accept = function () {
             var value = +field.getValue();
@@ -835,7 +860,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
             'friction', 'friction', 0, 100));
         elems.add(inputField('restitution:', world.defaultContactMaterial,
             'restitution', 'restitution', 0, 1));
-        elems.add(inputField('scale:', aSprite, 'physicsScale', 'physicsScale',
+        elems.add(inputField('scale:', aSprite, 'physicsScale', 'setPhysicsScale',
             0.01, 100, 'pixel/m'));
         elems.add(toggleField("enable ground", aSprite, 'physicsFloor',
             function () {

@@ -655,7 +655,7 @@ StageMorph.prototype.init = function (globals) {
         gravity: [0, -9.81]
     });
     this.physicsWorld.useFrictionGravityOnZeroGravity = false;
-    this.physicsWorld.setGlobalStiffness(1e18); // make it stiffer
+    // this.physicsWorld.setGlobalStiffness(1e18); // make it stiffer
 
     this.physicsElapsed = 0;
     this.physicsUpdated = Date.now();
@@ -665,25 +665,22 @@ StageMorph.prototype.init = function (globals) {
 
 StageMorph.prototype.setPhysicsFloor = function (enable) {
     if (this.physicsFloor) {
-        this.physicsFloor.destroy();
+        this.physicsWorld.removeBody(this.physicsFloor);
         this.physicsFloor = null;
     }
 
     if (enable) {
         var ext = this.extent().multiplyBy(1.0 / this.physicsScale),
             body = new p2.Body({
-                mass: 0,
-                position: [0, -100 / this.physicsScale - ext.y / 2],
-                angle: 0
+                position: [0, 0],
+                type: p2.Body.STATIC
             });
-        body.addShape(new p2.Box({
-            width: ext.x,
-            height: 200 / this.physicsScale
-        }));
+        body.addShape(new p2.Plane(), [0, -ext.y / 2]);
+        body.addShape(new p2.Plane(), [ext.x / 2, 0], Math.PI * 0.5);
+        body.addShape(new p2.Plane(), [0, ext.y / 2], Math.PI);
+        body.addShape(new p2.Plane(), [-ext.x / 2, 0], Math.PI * 1.5);
         this.physicsWorld.addBody(body);
-        this.physicsFloor = new PhysicsMorph(body);
-        this.addBack(this.physicsFloor);
-        this.physicsFloor.updateMorphicPosition();
+        this.physicsFloor = body;
     }
 };
 
@@ -699,6 +696,9 @@ StageMorph.prototype.setPhysicsScale = function (scale) {
         body.velocity[1] = body.velocity[1] * rel;
 
         body.shapes.forEach(function (shape) {
+            shape.position[0] = shape.position[0] * rel;
+            shape.position[1] = shape.position[1] * rel;
+
             if (shape.vertices) {
                 shape.vertices.forEach(function (vertex) {
                     vertex[0] = vertex[0] * rel;
@@ -804,7 +804,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         }
 
         var value = typeof object[getter] !== 'function' ? +object[getter] : +object[getter]();
-        var field = new InputFieldMorph(value.toFixed(2), true, null, setter !== 0 && !setter);
+        var field = new InputFieldMorph(value.toFixed(2), true, null, !setter);
         field.fixLayout();
         field.accept = function () {
             var value = +field.getValue();
@@ -854,8 +854,8 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     if (aSprite instanceof StageMorph) {
         var world = aSprite.physicsWorld;
 
-        elems.add(inputField('gravity x:', world.gravity, 0, 0, -100, 100, 'm/s\u00b2'));
-        elems.add(inputField('gravity y:', world.gravity, 1, 1, -100, 100, 'm/s\u00b2'));
+        elems.add(inputField('gravity x:', world.gravity, "0", "0", -100, 100, 'm/s\u00b2'));
+        elems.add(inputField('gravity y:', world.gravity, "1", "1", -100, 100, 'm/s\u00b2'));
         elems.add(inputField('friction:', world.defaultContactMaterial,
             'friction', 'friction', 0, 100));
         elems.add(inputField('restitution:', world.defaultContactMaterial,

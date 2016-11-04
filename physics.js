@@ -136,6 +136,8 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
   console.log("Initializing physics blocks");
 
   var blocks = SpriteMorph.prototype.blocks;
+  console.log(blocks);
+
   blocks.angularForce = {
     only: SpriteMorph,
     type: 'command',

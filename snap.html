@@ -25,13 +25,14 @@
 		<script type="text/javascript">
 			var world;
 			window.onload = function () {
+				SpriteMorph.prototype.initPhysicsBlocks();
 				world = new WorldMorph(document.getElementById('world'));
                 world.worldCanvas.focus();
 				new IDE_Morph().openIn(world);
-        loop();
+		        loop();
 			};
 			function loop() {
-        requestAnimationFrame(loop);
+        		requestAnimationFrame(loop);
 				world.doOneCycle();
 			}
 		</script>

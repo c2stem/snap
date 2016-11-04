@@ -302,8 +302,6 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
   labels.deltaTime = blocks.deltaTime.spec;
 };
 
-SpriteMorph.prototype.initPhysicsBlocks();
-
 SpriteMorph.prototype.deltaTime = function () {
   var stage = this.parentThatIsA(StageMorph);
   return (stage && stage.physicsElapsed) || 0;

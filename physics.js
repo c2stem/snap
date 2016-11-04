@@ -133,6 +133,8 @@ SpriteMorph.prototype.categories.push('physics');
 SpriteMorph.prototype.blockColor.physics = new Color(100, 140, 250);
 
 SpriteMorph.prototype.initPhysicsBlocks = function () {
+  console.log("Initializing physics blocks");
+
   var blocks = SpriteMorph.prototype.blocks;
   blocks.angularForce = {
     only: SpriteMorph,

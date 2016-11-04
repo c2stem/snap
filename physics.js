@@ -134,6 +134,7 @@ SpriteMorph.prototype.blockColor.physics = new Color(100, 140, 250);
 
 SpriteMorph.prototype.initPhysicsBlocks = function () {
   console.log("Initializing physics blocks");
+  console.log("Hello Brian");
 
   var blocks = SpriteMorph.prototype.blocks;
   console.log(blocks);

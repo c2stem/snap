@@ -1781,6 +1781,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
 
     } else if (cat === 'physics' ) {
 
+        console.log(SpriteMorph.prototype.blocks);
         blocks.push(block('doSimulationStep'));
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
@@ -1788,7 +1789,6 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
         // blocks.push(block('setMass'));
-        // blocks.push(watcherToggle('mass'));
         blocks.push(block('mass'));
         blocks.push('-');
         blocks.push(block('setPhysicsPosition'));

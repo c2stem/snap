@@ -3777,6 +3777,7 @@ IDE_Morph.prototype.rawOpenProjectString = function (str) {
                 this
             );
         } catch (err) {
+            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {
@@ -3827,6 +3828,7 @@ IDE_Morph.prototype.rawOpenCloudDataString = function (str) {
                 this
             );
         } catch (err) {
+            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {
@@ -3868,6 +3870,7 @@ IDE_Morph.prototype.rawOpenBlocksString = function (str, name, silently) {
         try {
             blocks = this.serializer.loadBlocks(str, myself.stage);
         } catch (err) {
+            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {
@@ -3912,6 +3915,7 @@ IDE_Morph.prototype.rawOpenSpritesString = function (str) {
         try {
             this.serializer.loadSprites(str, this);
         } catch (err) {
+            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {
@@ -3924,6 +3928,7 @@ IDE_Morph.prototype.openMediaString = function (str) {
         try {
             this.serializer.loadMedia(str);
         } catch (err) {
+            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {

@@ -584,6 +584,34 @@ SpriteMorph.prototype.phyJustDropped = SpriteMorph.prototype.justDropped;
 SpriteMorph.prototype.justDropped = function () {
     this.phyJustDropped();
     this.updatePhysicsPosition();
+
+    var world = this.parentThatIsA(WorldMorph),
+        stage = this.parentThatIsA(StageMorph);
+    if (stage && world && world.hand && world.hand.phyPosTrace) {
+        var trace = world.hand.phyPosTrace;
+        if (trace.length >= 2) {
+            var i = trace.length - 1,
+                n = Date.now();
+            while (i >= 1 && n - trace[i].t < 300) {
+                i = i - 1;
+            }
+
+            var x = trace[trace.length - 1].x - trace[i].x,
+                y = trace[trace.length - 1].y - trace[i].y,
+                t = trace[trace.length - 1].t - trace[i].t,
+                s = this.physicsScale() * stage.scale;
+
+            if (t > 10.0) {
+                s = 1000.0 / (s * t);
+                x = x * s;
+                y = y * s;
+
+                this.setXVelocity(x);
+                this.setYVelocity(-y);
+            }
+        }
+
+    }
 };
 
 SpriteMorph.prototype.phyGotoXY = SpriteMorph.prototype.gotoXY;
@@ -629,6 +657,31 @@ SpriteMorph.prototype.allHatBlocksForSimulation = function () {
         return morph.selector === 'doSimulationStep';
     });
 };
+
+// ------- HandMorph -------
+
+HandMorph.prototype.phyProcessMouseMove = HandMorph.prototype.processMouseMove;
+HandMorph.prototype.processMouseMove = function(event) {
+    this.phyProcessMouseMove(event);
+
+    if (this.phyPosTrace instanceof Array) {
+        while(this.phyPosTrace.length >= 10) {
+            this.phyPosTrace.shift();
+        }
+
+        this.phyPosTrace.push({
+            x: event.screenX, 
+            y: event.screenY,
+            t: Date.now()
+        });
+    }
+}
+
+HandMorph.prototype.phyProcessMouseDown = HandMorph.prototype.processMouseDown;
+HandMorph.prototype.processMouseDown = function(event) {
+    this.phyProcessMouseDown(event);
+    this.phyPosTrace = [];
+}
 
 // ------- SpriteIconMorph -------
 

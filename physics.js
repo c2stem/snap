@@ -122,23 +122,10 @@ PhysicsMorph.prototype.userMenu = function () {
   return menu;
 };
 
-// PhysicsMorph.prototype.isRetinaEnabled = function() {
-//    console.log("PhysicsMorph.isRetinaEnabled");
-//    return false;
-//}
-
 // ------- SpriteMorph -------
 
-SpriteMorph.prototype.categories.push('physics');
-SpriteMorph.prototype.blockColor.physics = new Color(100, 140, 250);
-
 SpriteMorph.prototype.initPhysicsBlocks = function () {
-  console.log("Initializing physics blocks");
-  console.log("Hello Brian");
-
   var blocks = SpriteMorph.prototype.blocks;
-  console.log(blocks);
-
   blocks.angularForce = {
     only: SpriteMorph,
     type: 'command',
@@ -306,6 +293,17 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
   labels.yVelocity = blocks.yVelocity.spec;
   labels.deltaTime = blocks.deltaTime.spec;
 };
+
+SpriteMorph.prototype.categories.push('physics');
+SpriteMorph.prototype.blockColor.physics = new Color(100, 140, 250);
+
+SpriteMorph.prototype.initPhysicsBlocks();
+
+SpriteMorph.prototype.phyInitBlocks = SpriteMorph.prototype.initBlocks;
+SpriteMorph.prototype.initBlocks = function () {
+  SpriteMorph.prototype.phyInitBlocks();
+  SpriteMorph.prototype.initPhysicsBlocks();
+}
 
 SpriteMorph.prototype.deltaTime = function () {
   var stage = this.parentThatIsA(StageMorph);

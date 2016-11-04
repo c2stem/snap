@@ -736,7 +736,7 @@ StageMorph.prototype.init = function (globals) {
   this.physicsElapsed = 0;
   this.physicsUpdated = Date.now();
   this.physicsFloor = null;
-  this.physicsScale = 1.0;
+  this.physicsScale = 10.0;
 };
 
 StageMorph.prototype.setPhysicsFloor = function (enable) {
@@ -760,33 +760,44 @@ StageMorph.prototype.setPhysicsFloor = function (enable) {
   }
 };
 
-StageMorph.prototype.setPhysicsScale =
-  function (scale) {
-    var rel = this.physicsScale / scale;
-
-    this.physicsWorld.bodies.forEach(function (body) {
-      body.position[0] = body.position[0] * rel;
-      body.position[1] = body.position[1] * rel;
-      body.aabbNeedsUpdate = true;
-
-      body.velocity[0] = body.velocity[0] * rel;
-      body.velocity[1] = body.velocity[1] * rel;
-
-      body.shapes.forEach(function (shape) {
-        shape.position[0] = shape.position[0] * rel;
-        shape.position[1] = shape.position[1] * rel;
-
-        if (shape.vertices) {
-          shape.vertices.forEach(function (vertex) {
-            vertex[0] = vertex[0] * rel;
-            vertex[1] = vertex[1] * rel;
-          });
-        }
-      });
-    });
-
-    this.physicsScale = scale;
+StageMorph.prototype.updateScaleMorph = function () {
+  if (this.scaleMorph) {
+    this.scaleMorph.destroy();
   }
+
+  var height = this.physicsScale * this.scale * 2.0; // two meters
+  this.scaleMorph = new SymbolMorph("robot", height, new Color(120, 120, 120, 0.1));
+  this.add(this.scaleMorph);
+  this.scaleMorph.setPosition(this.bottomRight().subtract(new Point(5 + height * 0.96, 5 + height)));
+}
+
+StageMorph.prototype.setPhysicsScale = function (scale) {
+  var rel = this.physicsScale / scale;
+
+  this.physicsWorld.bodies.forEach(function (body) {
+    body.position[0] = body.position[0] * rel;
+    body.position[1] = body.position[1] * rel;
+    body.aabbNeedsUpdate = true;
+
+    body.velocity[0] = body.velocity[0] * rel;
+    body.velocity[1] = body.velocity[1] * rel;
+
+    body.shapes.forEach(function (shape) {
+      shape.position[0] = shape.position[0] * rel;
+      shape.position[1] = shape.position[1] * rel;
+
+      if (shape.vertices) {
+        shape.vertices.forEach(function (vertex) {
+          vertex[0] = vertex[0] * rel;
+          vertex[1] = vertex[1] * rel;
+        });
+      }
+    });
+  });
+
+  this.physicsScale = scale;
+  this.updateScaleMorph();
+}
 
 StageMorph.prototype.updateMorphicPosition = function () {
   this.children.forEach(function (morph) {
@@ -1020,6 +1031,7 @@ SnapSerializer.prototype.phyRawLoadProjectModel =
 SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
   var project = this.phyRawLoadProjectModel(xmlNode);
   project.stage.setPhysicsFloor(true);
+  project.stage.updateScaleMorph();
   return project;
 };
 
@@ -1029,6 +1041,7 @@ IDE_Morph.prototype.phyCreateStage = IDE_Morph.prototype.createStage;
 IDE_Morph.prototype.createStage = function () {
   this.phyCreateStage();
   this.stage.setPhysicsFloor(true);
+  this.stage.updateScaleMorph();
 };
 
 IDE_Morph.prototype.phyCreateSpriteEditor =

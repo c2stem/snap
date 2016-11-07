@@ -723,12 +723,16 @@ IDE_Morph.prototype.createControlBar = function () {
     button = new ToggleButtonMorph(
         null, // colors
         this, // the IDE is the target
-        'togglePhysics',
+        function() {
+            this.stage.physicsEngaged = !this.stage.physicsEngaged;
+        },
         [
             new SymbolMorph('atom', 14),
             new SymbolMorph('atom', 14)
         ],
-        'isPhysicsEngaged'
+        function() {
+            return this.stage && this.stage.physicsEngaged;
+        }
     );
     button.corner = 12;
     button.color = colors[0];
@@ -1849,14 +1853,6 @@ IDE_Morph.prototype.isPaused = function () {
     if (!this.stage) {return false; }
     return this.stage.threads.isPaused();
 };
-
-IDE_Morph.prototype.togglePhysics = function () {
-    this.stage.physicsEngaged = !this.stage.physicsEngaged;
-}
-
-IDE_Morph.prototype.isPhysicsEngaged = function () {
-    return this.stage && this.stage.physicsEngaged;
-}
 
 IDE_Morph.prototype.stopAllScripts = function () {
     if (this.stage.enableCustomHatBlocks) {
@@ -3777,7 +3773,6 @@ IDE_Morph.prototype.rawOpenProjectString = function (str) {
                 this
             );
         } catch (err) {
-            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {
@@ -3828,7 +3823,6 @@ IDE_Morph.prototype.rawOpenCloudDataString = function (str) {
                 this
             );
         } catch (err) {
-            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {
@@ -3870,7 +3864,6 @@ IDE_Morph.prototype.rawOpenBlocksString = function (str, name, silently) {
         try {
             blocks = this.serializer.loadBlocks(str, myself.stage);
         } catch (err) {
-            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {
@@ -3915,7 +3908,6 @@ IDE_Morph.prototype.rawOpenSpritesString = function (str) {
         try {
             this.serializer.loadSprites(str, this);
         } catch (err) {
-            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {
@@ -3928,7 +3920,6 @@ IDE_Morph.prototype.openMediaString = function (str) {
         try {
             this.serializer.loadMedia(str);
         } catch (err) {
-            console.log(err.stack);
             this.showMessage('Load failed: ' + err);
         }
     } else {

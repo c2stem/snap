@@ -5838,7 +5838,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
-        
+
     } else if (cat === 'looks') {
 
         blocks.push(block('doSwitchToCostume'));

@@ -726,6 +726,7 @@ IDE_Morph.prototype.createControlBar = function () {
         this, // the IDE is the target
         function() {
             this.stage.physicsEngaged = !this.stage.physicsEngaged;
+            this.stage.physicsUpdated = Date.now();
         },
         [
             new SymbolMorph('atom', 14),

@@ -812,35 +812,35 @@ StageMorph.prototype.phyStep = StageMorph.prototype.step;
 StageMorph.prototype.step = function () {
   this.phyStep();
   if (this.physicsEngaged) {
-    var time = Date.now(), // in milliseconds
-      delta = (time - this.physicsUpdated) * 0.001;
+    var active = false,
+      hats = this.allHatBlocksForSimulation();
 
-    if (delta < 0.5) {
-      var active = false,
-        hats = this.allHatBlocksForSimulation();
+    this.children.forEach(function (morph) {
+      if (morph.allHatBlocksForSimulation)
+        hats = hats.concat(morph.allHatBlocksForSimulation());
+    });
 
-      this.children.forEach(function (morph) {
-        if (morph.allHatBlocksForSimulation)
-          hats = hats.concat(morph.allHatBlocksForSimulation());
-      });
+    for (var i = 0; !active && i < hats.length; i++) {
+      active = this.threads.findProcess(hats[i]);
+    }
 
-      for (var i = 0; !active && i < hats.length; i++) {
-        active = this.threads.findProcess(hats[i]);
-      }
+    if (!active) {
+      var time = Date.now(), // in milliseconds
+        delta = (time - this.physicsUpdated) * 0.001;
 
-      if (!active) {
+      if (0.001 < delta) {
+        if (delta > 0.1) {
+          delta = 0.1
+        }
+
+        this.physicsUpdated = time;
+        this.physicsElapsed = delta;
         this.physicsWorld.step(delta);
         this.updateMorphicPosition();
-        this.physicsElapsed = delta;
-        this.physicsUpdated = time;
-
         for (var i = 0; i < hats.length; i++) {
           this.threads.startProcess(hats[i], this.isThreadSafe);
         }
       }
-    } else {
-      this.physicsElapsed = 0;
-      this.physicsUpdated = time;
     }
   }
 };

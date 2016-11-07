@@ -2,7 +2,7 @@
 
 "use strict";
 
-modules.physics = '2016-October-1';
+modules.physics = '2016-November-7';
 
 // ------- PhysicsMorph -------
 
@@ -74,11 +74,10 @@ PhysicsMorph.prototype.drawNew = function () {
   // context.stroke();
 };
 
-PhysicsMorph.prototype.physicsScale =
-  function () {
-    var stage = this.parentThatIsA(StageMorph);
-    return (stage && stage.physicsScale) || 1.0;
-  }
+PhysicsMorph.prototype.physicsScale = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  return (stage && stage.physicsScale) || 1.0;
+}
 
 PhysicsMorph.prototype.updateMorphicPosition = function () {
   var stage = this.parentThatIsA(StageMorph);
@@ -286,6 +285,13 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     spec: 'change y position by %n m',
     defaults: [0]
   };
+  blocks.changePhysicsPosition = {
+    only: SpriteMorph,
+    type: 'command',
+    category: 'physics',
+    spec: 'change position by x: %n y: %n m',
+    defaults: [0]
+  };
 
   var labels = SnapSerializer.prototype.watcherLabels;
   // labels.mass = blocks.mass.spec;
@@ -387,46 +393,42 @@ SpriteMorph.prototype.changeYVelocity = function (delta) {
   this.setYVelocity(this.yVelocity() + (+delta || 0));
 };
 
-SpriteMorph.prototype.physicsScale =
-  function () {
-    var stage = this.parentThatIsA(StageMorph);
-    return (stage && stage.physicsScale) || 1.0;
-  }
+SpriteMorph.prototype.physicsScale = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  return (stage && stage.physicsScale) || 1.0;
+}
 
-SpriteMorph.prototype.setPhysicsPosition =
-  function (x, y) {
-    this.gotoXY(+x * this.physicsScale(), +y * this.physicsScale());
-  }
+SpriteMorph.prototype.setPhysicsPosition = function (x, y) {
+  this.gotoXY(+x * this.physicsScale(), +y * this.physicsScale());
+}
 
-SpriteMorph.prototype.setPhysicsXPosition =
-  function (pos) {
-    this.setXPosition(+pos * this.physicsScale());
-  }
+SpriteMorph.prototype.setPhysicsXPosition = function (pos) {
+  this.setXPosition(+pos * this.physicsScale());
+}
 
-SpriteMorph.prototype.setPhysicsYPosition =
-  function (pos) {
-    this.setYPosition(+pos * this.physicsScale());
-  }
+SpriteMorph.prototype.setPhysicsYPosition = function (pos) {
+  this.setYPosition(+pos * this.physicsScale());
+}
 
-SpriteMorph.prototype.changePhysicsXPosition =
-  function (delta) {
-    this.changeXPosition(+delta * this.physicsScale());
-  }
+SpriteMorph.prototype.changePhysicsXPosition = function (delta) {
+  this.changeXPosition(+delta * this.physicsScale());
+}
 
-SpriteMorph.prototype.changePhysicsYPosition =
-  function (delta) {
-    this.changeYPosition(+delta * this.physicsScale());
-  }
+SpriteMorph.prototype.changePhysicsYPosition = function (delta) {
+  this.changeYPosition(+delta * this.physicsScale());
+}
 
-SpriteMorph.prototype.physicsXPosition =
-  function () {
-    return this.xPosition() / this.physicsScale();
-  }
+SpriteMorph.prototype.changePhysicsPosition = function (dx, dy) {
+  this.setPhysicsPosition(this.physicsXPosition() + dx, this.physicsYPosition() + dy);
+}
 
-SpriteMorph.prototype.physicsYPosition =
-  function () {
-    return this.yPosition() / this.physicsScale();
-  }
+SpriteMorph.prototype.physicsXPosition = function () {
+  return this.xPosition() / this.physicsScale();
+}
+
+SpriteMorph.prototype.physicsYPosition = function () {
+  return this.yPosition() / this.physicsScale();
+}
 
 SpriteMorph.prototype.applyForce = function (
   force, direction) {
@@ -682,30 +684,27 @@ SpriteMorph.prototype.allHatBlocksForSimulation = function () {
 // ------- HandMorph -------
 
 HandMorph.prototype.phyProcessMouseMove = HandMorph.prototype.processMouseMove;
-HandMorph.prototype.processMouseMove =
-  function (event) {
-    this.phyProcessMouseMove(event);
+HandMorph.prototype.processMouseMove = function (event) {
+  this.phyProcessMouseMove(event);
 
-    if (this.phyPosTrace instanceof Array) {
-      while (this.phyPosTrace.length >= 10) {
-        this.phyPosTrace.shift();
-      }
-
-      this.phyPosTrace.push({
-        x: event.screenX,
-        y: event.screenY,
-        t: Date.now()
-      });
+  if (this.phyPosTrace instanceof Array) {
+    while (this.phyPosTrace.length >= 10) {
+      this.phyPosTrace.shift();
     }
-  }
 
-HandMorph.prototype.phyProcessMouseDown =
-  HandMorph.prototype.processMouseDown;
-HandMorph.prototype.processMouseDown =
-  function (event) {
-    this.phyProcessMouseDown(event);
-    this.phyPosTrace = [];
+    this.phyPosTrace.push({
+      x: event.screenX,
+      y: event.screenY,
+      t: Date.now()
+    });
   }
+}
+
+HandMorph.prototype.phyProcessMouseDown = HandMorph.prototype.processMouseDown;
+HandMorph.prototype.processMouseDown = function (event) {
+  this.phyProcessMouseDown(event);
+  this.phyPosTrace = [];
+}
 
 // ------- SpriteIconMorph -------
 
@@ -854,8 +853,7 @@ StageMorph.prototype.add = function (morph) {
   }
 };
 
-StageMorph.prototype.allHatBlocksForSimulation =
-  SpriteMorph.prototype.allHatBlocksForSimulation;
+StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlocksForSimulation;
 StageMorph.prototype.deltaTime = SpriteMorph.prototype.deltaTime;
 StageMorph.prototype.xGravity = SpriteMorph.prototype.xGravity;
 StageMorph.prototype.yGravity = SpriteMorph.prototype.yGravity;
@@ -1027,8 +1025,7 @@ PhysicsTabMorph.prototype.wantsDropOf = function (morph) {
 
 // ------- SnapSerializer -------
 
-SnapSerializer.prototype.phyRawLoadProjectModel =
-  SnapSerializer.prototype.rawLoadProjectModel;
+SnapSerializer.prototype.phyRawLoadProjectModel = SnapSerializer.prototype.rawLoadProjectModel;
 SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
   var project = this.phyRawLoadProjectModel(xmlNode);
   project.stage.setPhysicsFloor(true);
@@ -1045,16 +1042,14 @@ IDE_Morph.prototype.createStage = function () {
   this.stage.updateScaleMorph();
 };
 
-IDE_Morph.prototype.phyCreateSpriteEditor =
-  IDE_Morph.prototype.createSpriteEditor;
+IDE_Morph.prototype.phyCreateSpriteEditor = IDE_Morph.prototype.createSpriteEditor;
 IDE_Morph.prototype.createSpriteEditor = function () {
   if (this.currentTab === 'physics') {
     if (this.spriteEditor) {
       this.spriteEditor.destroy();
     }
 
-    this.spriteEditor =
-      new PhysicsTabMorph(this.currentSprite, this.sliderColor);
+    this.spriteEditor = new PhysicsTabMorph(this.currentSprite, this.sliderColor);
     this.spriteEditor.color = this.groupColor;
     this.add(this.spriteEditor);
   } else {

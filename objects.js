@@ -1797,6 +1797,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('setPhysicsYPosition'));
         blocks.push(block('changePhysicsXPosition'));
         blocks.push(block('changePhysicsYPosition'));
+        blocks.push(block('changePhysicsPosition'));
         blocks.push(watcherToggle('physicsXPosition'));
         blocks.push(block('physicsXPosition'));
         blocks.push(watcherToggle('physicsYPosition'));

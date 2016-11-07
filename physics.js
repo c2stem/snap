@@ -1025,12 +1025,12 @@ PhysicsTabMorph.prototype.wantsDropOf = function (morph) {
 
 // ------- SnapSerializer -------
 
-SnapSerializer.prototype.phyRawLoadProjectModel = SnapSerializer.prototype.rawLoadProjectModel;
-SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
-  var project = this.phyRawLoadProjectModel(xmlNode);
-  project.stage.setPhysicsFloor(true);
-  project.stage.updateScaleMorph();
-  return project;
+SnapSerializer.prototype.phyOpenProject = SnapSerializer.prototype.openProject;
+SnapSerializer.prototype.openProject = function (project, ide) {
+  this.phyOpenProject(project, ide);
+  ide.stage.setPhysicsFloor(true);
+  ide.stage.updateScaleMorph();
+  ide.controlBar.physicsButton.refresh();
 };
 
 // ------- IDE_Morph -------
@@ -1040,6 +1040,7 @@ IDE_Morph.prototype.createStage = function () {
   this.phyCreateStage();
   this.stage.setPhysicsFloor(true);
   this.stage.updateScaleMorph();
+  this.controlBar.physicsButton.refresh();
 };
 
 IDE_Morph.prototype.phyCreateSpriteEditor = IDE_Morph.prototype.createSpriteEditor;

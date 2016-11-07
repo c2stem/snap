@@ -145,11 +145,11 @@ radians, useBlurredShadows, SpeechBubbleMorph, modules, StageMorph,
 fontHeight, TableFrameMorph, SpriteMorph, Context, ListWatcherMorph,
 CellMorph, DialogBoxMorph, BlockInputFragmentMorph, PrototypeHatBlockMorph,
 Costume, IDE_Morph, BlockDialogMorph, BlockEditorMorph, localize, isNil,
-isSnapObject, copy, PushButtonMorph, SpriteIconMorph*/
+isSnapObject, copy, PushButtonMorph, SpriteIconMorph, Process*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.blocks = '2016-July-15';
+modules.blocks = '2016-October-31';
 
 var SyntaxElementMorph;
 var BlockMorph;
@@ -186,7 +186,7 @@ WorldMorph.prototype.customMorphs = function () {
 /*
     return [
         new SymbolMorph(
-            'pipette',
+            'stepForward',
             50,
             new Color(250, 250, 250),
             new Point(-1, -1),
@@ -346,6 +346,7 @@ SyntaxElementMorph.prototype.init = function (silently) {
     this.cachedClr = null;
     this.cachedClrBright = null;
     this.cachedClrDark = null;
+    this.cachedNormalColor = null; // for single-stepping
     this.isStatic = false; // if true, I cannot be exchanged
 
     SyntaxElementMorph.uber.init.call(this, silently);
@@ -731,6 +732,20 @@ SyntaxElementMorph.prototype.setLabelColor = function (
     });
 };
 
+SyntaxElementMorph.prototype.flash = function () {
+    if (!this.cachedNormalColor) {
+        this.cachedNormalColor = this.color;
+        this.setColor(this.activeHighlight);
+    }
+};
+
+SyntaxElementMorph.prototype.unflash = function () {
+    if (this.cachedNormalColor) {
+        var clr = this.cachedNormalColor;
+        this.cachedNormalColor = null;
+        this.setColor(clr);
+    }
+};
 
 // SyntaxElementMorph zebra coloring
 
@@ -2333,7 +2348,7 @@ BlockMorph.prototype.userMenu = function () {
             function () {
                 new DialogBoxMorph(
                     myself,
-                    myself.setSpec,
+                    myself.userSetSpec,
                     myself
                 ).prompt(
                     "Variable name",
@@ -2431,7 +2446,7 @@ BlockMorph.prototype.userMenu = function () {
         }
         return menu;
     }
-    if (this.parentThatIsA(RingMorph)) {
+    if (this.parent.parentThatIsA(RingMorph)) {
         menu.addLine();
         menu.addItem("unringify", 'unringify');
         menu.addItem("ringify", 'ringify');
@@ -2528,10 +2543,10 @@ BlockMorph.prototype.deleteBlock = function () {
             }
         });
     }
-    if (this instanceof ReporterBlockMorph) {
-        if (this.parent instanceof BlockMorph) {
-            this.parent.revertToDefaultInput(this);
-        }
+    if ((this.parent instanceof BlockMorph)
+            || (this.parent instanceof MultiArgMorph)
+            || (this.parent instanceof ReporterSlotMorph)) {
+        this.parent.revertToDefaultInput(this);
     } else { // CommandBlockMorph
         if (this.parent) {
             if (this.parent.fixLayout) {
@@ -2584,7 +2599,7 @@ BlockMorph.prototype.ringify = function () {
 
 BlockMorph.prototype.unringify = function () {
     // remove a Ring around me, if any
-    var ring = this.parentThatIsA(RingMorph),
+    var ring = this.parent.parentThatIsA(RingMorph),
         top = this.topBlock(),
         scripts = this.parentThatIsA(ScriptsMorph),
         block,
@@ -5836,7 +5851,8 @@ ArgMorph.prototype.reactToSliderEdit = function () {
         }
         if (receiver) {
             stage = receiver.parentThatIsA(StageMorph);
-            if (stage && stage.isThreadSafe) {
+            if (stage && (stage.isThreadSafe ||
+                    Process.prototype.enableSingleStepping)) {
                 stage.threads.startProcess(top, stage.isThreadSafe);
             } else {
                 top.mouseClickLeft();
@@ -7530,7 +7546,6 @@ InputSlotMorph.prototype.mouseDownLeft = function (pos) {
         this.escalateEvent('mouseDownLeft', pos);
     } else {
         this.contents().edit();
-        this.contents().selectAll();
     }
 };
 
@@ -7541,7 +7556,6 @@ InputSlotMorph.prototype.mouseClickLeft = function (pos) {
         this.dropDownMenu();
     } else {
         this.contents().edit();
-        this.contents().selectAll();
     }
 };
 
@@ -7557,6 +7571,12 @@ InputSlotMorph.prototype.reactToKeystroke = function () {
 
 InputSlotMorph.prototype.reactToEdit = function () {
     this.contents().clearSelection();
+};
+
+InputSlotMorph.prototype.freshTextEdit = function (aStringOrTextMorph) {
+    this.onNextStep = function () {
+        aStringOrTextMorph.selectAll();
+    };
 };
 
 // InputSlotMorph menu:
@@ -7640,6 +7660,29 @@ InputSlotMorph.prototype.isEmptySlot = function () {
     return this.contents().text === '';
 };
 
+// InputSlotMorph single-stepping:
+
+InputSlotMorph.prototype.flash = function () {
+    // don't redraw the label b/c zebra coloring
+    if (!this.cachedNormalColor) {
+        this.cachedNormalColor = this.color;
+        this.color = this.activeHighlight;
+        this.drawNew();
+        this.changed();
+    }
+};
+
+InputSlotMorph.prototype.unflash = function () {
+    // don't redraw the label b/c zebra coloring
+    if (this.cachedNormalColor) {
+        var clr = this.cachedNormalColor;
+        this.cachedNormalColor = null;
+        this.color = clr;
+        this.drawNew();
+        this.changed();
+    }
+};
+
 // InputSlotMorph drawing:
 
 InputSlotMorph.prototype.drawNew = function () {
@@ -7648,13 +7691,15 @@ InputSlotMorph.prototype.drawNew = function () {
     // initialize my surface property
     this.image = newCanvas(this.extent());
     context = this.image.getContext('2d');
-    if (this.parent) {
+    if (this.cachedNormalColor) { // if flashing
+        borderColor = this.color;
+    } else if (this.parent) {
         borderColor = this.parent.color;
     } else {
         borderColor = new Color(120, 120, 120);
     }
     context.fillStyle = this.color.toString();
-    if (this.isReadOnly) {
+    if (this.isReadOnly && !this.cachedNormalColor) { // unless flashing
         context.fillStyle = borderColor.darker().toString();
     }
 
@@ -7995,6 +8040,16 @@ TemplateSlotMorph.prototype.drawNew = function () {
 TemplateSlotMorph.prototype.drawRounded = ReporterBlockMorph
     .prototype.drawRounded;
 
+// TemplateSlotMorph single-stepping
+
+TemplateSlotMorph.prototype.flash = function () {
+    this.template().flash();
+};
+
+TemplateSlotMorph.prototype.unflash = function () {
+    this.template().unflash();
+};
+
 // BooleanSlotMorph ////////////////////////////////////////////////////
 
 /*
@@ -8143,7 +8198,10 @@ BooleanSlotMorph.prototype.drawNew = function (progress) {
             this.fontSize + this.edge * 2
         ));
     }
-    this.color = this.parent ? this.parent.color : new Color(200, 200, 200);
+    if (!(this.cachedNormalColor)) { // unless flashing
+        this.color = this.parent ?
+                this.parent.color : new Color(200, 200, 200);
+    }
     this.cachedClr = this.color.toString();
     this.cachedClrBright = this.bright();
     this.cachedClrDark = this.dark();
@@ -8163,15 +8221,19 @@ BooleanSlotMorph.prototype.drawDiamond = function (context, progress) {
         gradient;
 
     // draw the 'flat' shape:
-    switch (this.value) {
-    case true:
-        context.fillStyle = 'rgb(0, 200, 0)';
-        break;
-    case false:
-        context.fillStyle = 'rgb(200, 0, 0)';
-        break;
-    default:
-        context.fillStyle = this.color.darker(25).toString();
+    if (this.cachedNormalColor) { // if flashing
+        context.fillStyle = this.color.toString();
+    } else {
+        switch (this.value) {
+        case true:
+            context.fillStyle = 'rgb(0, 200, 0)';
+            break;
+        case false:
+            context.fillStyle = 'rgb(200, 0, 0)';
+            break;
+        default:
+            context.fillStyle = this.color.darker(25).toString();
+        }
     }
 
     if (progress && !this.isEmptySlot()) {
@@ -8681,6 +8743,7 @@ SymbolMorph.uber = Morph.prototype;
 SymbolMorph.prototype.names = [
     'square',
     'pointRight',
+    'stepForward',
     'gears',
     'file',
     'fullScreen',
@@ -8757,7 +8820,7 @@ SymbolMorph.prototype.setLabelColor = function (
     shadowColor,
     shadowOffset
 ) {
-    this.shadowOffset = shadowOffset;
+    this.shadowOffset = shadowOffset || new Point();
     this.shadowColor = shadowColor;
     this.setColor(textColor);
 };
@@ -8804,6 +8867,8 @@ SymbolMorph.prototype.symbolCanvasColored = function (aColor) {
         return this.drawSymbolStop(canvas, aColor);
     case 'pointRight':
         return this.drawSymbolPointRight(canvas, aColor);
+    case 'stepForward':
+        return this.drawSymbolStepForward(canvas, aColor);
     case 'gears':
         return this.drawSymbolGears(canvas, aColor);
     case 'file':
@@ -8946,6 +9011,28 @@ SymbolMorph.prototype.drawSymbolPointRight = function (canvas, color) {
     ctx.lineTo(0, 0);
     ctx.closePath();
     ctx.fill();
+    return canvas;
+};
+
+SymbolMorph.prototype.drawSymbolStepForward = function (canvas, color) {
+    // answer a canvas showing a right-pointing triangle
+    // followed by a vertical bar
+    var ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = color.toString();
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(canvas.width * 0.75, Math.round(canvas.height / 2));
+    ctx.lineTo(0, canvas.height);
+    ctx.lineTo(0, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(
+        canvas.width * 0.75,
+        0,
+        canvas.width * 0.25,
+        canvas.height
+    );
     return canvas;
 };
 
@@ -10400,7 +10487,7 @@ MultiArgMorph.prototype.mouseClickLeft = function (pos) {
         this.escalateEvent('mouseClickLeft', pos);
         return;
     }
-    // if the <shift> key is pressed, repeat action 5 times
+    // if the <shift> key is pressed, repeat action 3 times
     var arrows = this.arrows(),
         leftArrow = arrows.children[0],
         rightArrow = arrows.children[1],
@@ -12216,6 +12303,13 @@ ScriptFocusMorph.prototype.insertBlock = function (block) {
                 }
             }
         }
+    }
+
+    // experimental: if the inserted block has inputs, go to the first one
+    if (block.inputs && block.inputs().length) {
+        this.element = block;
+        this.atEnd = false;
+        this.nextElement();
     }
 };
 

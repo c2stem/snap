@@ -402,7 +402,7 @@ SpriteMorph.prototype.setVelocity = function (vx, vy) {
     this.physicsBody.velocity[1] = +vy;
   } else {
     this.physicsXVelocity = +vx;
-    this.physicsYVelocity = +vx;
+    this.physicsYVelocity = +vy;
   }
 };
 
@@ -698,7 +698,7 @@ SpriteMorph.prototype.justDropped = function () {
     if (trace.length >= 2) {
       var i = trace.length - 1,
         n = Date.now();
-      while (i >= 1 && n - trace[i].t < 300) {
+      while (i >= 1 && n - trace[i].t < 200) {
         i = i - 1;
       }
 
@@ -707,12 +707,14 @@ SpriteMorph.prototype.justDropped = function () {
         t = trace[trace.length - 1].t - trace[i].t,
         s = this.physicsScale() * stage.scale;
 
-      if (t > 10.0) {
+      if (t > 20.0) {
         s = 1000.0 / (s * t);
         x = x * s;
         y = y * s;
 
         this.setVelocity(x, -y);
+      } else {
+        this.setVelocity(0, 0);
       }
     }
   }

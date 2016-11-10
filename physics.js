@@ -90,14 +90,11 @@ PhysicsMorph.prototype.updateMorphicPosition = function () {
     scale = stage.scale * this.physicsScale(),
     pos = new Point(
       center.x + aabb.lowerBound[0] * scale,
-      center.y - aabb.upperBound[1] * scale),
-    delta = pos.subtract(this.topLeft());
+      center.y - aabb.upperBound[1] * scale);
 
-  if (Math.abs(delta.x) >= 0.5 || Math.abs(delta.y) >= 0.5) {
-    this.setPosition(pos);
-    this.drawNew();
-    this.changed();
-  }
+  this.setPosition(pos);
+  this.drawNew();
+  this.changed();
 };
 
 PhysicsMorph.prototype.destroy = function () {

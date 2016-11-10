@@ -1813,6 +1813,15 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(watcherToggle('yVelocity'));
         blocks.push(block('yVelocity'));
         blocks.push('-');
+        blocks.push(block('setPhysicsAngle'))
+        blocks.push(block('changePhysicsAngle'))
+        blocks.push(block('setAngularVelocity'));
+        blocks.push(block('changeAngularVelocity'));
+        blocks.push(watcherToggle('physicsAngle'));
+        blocks.push(block('physicsAngle'))
+        blocks.push(watcherToggle('angularVelocity'));
+        blocks.push(block('angularVelocity'));
+        blocks.push('-');
         blocks.push(block('applyForceForward'));
         blocks.push(block('applyForce'));
         blocks.push(block('angularForce'));

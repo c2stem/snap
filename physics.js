@@ -761,6 +761,29 @@ SpriteMorph.prototype.allHatBlocksForSimulation = function () {
   });
 };
 
+SpriteMorph.prototype.physicsSaveToXML = function (serializer) {
+  return serializer.format(
+    '<physics' +
+    ' mass="@"' +
+    ' mode="@"' +
+    '></physics>',
+    this.physicsMass,
+    this.physicsMode || 'morphic'
+  );
+};
+
+SpriteMorph.prototype.physicsLoadFromXML = function (model) {
+  var attrs = model.attributes;
+
+  if (attrs.mass) {
+    this.setMass(parseFloat(attrs.mass));
+  }
+
+  if (attrs.mode) {
+    this.physicsMode = attrs.mode !== 'morphic' ? attrs.mode : '';
+  }
+};
+
 // ------- HandMorph -------
 
 HandMorph.prototype.phyProcessMouseMove = HandMorph.prototype.processMouseMove;
@@ -778,13 +801,13 @@ HandMorph.prototype.processMouseMove = function (event) {
       t: Date.now()
     });
   }
-}
+};
 
 HandMorph.prototype.phyProcessMouseDown = HandMorph.prototype.processMouseDown;
 HandMorph.prototype.processMouseDown = function (event) {
   this.phyProcessMouseDown(event);
   this.phyPosTrace = [];
-}
+};
 
 // ------- SpriteIconMorph -------
 
@@ -849,7 +872,7 @@ StageMorph.prototype.updateScaleMorph = function () {
   this.scaleMorph = new SymbolMorph("robot", height, new Color(120, 120, 120, 0.1));
   this.add(this.scaleMorph);
   this.scaleMorph.setPosition(this.bottomRight().subtract(new Point(5 + height * 0.96, 5 + height)));
-}
+};
 
 StageMorph.prototype.setPhysicsScale = function (scale) {
   var rel = this.physicsScale / scale;
@@ -877,7 +900,7 @@ StageMorph.prototype.setPhysicsScale = function (scale) {
 
   this.physicsScale = scale;
   this.updateScaleMorph();
-}
+};
 
 StageMorph.prototype.updateMorphicPosition = function () {
   this.children.forEach(function (morph) {
@@ -969,7 +992,7 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
     if (attrs[name]) {
       object[property] = parseFloat(attrs[name]);
     }
-  }
+  };
 
   loadFloat(world.gravity, 0, "xgravity");
   loadFloat(world.gravity, 1, "ygravity");
@@ -980,7 +1003,7 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
   if (attrs.floor) {
     this.setPhysicsFloor(attrs.floor === "true");
   }
-}
+};
 
 // ------- PhysicTabMorph -------
 

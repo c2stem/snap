@@ -639,8 +639,6 @@ SnapSerializer.prototype.loadSprites = function (xmlString, ide) {
         if (model.attributes.pen) {
             sprite.penPoint = model.attributes.pen;
         }
-        sprite.physicsMode = model.attributes.physics || '';
-        sprite.physicsMass = parseFloat(model.attributes.mass) || 0;
         project.stage.add(sprite);
         ide.sprites.add(sprite);
         sprite.scale = parseFloat(model.attributes.scale || '1');
@@ -1240,8 +1238,6 @@ SnapSerializer.prototype.loadValue = function (model) {
         if (model.attributes.pen) {
             v.penPoint = model.attributes.pen;
         }
-        v.physicsMode = model.attributes.physics || '';
-        v.physicsMass = parseFloat(model.attributes.mass) || 0;
         myself.project.stage.add(v);
         v.scale = parseFloat(model.attributes.scale || '1');
         v.rotationStyle = parseFloat(
@@ -1568,9 +1564,8 @@ SpriteMorph.prototype.toXML = function (serializer) {
             ' rotation="@"' +
             ' draggable="@"' +
             '%' +
-            ' mass="@"' +
-            '%' +
             ' costume="@" color="@,@,@" pen="@" ~>' +
+            '%' + // physics properties
             '%' + // inheritance info
             '%' + // nesting info
             '<costumes>%</costumes>' +
@@ -1587,14 +1582,13 @@ SpriteMorph.prototype.toXML = function (serializer) {
         this.scale,
         this.rotationStyle,
         this.isDraggable,
-        this.physicsMode ? ' physics="' + this.physicsMode + '"': '',
-        this.physicsMass || 0,
         this.isVisible ? '' : ' hidden="true"',
         this.getCostumeIdx(),
         this.color.r,
         this.color.g,
         this.color.b,
         this.penPoint,
+        this.physicsSaveToXML(serializer),
 
         // inheritance info
         this.exemplar

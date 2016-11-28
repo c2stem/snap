@@ -287,7 +287,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       type: 'command',
       category: 'physics',
       spec: 'change position by x: %n y: %n m',
-      defaults: [0]
+      defaults: [0, 0]
     },
     setPhysicsAngle: {
       only: SpriteMorph,
@@ -938,6 +938,49 @@ StageMorph.prototype.deltaTime = SpriteMorph.prototype.deltaTime;
 StageMorph.prototype.xGravity = SpriteMorph.prototype.xGravity;
 StageMorph.prototype.yGravity = SpriteMorph.prototype.yGravity;
 StageMorph.prototype.friction = SpriteMorph.prototype.friction;
+
+StageMorph.prototype.physicsSaveToXML = function (serializer) {
+  var world = this.physicsWorld,
+    material = world.defaultContactMaterial;
+
+  return serializer.format(
+    '<physics' +
+    ' xgravity="@"' +
+    ' ygravity="@"' +
+    ' friction="@"' +
+    ' restitution="@"' +
+    ' scale="@"' +
+    ' floor="@"' +
+    '></physics>',
+    world.gravity[0],
+    world.gravity[1],
+    material.friction,
+    material.restitution,
+    this.physicsScale, !!this.physicsFloor
+  );
+};
+
+StageMorph.prototype.physicsLoadFromXML = function (model) {
+  var attrs = model.attributes,
+    world = this.physicsWorld,
+    material = world.defaultContactMaterial;
+
+  var loadFloat = function (object, property, name) {
+    if (attrs[name]) {
+      object[property] = parseFloat(attrs[name]);
+    }
+  }
+
+  loadFloat(world.gravity, 0, "xgravity");
+  loadFloat(world.gravity, 1, "ygravity");
+  loadFloat(material, "friction", "friction");
+  loadFloat(material, "restitution", "restitution");
+  loadFloat(this, "physicsScale", "scale");
+
+  if (attrs.floor) {
+    this.setPhysicsFloor(attrs.floor === "true");
+  }
+}
 
 // ------- PhysicTabMorph -------
 

@@ -723,6 +723,11 @@ SnapSerializer.prototype.loadObject = function (object, model) {
     this.populateCustomBlocks(object, blocks);
     this.loadVariables(object.variables, model.require('variables'));
     this.loadScripts(object.scripts, model.require('scripts'));
+
+    var physics = model.childNamed('physics');
+    if (physics && object.physicsLoadFromXML) {
+        object.physicsLoadFromXML(physics);
+    }
 };
 
 SnapSerializer.prototype.loadInheritanceInfo = function (object, model) {
@@ -1502,6 +1507,7 @@ StageMorph.prototype.toXML = function (serializer) {
             'inheritance="@" ' +
             'sublistIDs="@" ' +
             'scheduled="@" ~>' +
+            '%' + // physics properties
             '<pentrails>$</pentrails>' +
             '<costumes>%</costumes>' +
             '<sounds>%</sounds>' +
@@ -1531,6 +1537,7 @@ StageMorph.prototype.toXML = function (serializer) {
         this.enableInheritance,
         this.enableSublistIDs,
         StageMorph.prototype.frameRate !== 0,
+        this.physicsSaveToXML(serializer),
         normalizeCanvas(this.trailsCanvas, true).toDataURL('image/png'),
         serializer.store(this.costumes, this.name + '_cst'),
         serializer.store(this.sounds, this.name + '_snd'),

@@ -911,11 +911,11 @@ StageMorph.prototype.updateMorphicPosition = function () {
 
 StageMorph.prototype.phyStep = StageMorph.prototype.step;
 StageMorph.prototype.step = function () {
-  var i, active;
+  var i, active, hats;
 
   this.phyStep();
   if (this.physicsEngaged) {
-    active = false,
+      active = false;
       hats = this.allHatBlocksForSimulation();
 
     this.children.forEach(function (morph) {

@@ -8,7 +8,7 @@ modules.physics = '2016-November-7';
 
 function PhysicsMorph(physicsBody) {
   this.init(physicsBody);
-};
+}
 
 PhysicsMorph.prototype = new Morph();
 PhysicsMorph.prototype.constructor = PhysicsMorph;
@@ -21,10 +21,11 @@ PhysicsMorph.prototype.init = function (physicsBody) {
 
 PhysicsMorph.prototype.drawNew = function () {
   var stage = this.parentThatIsA(StageMorph),
+    aabb = this.physicsBody.getAABB(),
     scale = 1;
+
   if (stage) {
     scale = stage.scale * this.physicsScale();
-    var aabb = this.physicsBody.getAABB();
     this.silentSetExtent(
       new Point(
         scale * (aabb.upperBound[0] - aabb.lowerBound[0]),
@@ -37,14 +38,13 @@ PhysicsMorph.prototype.drawNew = function () {
     bodySin = Math.sin(bodyAngle),
     bodyCos = Math.cos(bodyAngle),
     bodyPos = this.physicsBody.position,
-    aabb = this.physicsBody.getAABB(),
     xOffset = bodyPos[0] - aabb.lowerBound[0],
     yOffset = aabb.upperBound[1] - bodyPos[1];
 
   context.fillStyle = new Color(0, 255, 0, 0.1);
   context.strokeStyle = new Color(0, 0, 0, 0.7);
   this.physicsBody.shapes.forEach(function (shape) {
-    if (shape.type == p2.Shape.BOX || shape.type == p2.Shape.CONVEX) {
+    if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
         x = xOffset + bodyCos * shape.position[0] +
         bodySin * shape.position[1],
@@ -77,7 +77,7 @@ PhysicsMorph.prototype.drawNew = function () {
 PhysicsMorph.prototype.physicsScale = function () {
   var stage = this.parentThatIsA(StageMorph);
   return (stage && stage.physicsScale) || 1.0;
-}
+};
 
 PhysicsMorph.prototype.updateMorphicPosition = function () {
   var stage = this.parentThatIsA(StageMorph);
@@ -107,8 +107,7 @@ PhysicsMorph.prototype.destroy = function () {
 };
 
 PhysicsMorph.prototype.userMenu = function () {
-  var ide = this.parentThatIsA(IDE_Morph),
-    menu = new MenuMorph(this);
+  var menu = new MenuMorph(this);
 
   menu.addItem("delete", 'destroy');
   menu.addItem("redraw", 'drawNew');
@@ -351,7 +350,7 @@ SpriteMorph.prototype.phyInitBlocks = SpriteMorph.prototype.initBlocks;
 SpriteMorph.prototype.initBlocks = function () {
   SpriteMorph.prototype.phyInitBlocks();
   SpriteMorph.prototype.initPhysicsBlocks();
-}
+};
 
 SpriteMorph.prototype.phyInit = SpriteMorph.prototype.init;
 SpriteMorph.prototype.init = function (globals) {
@@ -394,7 +393,7 @@ SpriteMorph.prototype.mass = function () {
 };
 
 SpriteMorph.prototype.setVelocity = function (vx, vy) {
-  if (this.physicsBody && this.physicsMode == 'dynamic') {
+  if (this.physicsBody && this.physicsMode === 'dynamic') {
     this.physicsBody.velocity[0] = +vx;
     this.physicsBody.velocity[1] = +vy;
   } else {
@@ -404,7 +403,7 @@ SpriteMorph.prototype.setVelocity = function (vx, vy) {
 };
 
 SpriteMorph.prototype.setXVelocity = function (v) {
-  if (this.physicsBody && this.physicsMode == 'dynamic') {
+  if (this.physicsBody && this.physicsMode === 'dynamic') {
     this.physicsBody.velocity[0] = +v;
   } else {
     this.physicsXVelocity = +v;
@@ -412,7 +411,7 @@ SpriteMorph.prototype.setXVelocity = function (v) {
 };
 
 SpriteMorph.prototype.setYVelocity = function (v) {
-  if (this.physicsBody && this.physicsMode == 'dynamic') {
+  if (this.physicsBody && this.physicsMode === 'dynamic') {
     this.physicsBody.velocity[1] = +v;
   } else {
     this.physicsYVelocity = +v;
@@ -420,7 +419,7 @@ SpriteMorph.prototype.setYVelocity = function (v) {
 };
 
 SpriteMorph.prototype.xVelocity = function () {
-  if (this.physicsBody && this.physicsMode == 'dynamic') {
+  if (this.physicsBody && this.physicsMode === 'dynamic') {
     return this.physicsBody.velocity[0];
   } else {
     return this.physicsXVelocity || 0;
@@ -428,7 +427,7 @@ SpriteMorph.prototype.xVelocity = function () {
 };
 
 SpriteMorph.prototype.yVelocity = function () {
-  if (this.physicsBody && this.physicsMode == 'dynamic') {
+  if (this.physicsBody && this.physicsMode === 'dynamic') {
     return this.physicsBody.velocity[1];
   } else {
     return this.physicsYVelocity || 0;
@@ -446,39 +445,39 @@ SpriteMorph.prototype.changeYVelocity = function (delta) {
 SpriteMorph.prototype.physicsScale = function () {
   var stage = this.parentThatIsA(StageMorph);
   return (stage && stage.physicsScale) || 1.0;
-}
+};
 
 SpriteMorph.prototype.setPhysicsPosition = function (x, y) {
   this.gotoXY(+x * this.physicsScale(), +y * this.physicsScale());
-}
+};
 
 SpriteMorph.prototype.setPhysicsXPosition = function (pos) {
   this.setXPosition(+pos * this.physicsScale());
-}
+};
 
 SpriteMorph.prototype.setPhysicsYPosition = function (pos) {
   this.setYPosition(+pos * this.physicsScale());
-}
+};
 
 SpriteMorph.prototype.changePhysicsXPosition = function (delta) {
   this.changeXPosition(+delta * this.physicsScale());
-}
+};
 
 SpriteMorph.prototype.changePhysicsYPosition = function (delta) {
   this.changeYPosition(+delta * this.physicsScale());
-}
+};
 
 SpriteMorph.prototype.changePhysicsPosition = function (dx, dy) {
   this.setPhysicsPosition(this.physicsXPosition() + dx, this.physicsYPosition() + dy);
-}
+};
 
 SpriteMorph.prototype.physicsXPosition = function () {
   return this.xPosition() / this.physicsScale();
-}
+};
 
 SpriteMorph.prototype.physicsYPosition = function () {
   return this.yPosition() / this.physicsScale();
-}
+};
 
 SpriteMorph.prototype.setPhysicsAngle = function (angle) {
   var heading = -degrees(angle) + 90;
@@ -498,7 +497,7 @@ SpriteMorph.prototype.physicsAngle = function () {
 };
 
 SpriteMorph.prototype.setAngularVelocity = function (speed) {
-  if (this.physicsBody && this.physicsMode == 'dynamic') {
+  if (this.physicsBody && this.physicsMode === 'dynamic') {
     this.physicsBody.angularVelocity = +speed;
   } else {
     this.physicsAngularVelocity = +speed;
@@ -510,7 +509,7 @@ SpriteMorph.prototype.changeAngularVelocity = function (delta) {
 };
 
 SpriteMorph.prototype.angularVelocity = function () {
-  if (this.physicsBody && this.physicsMode == 'dynamic') {
+  if (this.physicsBody && this.physicsMode === 'dynamic') {
     return this.physicsBody.angularVelocity;
   } else {
     return this.physicsAngularVelocity || 0;
@@ -912,17 +911,20 @@ StageMorph.prototype.updateMorphicPosition = function () {
 
 StageMorph.prototype.phyStep = StageMorph.prototype.step;
 StageMorph.prototype.step = function () {
+  var i, active;
+
   this.phyStep();
   if (this.physicsEngaged) {
-    var active = false,
+    active = false,
       hats = this.allHatBlocksForSimulation();
 
     this.children.forEach(function (morph) {
-      if (morph.allHatBlocksForSimulation)
+      if (morph.allHatBlocksForSimulation) {
         hats = hats.concat(morph.allHatBlocksForSimulation());
+      }
     });
 
-    for (var i = 0; !active && i < hats.length; i++) {
+    for (i = 0; !active && i < hats.length; i++) {
       active = this.threads.findProcess(hats[i]);
     }
 
@@ -932,14 +934,14 @@ StageMorph.prototype.step = function () {
 
       if (0.001 < delta) {
         if (delta > 0.1) {
-          delta = 0.1
+          delta = 0.1;
         }
 
         this.physicsUpdated = time;
         this.physicsElapsed = delta;
         this.physicsWorld.step(delta);
         this.updateMorphicPosition();
-        for (var i = 0; i < hats.length; i++) {
+        for (i = 0; i < hats.length; i++) {
           this.threads.startProcess(hats[i], this.isThreadSafe);
         }
       }
@@ -1013,7 +1015,7 @@ PhysicsTabMorph.uber = ScrollFrameMorph.prototype;
 
 function PhysicsTabMorph(aSprite, sliderColor) {
   this.init(aSprite, sliderColor);
-};
+}
 
 PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
   PhysicsTabMorph.uber.init.call(this, null, null, sliderColor);
@@ -1055,14 +1057,14 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     entry.add(field);
 
     if (unit) {
-      var text = new TextMorph(localize(unit), 10, null, true);
+      text = new TextMorph(localize(unit), 10, null, true);
       text.setColor(textColor);
       entry.add(text);
     }
 
     entry.fixLayout();
     return entry;
-  };
+  }
 
   function toggleField(string, object, getter, setter, radio) {
     var entry = new AlignmentMorph('row', 4);
@@ -1079,7 +1081,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     entry.fixLayout();
     entry.toggle = field;
     return entry;
-  };
+  }
 
   var elems = new AlignmentMorph('column', 6);
   elems.alignment = 'left';
@@ -1129,7 +1131,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
       radioStatic = toggleField(
         "static object", aSprite,
         function () {
-          return this.physicsMode === 'static'
+          return this.physicsMode === 'static';
         },
         function () {
           if (this.physicsMode !== 'static') {
@@ -1143,7 +1145,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
       radioDynamic = toggleField(
         "dynamic object", aSprite,
         function () {
-          return this.physicsMode === 'dynamic'
+          return this.physicsMode === 'dynamic';
         },
         function () {
           if (this.physicsMode !== 'dynamic') {

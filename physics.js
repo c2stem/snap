@@ -1164,35 +1164,37 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     elems.add(radioStatic);
     elems.add(radioDynamic);
 
-    elems.add(toggleField("fixed x position", aSprite, function () {
-      return this.physicsBody && this.physicsBody.fixedX;
-    }, function () {
-      if (this.physicsBody) {
-        this.physicsBody.fixedX = !this.physicsBody.fixedX;
-        if (this.physicsBody.fixedX) {
-          this.physicsBody.velocity[0] = 0;
+    if (false) {
+      elems.add(toggleField("fixed x position", aSprite, function () {
+        return this.physicsBody && this.physicsBody.fixedX;
+      }, function () {
+        if (this.physicsBody) {
+          this.physicsBody.fixedX = !this.physicsBody.fixedX;
+          if (this.physicsBody.fixedX) {
+            this.physicsBody.velocity[0] = 0;
+          }
         }
-      }
-    }));
+      }));
 
-    elems.add(toggleField("fixed y position", aSprite, function () {
-      return this.physicsBody && this.physicsBody.fixedY;
-    }, function () {
-      if (this.physicsBody) {
-        this.physicsBody.fixedY = !this.physicsBody.fixedY;
-        if (this.physicsBody.fixedY) {
-          this.physicsBody.velocity[1] = 0;
+      elems.add(toggleField("fixed y position", aSprite, function () {
+        return this.physicsBody && this.physicsBody.fixedY;
+      }, function () {
+        if (this.physicsBody) {
+          this.physicsBody.fixedY = !this.physicsBody.fixedY;
+          if (this.physicsBody.fixedY) {
+            this.physicsBody.velocity[1] = 0;
+          }
         }
-      }
-    }));
+      }));
 
-    elems.add(toggleField("fixed angle", aSprite, function () {
-      return this.physicsBody && this.physicsBody.fixedRotation;
-    }, function () {
-      if (this.physicsBody) {
-        this.physicsBody.fixedRotation = !this.physicsBody.fixedRotation;
-      }
-    }));
+      elems.add(toggleField("fixed angle", aSprite, function () {
+        return this.physicsBody && this.physicsBody.fixedRotation;
+      }, function () {
+        if (this.physicsBody) {
+          this.physicsBody.fixedRotation = !this.physicsBody.fixedRotation;
+        }
+      }));
+    }
   }
 
   elems.fixLayout();

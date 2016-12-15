@@ -36,7 +36,7 @@ modules.cloud = '2015-December-15';
 
 var Cloud;
 var SnapCloud = new Cloud(
-    'http://cloud.c2stem.org/SnapCloud'
+    'http://cloud.c2stem.org/SnapCloud/'
 );
 
 // Cloud /////////////////////////////////////////////////////////////

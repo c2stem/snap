@@ -36,7 +36,7 @@ modules.cloud = '2015-December-15';
 
 var Cloud;
 var SnapCloud = new Cloud(
-    'https://snap.apps.miosoft.com/SnapCloud'
+    'http://cloud.c2stem.org/SnapCloud'
 );
 
 // Cloud /////////////////////////////////////////////////////////////
@@ -422,7 +422,6 @@ Cloud.prototype.changePassword = function (
                 'changePassword',
                 function (response, url) {
                     callBack.call(null, response, url);
-                    myself.disconnect();
                 },
                 errorCall,
                 [hex_sha512(oldPW), hex_sha512(newPW)]
@@ -433,7 +432,6 @@ Cloud.prototype.changePassword = function (
 };
 
 Cloud.prototype.logout = function (callBack, errorCall) {
-    this.clear();
     this.callService(
         'logout',
         callBack,
@@ -506,7 +504,7 @@ Cloud.prototype.callService = function (
         myself = this,
         stickyUrl,
         postDict;
-
+    
     if (!this.session) {
         errorCall.call(null, 'You are not connected', 'Cloud');
         return;

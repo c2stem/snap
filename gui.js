@@ -1035,8 +1035,6 @@ IDE_Morph.prototype.createCategories = function () {
             row,
             col;
 
-        console.log(buttonWidth, buttonHeight);
-
         myself.categories.children.forEach(function (button) {
             i += 1;
             row = Math.ceil(i / 2);
@@ -1067,12 +1065,14 @@ IDE_Morph.prototype.createCategories = function () {
 IDE_Morph.prototype.hideCategory = function(category) {
     this.hiddenCategories.push(category);
     this.createCategories();
+    this.createPaletteHandle();
     this.fixLayout();
 }
 
 IDE_Morph.prototype.showHiddenCategories = function() {
     this.hiddenCategories.length = 0;
     this.createCategories();
+    this.createPaletteHandle();
     this.fixLayout();
 }
 

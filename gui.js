@@ -946,6 +946,10 @@ IDE_Morph.prototype.createControlBar = function () {
 IDE_Morph.prototype.createCategories = function () {
     var myself = this;
 
+    if (!this.hiddenCategories) {
+        this.hiddenCategories = [];
+    }
+
     if (this.categories) {
         this.categories.destroy();
     }
@@ -983,6 +987,18 @@ IDE_Morph.prototype.createCategories = function () {
             true // has preview
         );
 
+        button.userMenu = function() {
+            if (myself.categories.children.length <= 1) {
+                return;
+            }
+
+            var menu = new MenuMorph(myself);
+            menu.addItem("hide", function() {
+                this.hideCategory(category);
+            });
+            return menu;
+        }
+
         button.corner = 8;
         button.padding = 0;
         button.labelShadowOffset = new Point(-1, -1);
@@ -992,6 +1008,16 @@ IDE_Morph.prototype.createCategories = function () {
         button.refresh();
         myself.categories.add(button);
         return button;
+    }
+
+    this.categories.userMenu = function() {
+        if (myself.hiddenCategories.length <= 0) {
+            return;
+        }
+
+        var menu = new MenuMorph(myself);
+        menu.addItem("show hidden categories", 'showHiddenCategories');
+        return menu;
     }
 
     function fixCategoriesLayout() {
@@ -1009,6 +1035,8 @@ IDE_Morph.prototype.createCategories = function () {
             row,
             col;
 
+        console.log(buttonWidth, buttonHeight);
+
         myself.categories.children.forEach(function (button) {
             i += 1;
             row = Math.ceil(i / 2);
@@ -1019,6 +1047,7 @@ IDE_Morph.prototype.createCategories = function () {
             ));
         });
 
+        // rows = Math.max(rows, 4);
         myself.categories.setHeight(
             (rows + 1) * yPadding
                 + rows * buttonHeight
@@ -1027,13 +1056,25 @@ IDE_Morph.prototype.createCategories = function () {
     }
 
     SpriteMorph.prototype.categories.forEach(function (cat) {
-        if (!contains(['lists', 'other'], cat)) {
+        if (!contains(['lists', 'other'], cat) && !contains(myself.hiddenCategories, cat)) {
             addCategoryButton(cat);
         }
     });
     fixCategoriesLayout();
     this.add(this.categories);
 };
+
+IDE_Morph.prototype.hideCategory = function(category) {
+    this.hiddenCategories.push(category);
+    this.createCategories();
+    this.fixLayout();
+}
+
+IDE_Morph.prototype.showHiddenCategories = function() {
+    this.hiddenCategories.length = 0;
+    this.createCategories();
+    this.fixLayout();
+}
 
 IDE_Morph.prototype.createPalette = function (forSearching) {
     // assumes that the logo pane has already been created
@@ -1347,6 +1388,9 @@ IDE_Morph.prototype.createSpriteBar = function () {
     this.spriteBar.tabBar = tabBar;
     this.spriteBar.add(this.spriteBar.tabBar);
 
+    var height = rotationStyleButtons[rotationStyleButtons.length-1].bottom();
+    this.spriteBar.setHeight(height + tabBar.height());
+
     this.spriteBar.fixLayout = function () {
         this.tabBar.setLeft(this.left());
         this.tabBar.setBottom(this.bottom());
@@ -1649,10 +1693,7 @@ IDE_Morph.prototype.fixLayout = function (situation) {
         // spriteBar
         this.spriteBar.setLeft(this.paletteWidth + padding);
         this.spriteBar.setTop(this.logo.bottom() + padding);
-        this.spriteBar.setExtent(new Point(
-            Math.max(0, this.stage.left() - padding - this.spriteBar.left()),
-            this.categories.bottom() - this.spriteBar.top() - padding
-        ));
+        this.spriteBar.setWidth(Math.max(0, this.stage.left() - padding - this.spriteBar.left()));
         this.spriteBar.fixLayout();
 
         // spriteEditor

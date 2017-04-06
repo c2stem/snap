@@ -149,7 +149,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       spec: "apply force %n in direction %dir",
       defaults: [100]
     },
-    setMass: { // not enabled in objects.js
+    setMass: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
@@ -194,6 +194,13 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       type: "reporter",
       category: "physics",
       spec: "y velocity in m/s"
+    },
+    changeVelocity: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "change velocity by x: %n y: %n m/s",
+      defaults: [0, 0]
     },
     changeXVelocity: {
       only: SpriteMorph,
@@ -432,6 +439,10 @@ SpriteMorph.prototype.yVelocity = function () {
   } else {
     return this.physicsYVelocity || 0;
   }
+};
+
+SpriteMorph.prototype.changeVelocity = function (dx, dy) {
+  this.setVelocity(this.xVelocity() + (+dx || 0), this.yVelocity() + (+dy || 0));
 };
 
 SpriteMorph.prototype.changeXVelocity = function (delta) {

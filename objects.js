@@ -1308,7 +1308,27 @@ SpriteMorph.prototype.blockAlternatives = {
     doSetVar: ['doChangeVar'],
     doChangeVar: ['doSetVar'],
     doShowVar: ['doHideVar'],
-    doHideVar: ['doShowVar']
+    doHideVar: ['doShowVar'],
+
+    // physics
+    xGravity: ['yGravity'],
+    yGravity: ['xGravity'],
+    physicsXPosition: ['physicsYPosition'],
+    physicsYPosition: ['physicsXPosition'],
+    setPhysicsXPosition: ['setPhysicsYPosition', 'changePhysicsXPosition', 'changePhysicsYPosition'],
+    setPhysicsYPosition: ['setPhysicsXPosition', 'changePhysicsXPosition', 'changePhysicsYPosition'],
+    changePhysicsXPosition: ['changePhysicsYPosition', 'setPhysicsXPosition', 'setPhysicsYPosition'],
+    changePhysicsYPosition: ['changePhysicsXPosition', 'setPhysicsXPosition', 'setPhysicsYPosition'],
+    setPhysicsPosition: ['changePhysicsPosition'],
+    changePhysicsPosition: ['setPhysicsPosition'],
+    xVelocity: ['yVelocity'],
+    yVelocity: ['xVelocity'],
+    setXVelocity: ['setYVelocity', 'changeXVelocity', 'changeYVelocity'],
+    setYVelocity: ['setXVelocity', 'changeXVelocity', 'changeYVelocity'],
+    changeXVelocity: ['changeYVelocity', 'setXVelocity', 'setYVelocity'],
+    changeYVelocity: ['changeXVelocity', 'setXVelocity', 'setYVelocity'],
+    setVelocity: ['changeVelocity'],
+    changeVelocity: ['setVelocity']
 };
 
 // SpriteMorph instance creation
@@ -1789,15 +1809,17 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
-        // blocks.push(block('setMass'));
+        blocks.push('-');
+        blocks.push(block('setMass'));
+        blocks.push(watcherToggle('mass'));
         blocks.push(block('mass'));
         blocks.push('-');
         blocks.push(block('setPhysicsPosition'));
         blocks.push(block('setPhysicsXPosition'));
         blocks.push(block('setPhysicsYPosition'));
+        blocks.push(block('changePhysicsPosition'));
         blocks.push(block('changePhysicsXPosition'));
         blocks.push(block('changePhysicsYPosition'));
-        blocks.push(block('changePhysicsPosition'));
         blocks.push(watcherToggle('physicsXPosition'));
         blocks.push(block('physicsXPosition'));
         blocks.push(watcherToggle('physicsYPosition'));
@@ -1806,6 +1828,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('setVelocity'));
         blocks.push(block('setXVelocity'));
         blocks.push(block('setYVelocity'));
+        blocks.push(block('changeVelocity'));
         blocks.push(block('changeXVelocity'));
         blocks.push(block('changeYVelocity'));
         blocks.push(watcherToggle('xVelocity'));

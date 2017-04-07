@@ -949,10 +949,16 @@ IDE_Morph.prototype.createCategories = function () {
     if (!this.hiddenCategories) {
         this.hiddenCategories = [];
     }
-
     if (this.categories) {
         this.categories.destroy();
     }
+    if (contains(this.hiddenCategories, this.currentCategory)) {
+        this.currentCategory = SpriteMorph.prototype.categories.find(function (cat) {
+            return !contains(['lists', 'other'], cat) && !contains(myself.hiddenCategories, cat);
+        });
+        this.createPalette();
+    }
+
     this.categories = new Morph();
     this.categories.color = this.groupColor;
     this.categories.silentSetWidth(this.paletteWidth);

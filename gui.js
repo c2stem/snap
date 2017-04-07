@@ -3372,8 +3372,10 @@ IDE_Morph.prototype.newProject = function () {
     StageMorph.prototype.enableSublistIDs = false;
     SpriteMorph.prototype.useFlatLineEnds = false;
     Process.prototype.enableLiveCoding = false;
+    this.hiddenCategories = [];
     this.setProjectName('');
     this.projectNotes = '';
+    this.createCategories();
     this.createStage();
     this.add(this.stage);
     this.createCorral();

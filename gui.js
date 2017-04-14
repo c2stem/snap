@@ -254,6 +254,9 @@ IDE_Morph.prototype.init = function (isAutoFill) {
 
     // override inherited properites:
     this.color = this.backgroundColor;
+
+    this.hiddenCategories = [];
+    this.hiddenSpriteTabs = [];
 };
 
 IDE_Morph.prototype.openIn = function (world) {
@@ -950,9 +953,6 @@ IDE_Morph.prototype.createControlBar = function () {
 IDE_Morph.prototype.createCategories = function () {
     var myself = this;
 
-    if (!this.hiddenCategories) {
-        this.hiddenCategories = [];
-    }
     if (this.categories) {
         this.categories.destroy();
     }
@@ -1317,81 +1317,63 @@ IDE_Morph.prototype.createSpriteBar = function () {
         myself.fixLayout('tabEditor');
     };
 
-    tab = new TabMorph(
-        tabColors,
-        null, // target
-        function () {tabBar.tabTo('scripts'); },
-        localize('Scripts'), // label
-        function () {  // query
-            return myself.currentTab === 'scripts';
+    function addTab(tabString) {
+        if (contains(myself.hiddenSpriteTabs, tabString)) {
+            return;
         }
-    );
-    tab.padding = 3;
-    tab.corner = tabCorner;
-    tab.edge = 1;
-    tab.labelShadowOffset = new Point(-1, -1);
-    tab.labelShadowColor = tabColors[1];
-    tab.labelColor = this.buttonLabelColor;
-    tab.drawNew();
-    tab.fixLayout();
-    tabBar.add(tab);
 
-    tab = new TabMorph(
-        tabColors,
-        null, // target
-        function () {tabBar.tabTo('costumes'); },
-        localize('Costumes'), // label
-        function () {  // query
-            return myself.currentTab === 'costumes';
-        }
-    );
-    tab.padding = 3;
-    tab.corner = tabCorner;
-    tab.edge = 1;
-    tab.labelShadowOffset = new Point(-1, -1);
-    tab.labelShadowColor = tabColors[1];
-    tab.labelColor = this.buttonLabelColor;
-    tab.drawNew();
-    tab.fixLayout();
-    tabBar.add(tab);
+        tab = new TabMorph(
+            tabColors,
+            null, // target
+            function () {
+                tabBar.tabTo(tabString);
+            },
+            localize(tabString.charAt(0).toUpperCase() + tabString.slice(1)), // label
+            function () {  // query
+                return myself.currentTab === tabString;
+            }
+        );
+        tab.padding = 3;
+        tab.corner = tabCorner;
+        tab.edge = 1;
+        tab.labelShadowOffset = new Point(-1, -1);
+        tab.labelShadowColor = tabColors[1];
+        tab.labelColor = myself.buttonLabelColor;
+        tab.drawNew();
+        tab.fixLayout();
 
-    tab = new TabMorph(
-        tabColors,
-        null, // target
-        function () {tabBar.tabTo('sounds'); },
-        localize('Sounds'), // label
-        function () {  // query
-            return myself.currentTab === 'sounds';
+        tab.userMenu = function() {
+            var menu = new MenuMorph(myself);
+            if (tabString !== 'scripts') {
+                menu.addItem("hide tab", function() {
+                    myself.hideSpriteTab(tabString);
+                });
+            }
+            if (myself.hiddenSpriteTabs.length != 0) {
+                menu.addItem("show hidden tabs", function() {
+                    myself.showSpriteTabs();
+                });
+            }
+            if (myself.spriteBarHidden) {
+                menu.addItem("show fields", function() {
+                    myself.showSpriteBarFields();
+                });
+            }
+            else {
+                menu.addItem("hide fields", function() {
+                    myself.hideSpriteBarFields();
+                });
+            }  
+            return menu;
         }
-    );
-    tab.padding = 3;
-    tab.corner = tabCorner;
-    tab.edge = 1;
-    tab.labelShadowOffset = new Point(-1, -1);
-    tab.labelShadowColor = tabColors[1];
-    tab.labelColor = this.buttonLabelColor;
-    tab.drawNew();
-    tab.fixLayout();
-    tabBar.add(tab);
 
-    tab = new TabMorph(
-        tabColors,
-        null, // target
-        function () {tabBar.tabTo('physics'); },
-        localize('Physics'), // label
-        function () {  // query
-            return myself.currentTab === 'physics';
-        }
-    );
-    tab.padding = 3;
-    tab.corner = tabCorner;
-    tab.edge = 1;
-    tab.labelShadowOffset = new Point(-1, -1);
-    tab.labelShadowColor = tabColors[1];
-    tab.labelColor = this.buttonLabelColor;
-    tab.drawNew();
-    tab.fixLayout();
-    tabBar.add(tab);
+        tabBar.add(tab);
+    }
+
+    addTab('scripts');
+    addTab('costumes');
+    addTab('sounds');
+    addTab('physics');
 
     tabBar.fixLayout();
     tabBar.children.forEach(function (each) {
@@ -1410,6 +1392,11 @@ IDE_Morph.prototype.createSpriteBar = function () {
 
     this.spriteBar.userMenu = function() {
         var menu = new MenuMorph(myself);
+        if (myself.hiddenSpriteTabs.length != 0) {
+            menu.addItem("show hidden tabs", function() {
+                myself.showSpriteTabs();
+            });
+        }
         if (myself.spriteBarHidden) {
             menu.addItem("show fields", function() {
                 myself.showSpriteBarFields();
@@ -1432,6 +1419,25 @@ IDE_Morph.prototype.hideSpriteBarFields = function () {
 
 IDE_Morph.prototype.showSpriteBarFields = function () {
     this.spriteBarHidden = false;
+    this.createSpriteBar();
+    this.fixLayout();
+}
+
+IDE_Morph.prototype.hideSpriteTab = function (tabString) {
+    if(!contains(this.hiddenSpriteTabs, tabString)) {
+        this.hiddenSpriteTabs.push(tabString);
+        this.createSpriteBar();
+        if (this.currentTab === tabString) {
+            this.spriteBar.tabBar.tabTo('scripts');
+        }
+        else {
+            this.fixLayout();
+        }
+    }
+}
+
+IDE_Morph.prototype.showSpriteTabs = function() {
+    this.hiddenSpriteTabs.length = 0;
     this.createSpriteBar();
     this.fixLayout();
 }
@@ -3411,7 +3417,6 @@ IDE_Morph.prototype.newProject = function () {
     StageMorph.prototype.enableSublistIDs = false;
     SpriteMorph.prototype.useFlatLineEnds = false;
     Process.prototype.enableLiveCoding = false;
-    this.hiddenCategories = [];
     this.setProjectName('');
     this.projectNotes = '';
     this.createCategories();

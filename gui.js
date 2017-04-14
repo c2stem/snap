@@ -1349,21 +1349,15 @@ IDE_Morph.prototype.createSpriteBar = function () {
                     myself.hideSpriteTab(tabString);
                 });
             }
-            if (myself.hiddenSpriteTabs.length != 0) {
-                menu.addItem("show hidden tabs", function() {
-                    myself.showSpriteTabs();
-                });
-            }
             if (myself.spriteBarHidden) {
-                menu.addItem("show fields", function() {
-                    myself.showSpriteBarFields();
-                });
+                menu.addItem("show fields", 'showSpriteBarFields');
             }
             else {
-                menu.addItem("hide fields", function() {
-                    myself.hideSpriteBarFields();
-                });
+                menu.addItem("hide fields", 'hideSpriteBarFields');
             }  
+            if (myself.hiddenSpriteTabs.length != 0) {
+                menu.addItem("show hidden tabs", 'showSpriteTabs');
+            }
             return menu;
         }
 
@@ -1392,21 +1386,15 @@ IDE_Morph.prototype.createSpriteBar = function () {
 
     this.spriteBar.userMenu = function() {
         var menu = new MenuMorph(myself);
-        if (myself.hiddenSpriteTabs.length != 0) {
-            menu.addItem("show hidden tabs", function() {
-                myself.showSpriteTabs();
-            });
-        }
         if (myself.spriteBarHidden) {
-            menu.addItem("show fields", function() {
-                myself.showSpriteBarFields();
-            });
+            menu.addItem("show fields", 'showSpriteBarFields');
         }
         else {
-            menu.addItem("hide fields", function() {
-                myself.hideSpriteBarFields();
-            });
+            menu.addItem("hide fields", 'hideSpriteBarFields');
         }  
+        if (myself.hiddenSpriteTabs.length != 0) {
+            menu.addItem("show hidden tabs", 'showSpriteTabs');
+        }
         return menu;
     }
 };

@@ -725,15 +725,19 @@ IDE_Morph.prototype.createControlBar = function () {
         null, // colors
         this, // the IDE is the target
         function() {
-            this.stage.physicsEngaged = !this.stage.physicsEngaged;
-            this.stage.physicsUpdated = Date.now();
+            if (this.stage.isSimulationRunning()) {
+                this.stage.stopSimulation(true);
+            }
+            else {
+                this.stage.startSimulation(true);
+            }
         },
         [
             new SymbolMorph('atom', 14),
             new SymbolMorph('atom', 14)
         ],
         function() {
-            return this.stage && this.stage.physicsEngaged;
+            return this.stage && this.stage.isSimulationRunning();
         }
     );
     button.corner = 12;

@@ -216,6 +216,11 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       spec: "change y velocity by %n m/s",
       defaults: [0]
     },
+    simulationTime: {
+      type: "reporter",
+      category: "physics",
+      spec: "time in s"
+    },
     deltaTime: {
       type: "reporter",
       category: "physics",
@@ -334,6 +339,16 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       type: "reporter",
       category: "physics",
       spec: "angular velocity in rad/s"
+    },
+    startSimulation: {
+      type: "command",
+      category: "physics",
+      spec: "start simulation"
+    },
+    stopSimulation: {
+      type: "command",
+      category: "physics",
+      spec: "stop simulation"
     }
   };
 
@@ -367,9 +382,28 @@ SpriteMorph.prototype.init = function (globals) {
   this.physicsMass = 100;
 };
 
+SpriteMorph.prototype.startSimulation = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  if (stage) {
+    stage.startSimulation();
+  }
+};
+
+SpriteMorph.prototype.stopSimulation = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  if (stage) {
+    stage.stopSimulation();
+  }
+};
+
 SpriteMorph.prototype.deltaTime = function () {
   var stage = this.parentThatIsA(StageMorph);
-  return (stage && stage.physicsElapsed) || 0;
+  return (stage && stage.deltaTime()) || 0;
+};
+
+SpriteMorph.prototype.simulationTime = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  return (stage && stage.simulationTime()) || 0;
 };
 
 SpriteMorph.prototype.xGravity = function () {
@@ -846,8 +880,9 @@ StageMorph.prototype.init = function (globals) {
   this.physicsWorld.useFrictionGravityOnZeroGravity = false;
   // this.physicsWorld.setGlobalStiffness(1e18); // make it stiffer
 
-  this.physicsElapsed = 0;
-  this.physicsUpdated = Date.now();
+  this.physicsLastUpdated = null;
+  this.physicsSimulationTime = 0;
+  this.physicsDeltaTime = 0;
   this.physicsFloor = null;
   this.physicsScale = 10.0;
 };
@@ -928,43 +963,47 @@ StageMorph.prototype.updateMorphicPosition = function () {
   });
 };
 
-StageMorph.prototype.phyStep = StageMorph.prototype.step;
-StageMorph.prototype.step = function () {
-  var i, active, hats;
-
-  this.phyStep();
-  if (this.physicsEngaged) {
-    active = false;
+StageMorph.prototype.simulationStep = function () {
+  var i,
+    active = false,
     hats = this.allHatBlocksForSimulation();
 
-    this.children.forEach(function (morph) {
-      if (morph.allHatBlocksForSimulation) {
-        hats = hats.concat(morph.allHatBlocksForSimulation());
-      }
-    });
-
-    for (i = 0; !active && i < hats.length; i++) {
-      active = this.threads.findProcess(hats[i]);
+  this.children.forEach(function (morph) {
+    if (morph.allHatBlocksForSimulation) {
+      hats = hats.concat(morph.allHatBlocksForSimulation());
     }
+  });
 
-    if (!active) {
-      var time = Date.now(), // in milliseconds
-        delta = (time - this.physicsUpdated) * 0.001;
+  for (i = 0; !active && i < hats.length; i++) {
+    active = this.threads.findProcess(hats[i]);
+  }
 
-      if (0.001 < delta) {
-        if (delta > 0.1) {
-          delta = 0.1;
-        }
+  if (!active && this.physicsLastUpdated) {
+    var time = Date.now(), // in milliseconds
+      delta = (time - this.physicsLastUpdated) * 0.001;
 
-        this.physicsUpdated = time;
-        this.physicsElapsed = delta;
-        this.physicsWorld.step(delta);
-        this.updateMorphicPosition();
-        for (i = 0; i < hats.length; i++) {
-          this.threads.startProcess(hats[i], this.isThreadSafe);
-        }
+    if (0.001 < delta) {
+      if (delta > 0.1) {
+        delta = 0.1;
+      }
+
+      this.physicsLastUpdated = time;
+      this.physicsDeltaTime = delta;
+      this.physicsSimulationTime += delta;
+      this.physicsWorld.step(delta);
+      this.updateMorphicPosition();
+      for (i = 0; i < hats.length; i++) {
+        this.threads.startProcess(hats[i], this.isThreadSafe);
       }
     }
+  }
+}
+
+StageMorph.prototype.phyStep = StageMorph.prototype.step;
+StageMorph.prototype.step = function () {
+  this.phyStep();
+  if (this.isSimulationRunning()) {
+    this.simulationStep();
   }
 };
 
@@ -977,8 +1016,15 @@ StageMorph.prototype.add = function (morph) {
   }
 };
 
+StageMorph.prototype.deltaTime = function () {
+  return this.physicsDeltaTime;
+}
+
+StageMorph.prototype.simulationTime = function () {
+  return this.physicsSimulationTime;
+}
+
 StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlocksForSimulation;
-StageMorph.prototype.deltaTime = SpriteMorph.prototype.deltaTime;
 StageMorph.prototype.xGravity = SpriteMorph.prototype.xGravity;
 StageMorph.prototype.yGravity = SpriteMorph.prototype.yGravity;
 StageMorph.prototype.friction = SpriteMorph.prototype.friction;
@@ -1026,7 +1072,34 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
   }
 };
 
-// ------- PhysicTabMorph -------
+StageMorph.prototype.isSimulationRunning = function () {
+  return this.physicsLastUpdated;
+}
+
+StageMorph.prototype.startSimulation = function (norefresh) {
+  this.physicsSimulationTime = 0;
+  this.physicsLastUpdated = Date.now();
+
+  if (!norefresh) {
+    var ide = this.parentThatIsA(IDE_Morph);
+    if (ide) {
+      ide.controlBar.physicsButton.refresh();
+    }
+  }
+}
+
+StageMorph.prototype.stopSimulation = function (norefresh) {
+  this.physicsLastUpdated = null;
+
+  if (!norefresh) {
+    var ide = this.parentThatIsA(IDE_Morph);
+    if (ide) {
+      ide.controlBar.physicsButton.refresh();
+    }
+  }
+}
+
+// ------- PhysicsTabMorph -------
 
 PhysicsTabMorph.prototype = new ScrollFrameMorph();
 PhysicsTabMorph.prototype.constructor = PhysicsTabMorph;

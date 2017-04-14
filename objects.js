@@ -1804,8 +1804,13 @@ SpriteMorph.prototype.blockTemplates = function (category) {
     } else if (cat === 'physics' ) {
 
         blocks.push(block('doSimulationStep'));
+        blocks.push(block('startSimulation'));
+        blocks.push(block('stopSimulation'));
+        blocks.push(watcherToggle('simulationTime'));
+        blocks.push(block('simulationTime'));
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
+        blocks.push('-');
         blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
@@ -5901,8 +5906,13 @@ StageMorph.prototype.blockTemplates = function (category) {
     } else if (cat === 'physics' ) {
 
         blocks.push(block('doSimulationStep'));
+        blocks.push(block('startSimulation'));
+        blocks.push(block('stopSimulation'));
+        blocks.push(watcherToggle('simulationTime'));
+        blocks.push(block('simulationTime'));
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
+        blocks.push('-');
         blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));

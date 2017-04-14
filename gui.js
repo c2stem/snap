@@ -1428,14 +1428,12 @@ IDE_Morph.prototype.hideSpriteBarFields = function () {
     this.spriteBarHidden = true;
     this.createSpriteBar();
     this.fixLayout();
-//    this.createSpriteEditor();
 }
 
 IDE_Morph.prototype.showSpriteBarFields = function () {
     this.spriteBarHidden = false;
     this.createSpriteBar();
     this.fixLayout();
-//    this.createSpriteEditor();
 }
 
 IDE_Morph.prototype.createSpriteEditor = function () {

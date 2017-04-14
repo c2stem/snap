@@ -388,6 +388,9 @@ SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
     }
     project.hiddenCategories = model.stage.attributes.hiddenCategories || '';
     project.hiddenCategories = project.hiddenCategories === '' ? [] : project.hiddenCategories.split(' ');
+    project.hiddenSpriteBar = model.stage.attributes.hiddenSpriteBar === 'true';
+    project.hiddenSpriteTabs = model.stage.attributes.hiddenSpriteTabs || '';
+    project.hiddenSpriteTabs = project.hiddenSpriteTabs === '' ? [] : project.hiddenSpriteTabs.split(' ');
     model.pentrails = model.stage.childNamed('pentrails');
     if (model.pentrails) {
         project.pentrails = new Image();
@@ -1417,6 +1420,8 @@ SnapSerializer.prototype.openProject = function (project, ide) {
         ide.globalVariables = project.globalVariables;
     }
     ide.hiddenCategories = project.hiddenCategories || [];
+    ide.hiddenSpriteBar = project.hiddenSpriteBar === true;
+    ide.hiddenSpriteTabs = project.hiddenSpriteTabs || [];
     if (stage) {
         stage.destroy();
     }
@@ -1508,7 +1513,9 @@ StageMorph.prototype.toXML = function (serializer) {
             'inheritance="@" ' +
             'sublistIDs="@" ' +
             'scheduled="@" ' + 
-            'hiddenCategories="@" ~>' +
+            'hiddenCategories="@" ' +
+            'hiddenSpriteBar="@" ' +
+            'hiddenSpriteTabs="@" ~>' +
             '%' + // physics properties
             '<pentrails>$</pentrails>' +
             '<costumes>%</costumes>' +
@@ -1540,6 +1547,8 @@ StageMorph.prototype.toXML = function (serializer) {
         this.enableSublistIDs,
         StageMorph.prototype.frameRate !== 0,
         ide ? ide.hiddenCategories.join(' ') : '',
+        ide && ide.hiddenSpriteBar,
+        ide ? ide.hiddenSpriteTabs.join(' ') : '',
         this.physicsSaveToXML(serializer),
         normalizeCanvas(this.trailsCanvas, true).toDataURL('image/png'),
         serializer.store(this.costumes, this.name + '_cst'),

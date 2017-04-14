@@ -1184,7 +1184,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
     this.spriteBar.color = this.frameColor;
     this.add(this.spriteBar);
 
-    if (!this.spriteBarHidden) {
+    if (!this.hiddenSpriteBar) {
         function addRotationStyleButton(rotationStyle) {
             var colors = myself.rotationStyleColors,
                 button;
@@ -1349,7 +1349,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
                     myself.hideSpriteTab(tabString);
                 });
             }
-            if (myself.spriteBarHidden) {
+            if (myself.hiddenSpriteBar) {
                 menu.addItem("show fields", 'showSpriteBarFields');
             }
             else {
@@ -1376,7 +1376,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
     this.spriteBar.tabBar = tabBar;
     this.spriteBar.add(this.spriteBar.tabBar);
 
-    var height = this.spriteBarHidden ? 0 : rotationStyleButtons[rotationStyleButtons.length-1].bottom();
+    var height = this.hiddenSpriteBar ? 0 : rotationStyleButtons[rotationStyleButtons.length-1].bottom();
     this.spriteBar.setHeight(height + tabBar.height());
 
     this.spriteBar.fixLayout = function () {
@@ -1386,7 +1386,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
 
     this.spriteBar.userMenu = function() {
         var menu = new MenuMorph(myself);
-        if (myself.spriteBarHidden) {
+        if (myself.hiddenSpriteBar) {
             menu.addItem("show fields", 'showSpriteBarFields');
         }
         else {
@@ -1400,13 +1400,13 @@ IDE_Morph.prototype.createSpriteBar = function () {
 };
 
 IDE_Morph.prototype.hideSpriteBarFields = function () {
-    this.spriteBarHidden = true;
+    this.hiddenSpriteBar = true;
     this.createSpriteBar();
     this.fixLayout();
 }
 
 IDE_Morph.prototype.showSpriteBarFields = function () {
-    this.spriteBarHidden = false;
+    this.hiddenSpriteBar = false;
     this.createSpriteBar();
     this.fixLayout();
 }
@@ -3405,6 +3405,9 @@ IDE_Morph.prototype.newProject = function () {
     StageMorph.prototype.enableSublistIDs = false;
     SpriteMorph.prototype.useFlatLineEnds = false;
     Process.prototype.enableLiveCoding = false;
+    this.hiddenCategories = [];
+    this.hiddenSpriteBar = false;
+    this.hiddenSpriteTabs = [];
     this.setProjectName('');
     this.projectNotes = '';
     this.createCategories();

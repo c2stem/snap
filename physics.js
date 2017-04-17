@@ -639,7 +639,7 @@ SpriteMorph.prototype.getPhysicsContour = function () {
     return null;
   }
 
-  var scale = 1.0 / this.physicsScale(),
+  var scale = this.scale / this.physicsScale(),
     body = new p2.Body({
       position: [this.physicsXPosition(), this.physicsYPosition()],
       angle: radians(-this.direction() + 90),
@@ -706,19 +706,38 @@ SpriteMorph.prototype.updateMorphicPosition = function () {
 
 SpriteMorph.prototype.phyWearCostume = SpriteMorph.prototype.wearCostume;
 SpriteMorph.prototype.wearCostume = function (costume) {
-  var loading = costume && typeof costume.loaded === "function";
-  // console.log("wearcostume", !!costume, loading, this.physicsMode,
-  // !!this.physicsBody);
+  var loading = costume && typeof costume.loaded === "function",
+    mode = this.physicsMode;
 
-  this.phyWearCostume(costume);
-  if (!loading && this.physicsMode) {
-    var mode = this.physicsMode;
+  if (!loading && mode) {
     this.physicsMode = "";
     this.updatePhysicsBody();
+  }
+
+  this.phyWearCostume(costume);
+
+  if (!loading && mode) {
     this.physicsMode = mode;
     this.updatePhysicsBody();
   }
 };
+
+SpriteMorph.prototype.phySetScale = SpriteMorph.prototype.setScale;
+SpriteMorph.prototype.setScale = function (percentage) {
+  var mode = this.physicsMode;
+
+  if (mode) {
+    this.physicsMode = "";
+    this.updatePhysicsBody();
+  }
+
+  this.phySetScale(percentage);
+
+  if (mode) {
+    this.physicsMode = mode;
+    this.updatePhysicsBody();
+  }
+}
 
 SpriteMorph.prototype.phyDestroy = SpriteMorph.prototype.destroy;
 SpriteMorph.prototype.destroy = function () {

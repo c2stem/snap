@@ -1346,3 +1346,9 @@ IDE_Morph.prototype.createSpriteEditor = function () {
     this.phyCreateSpriteEditor();
   }
 };
+
+IDE_Morph.prototype.phyStopAllScripts = IDE_Morph.prototype.stopAllScripts;
+IDE_Morph.prototype.stopAllScripts = function () {
+  this.phyStopAllScripts();
+  this.stage.stopSimulation();
+}

@@ -22,15 +22,16 @@ PhysicsMorph.prototype.init = function (physicsBody) {
 PhysicsMorph.prototype.drawNew = function () {
   var stage = this.parentThatIsA(StageMorph),
     aabb = this.physicsBody.getAABB(),
-    scale = 1;
+    scale = this.physicsScale();
 
   if (stage) {
-    scale = stage.scale * this.physicsScale();
-    this.silentSetExtent(
-      new Point(
-        scale * (aabb.upperBound[0] - aabb.lowerBound[0]),
-        scale * (aabb.upperBound[1] - aabb.lowerBound[1])));
+    scale = scale * stage.scale;
   }
+
+  this.silentSetExtent(
+    new Point(
+      scale * (aabb.upperBound[0] - aabb.lowerBound[0]),
+      scale * (aabb.upperBound[1] - aabb.lowerBound[1])));
 
   this.image = newCanvas(this.extent());
   var context = this.image.getContext("2d"),
@@ -46,9 +47,9 @@ PhysicsMorph.prototype.drawNew = function () {
   this.physicsBody.shapes.forEach(function (shape) {
     if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
-        x = xOffset + bodyCos * shape.position[0] +
+        x = xOffset + bodyCos * shape.position[0] -
         bodySin * shape.position[1],
-        y = yOffset - bodySin * shape.position[0] +
+        y = yOffset - bodySin * shape.position[0] -
         bodyCos * shape.position[1],
         s = Math.sin(bodyAngle + shape.angle),
         c = Math.cos(bodyAngle + shape.angle);
@@ -647,10 +648,12 @@ SpriteMorph.prototype.getPhysicsContour = function () {
     });
 
   if (this.costume) {
+    var offsetX = this.costume.width() * 0.5 - this.costume.rotationCenter.x;
+    var offsetY = this.costume.height() * 0.5 - this.costume.rotationCenter.y;
     body.addShape(new p2.Box({
       width: this.costume.width() * scale,
       height: this.costume.height() * scale
-    }));
+    }), [offsetX * scale, -offsetY * scale]);
   } else {
     body.addShape(new p2.Convex({
       vertices: [

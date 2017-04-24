@@ -355,6 +355,14 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       type: "command",
       category: "physics",
       spec: "run simulation steps"
+    },
+    reportPhysicsAttrOf: {
+      type: "reporter",
+      category: "physics",
+      spec: "%phy of %spr",
+      defaults: [
+        ["x position"]
+      ]
     }
   };
 
@@ -1146,7 +1154,7 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
   }
 };
 
-// ------- StageMorph -------
+// ------- ProcessMorph -------
 
 Process.prototype.runSimulationSteps = function () {
   var stage = this.homeContext.receiver.parentThatIsA(StageMorph);
@@ -1158,6 +1166,42 @@ Process.prototype.runSimulationSteps = function () {
     this.pushContext('doYield');
     this.pushContext();
   }
+};
+
+Process.prototype.reportPhysicsAttrOf = function (attribute, name) {
+  var thisObj = this.blockReceiver(),
+    thatObj,
+    stage;
+
+  if (thisObj) {
+    this.assertAlive(thisObj);
+    stage = thisObj.parentThatIsA(StageMorph);
+    if (stage.name === name) {
+      thatObj = stage;
+    } else {
+      thatObj = this.getOtherObject(name, thisObj, stage);
+    }
+    if (thatObj) {
+      this.assertAlive(thatObj);
+      switch (this.inputOption(attribute)) {
+        case 'mass':
+          return thatObj.mass ? thatObj.mass() : '';
+        case 'x position':
+          return thatObj.physicsXPosition ? thatObj.physicsXPosition() : '';
+        case 'y position':
+          return thatObj.physicsYPosition ? thatObj.physicsYPosition() : '';
+        case 'x velocity':
+          return thatObj.xVelocity ? thatObj.xVelocity() : '';
+        case 'y velocity':
+          return thatObj.yVelocity ? thatObj.yVelocity() : '';
+        case 'angle':
+          return thatObj.physicsAngle ? thatObj.physicsAngle() : '';
+        case 'angular velocity':
+          return thatObj.angularVelocity ? thatObj.angularVelocity() : '';
+      }
+    }
+  }
+  return '';
 };
 
 // ------- PhysicsTabMorph -------
@@ -1384,4 +1428,51 @@ IDE_Morph.prototype.createSpriteEditor = function () {
   } else {
     this.phyCreateSpriteEditor();
   }
+};
+
+// ------- InputSlotMorph -------
+
+InputSlotMorph.prototype.physicsAttrMenu = function () {
+  var block = this.parentThatIsA(BlockMorph),
+    objName = block.inputs()[1].evaluate(),
+    rcvr = block.receiver(),
+    stage = rcvr.parentThatIsA(StageMorph),
+    obj,
+    dict = {},
+    varNames = [];
+
+  if (objName === stage.name) {
+    obj = stage;
+  } else {
+    obj = detect(
+      stage.children,
+      function (morph) {
+        return morph.name === objName;
+      }
+    );
+  }
+  if (!obj) {
+    return dict;
+  }
+  if (obj instanceof SpriteMorph) {
+    dict = {
+      'mass in kg': ['mass'],
+      'x position in m': ['x position'],
+      'y position in m': ['y position'],
+      'x velocity in m/s': ['x velocity'],
+      'y velocity in m/s': ['y velocity'],
+      'angle in rad': ['angle'],
+      'angular velocity in rad/s': ['angular velocity']
+    };
+  } else { // the stage
+    dict = {};
+  }
+  varNames = obj.variables.names();
+  if (varNames.length > 0) {
+    dict['~'] = null;
+    varNames.forEach(function (name) {
+      dict[name] = name;
+    });
+  }
+  return dict;
 };

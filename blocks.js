@@ -1174,6 +1174,14 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
                 true
             );
             break;
+        case '%phy':
+            part = new InputSlotMorph(
+                null,
+                false,
+                'physicsAttrMenu',
+                true
+            );
+            break;
         case '%fun':
             part = new InputSlotMorph(
                 null,

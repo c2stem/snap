@@ -745,7 +745,7 @@ SpriteMorph.prototype.setScale = function (percentage) {
     this.physicsMode = mode;
     this.updatePhysicsBody();
   }
-}
+};
 
 SpriteMorph.prototype.phyDestroy = SpriteMorph.prototype.destroy;
 SpriteMorph.prototype.destroy = function () {
@@ -1009,7 +1009,8 @@ StageMorph.prototype.simulationStep = function () {
 
   time = Date.now(); // in milliseconds
   if (this.physicsLastUpdated) {
-    delta = time - this.physicsLastUpdated * 0.001;
+    delta = (time - this.physicsLastUpdated) * 0.001;
+
     if (0.001 < delta) {
       if (delta > 0.1) {
         delta = 0.1;
@@ -1029,7 +1030,7 @@ StageMorph.prototype.simulationStep = function () {
   }
 
   return true;
-}
+};
 
 StageMorph.prototype.phyStep = StageMorph.prototype.step;
 StageMorph.prototype.step = function () {
@@ -1045,7 +1046,6 @@ StageMorph.prototype.isSimulationRunning = function () {
 
 StageMorph.prototype.startSimulation = function (norefresh) {
   this.physicsRunning = true;
-  this.physicsSimulationTime = 0.0;
   this.physicsLastUpdated = Date.now();
 
   if (!norefresh) {
@@ -1054,7 +1054,7 @@ StageMorph.prototype.startSimulation = function (norefresh) {
       ide.controlBar.physicsButton.refresh();
     }
   }
-}
+};
 
 StageMorph.prototype.stopSimulation = function (norefresh) {
   this.physicsRunning = false;
@@ -1065,7 +1065,21 @@ StageMorph.prototype.stopSimulation = function (norefresh) {
       ide.controlBar.physicsButton.refresh();
     }
   }
-}
+};
+
+StageMorph.prototype.phyFireGreenFlagEvent = StageMorph.prototype.fireGreenFlagEvent;
+StageMorph.prototype.fireGreenFlagEvent = function () {
+  var r = this.phyFireGreenFlagEvent();
+  this.physicsSimulationTime = 0.0;
+  return r;
+};
+
+StageMorph.prototype.phyFireStopAllEvent = StageMorph.prototype.fireStopAllEvent;
+StageMorph.prototype.fireStopAllEvent = function () {
+  var r = this.phyFireStopAllEvent();
+  this.stopSimulation();
+  return r;
+};
 
 StageMorph.prototype.phyAdd = StageMorph.prototype.add;
 StageMorph.prototype.add = function (morph) {
@@ -1078,11 +1092,11 @@ StageMorph.prototype.add = function (morph) {
 
 StageMorph.prototype.deltaTime = function () {
   return this.physicsDeltaTime;
-}
+};
 
 StageMorph.prototype.simulationTime = function () {
   return this.physicsSimulationTime;
-}
+};
 
 StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlocksForSimulation;
 StageMorph.prototype.xGravity = SpriteMorph.prototype.xGravity;
@@ -1144,7 +1158,7 @@ Process.prototype.runSimulationSteps = function () {
     this.pushContext('doYield');
     this.pushContext();
   }
-}
+};
 
 // ------- PhysicsTabMorph -------
 
@@ -1154,7 +1168,7 @@ PhysicsTabMorph.uber = ScrollFrameMorph.prototype;
 
 function PhysicsTabMorph(aSprite, sliderColor) {
   this.init(aSprite, sliderColor);
-}
+};
 
 PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
   PhysicsTabMorph.uber.init.call(this, null, null, sliderColor);
@@ -1371,9 +1385,3 @@ IDE_Morph.prototype.createSpriteEditor = function () {
     this.phyCreateSpriteEditor();
   }
 };
-
-IDE_Morph.prototype.phyStopAllScripts = IDE_Morph.prototype.stopAllScripts;
-IDE_Morph.prototype.stopAllScripts = function () {
-  this.phyStopAllScripts();
-  this.stage.stopSimulation();
-}

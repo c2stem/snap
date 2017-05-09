@@ -34,9 +34,9 @@ modules.cloud = '2015-December-15';
 
 // Global stuff
 
-var Cloud;
-var SnapCloud = new Cloud(
-    'http://cloud.c2stem.org/SnapCloud/'
+console.log();
+var SnapCloud = new Cloud(location.origin != 'http://localhost:8080' ? 
+    'http://cloud.c2stem.org/SnapCloud/' : 'http://localhost:8080/SnapCloud/'
 );
 
 // Cloud /////////////////////////////////////////////////////////////

@@ -6,7 +6,7 @@
 
     written by Jens Mönig
 
-    Copyright (C) 2016 by Jens Mönig
+    Copyright (C) 2017 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -185,7 +185,7 @@ SnapTranslator.dict.de = {
     'translator_e-mail':
         'jens@moenig.org', // optional
     'last_changed':
-        '2016-11-10', // this, too, will appear in the Translators tab
+        '2017-01-24', // this, too, will appear in the Translators tab
 
     // GUI
     // control bar:
@@ -817,6 +817,8 @@ SnapTranslator.dict.de = {
         'einschalten um IDE-\nAnimationen zu erlauben',
     'Flat design':
         'Helles Design',
+    'Nested auto-wrapping':
+        'Automatisches Umklammern',
     'Keyboard Editing':
         'Tastaturunterstützung',
     'Table support':
@@ -843,6 +845,8 @@ SnapTranslator.dict.de = {
         'einschalten f\u00fcr flache\nPinselstrichenden',
     'uncheck for round ends of lines':
         'auschalten f\u00fcr runde\nPinselstrichenden',
+    'Ternary Boolean slots':
+        'Ternäre Bool\'sche Inputs',
     'Inheritance support':
         'Prototypische Vererbung',
 
@@ -893,6 +897,8 @@ SnapTranslator.dict.de = {
         'ausschalten, um den Inhalt\nim Projekt zu speichern',
     'check to prevent contents\nfrom being saved':
         'einschalten, um das Speichern des Inhalts\nim Projekt zu verhindern',
+    'new line':
+        'neue Zeile',
 
     // custom blocks:
     'delete block definition...':
@@ -931,6 +937,8 @@ SnapTranslator.dict.de = {
         'R\u00fcckg\u00e4ngig',
     'undo the last\nblock drop\nin this pane':
         'Setzen des letzten Blocks\nwiderrufen',
+    'redrop':
+        'Wiederherstellen',
     'scripts pic...':
         'Bild aller Scripte...',
     'open a new window\nwith a picture of all scripts':
@@ -1064,6 +1072,15 @@ SnapTranslator.dict.de = {
         'f\u00fcr alle',
     'for this sprite only':
         'nur f\u00fcr dieses Objekt',
+
+    // variables refactoring
+    'rename only\nthis reporter':
+        'nur diesen Block\numbenennen',
+    'rename all...':
+        'alle umbenennen...',
+    'rename all blocks that\naccess this variable':
+        'alle Blöcke umbenennen,\ndie diese Variable referenzieren',
+
 
     // block dialog
     'Change block':
@@ -1342,6 +1359,10 @@ SnapTranslator.dict.de = {
         'ln',
     'e^':
         'e^',
+
+    // Boolean expressions keyboard entry
+    'not':
+        'nicht',
 
     // delimiters
     'letter':

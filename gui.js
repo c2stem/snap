@@ -1711,10 +1711,10 @@ IDE_Morph.prototype.fixLayout = function (situation) {
             this.stage.setScale(this.isSmallStage ? this.stageRatio : 1);
             this.stage.setTop(this.logo.bottom() + padding);
             this.stage.setRight(this.right());
-            maxPaletteWidth = this.width() -
+            maxPaletteWidth = Math.max(200, this.width() -
                 this.stage.width() -
                 this.spriteBar.tabBar.width() -
-                (this.padding * 2);
+                (this.padding * 2));
             if (this.paletteWidth > maxPaletteWidth) {
                 this.paletteWidth = maxPaletteWidth;
                 this.fixLayout();

@@ -23,27 +23,17 @@
 		<script type="text/javascript" src="physics.js"></script>
 		<script type="text/javascript" src="FileSaver.min.js"></script>
 		<script type="text/javascript">
-            var world;
-            var ide;
-            window.onload = function () {
-                world = new WorldMorph(document.getElementById('world'));
+			var world;
+			window.onload = function () {
+				world = new WorldMorph(document.getElementById('world'));
                 world.worldCanvas.focus();
-                ide = new IDE_Morph();
-                ide.openIn(world);
-                loop();
-            };
-            function loop() {
-                requestAnimationFrame(loop);
-                world.doOneCycle();
-            }
-            function load_project_xml(xml) {
-                window.ide.droppedText(xml);
-            }
-            function export_project_to_xml_str() {
-                return window.ide.serializer.serialize(window.ide.stage);
-            }
-            window.load_project_xml = load_project_xml;
-            window.export_project_to_xml_str = export_project_to_xml_str;
+				new IDE_Morph().openIn(world);
+		        loop();
+			};
+			function loop() {
+        		requestAnimationFrame(loop);
+				world.doOneCycle();
+			}
 		</script>
 	</head>
 	<body style="margin: 0;">

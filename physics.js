@@ -305,41 +305,41 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "set angle to %n rad",
+      spec: "set angle to %n deg",
       defaults: [0]
     },
     changePhysicsAngle: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "change angle by %n rad",
+      spec: "change angle by %n deg",
       defaults: [0]
     },
     physicsAngle: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "angle in rad"
+      spec: "angle in deg"
     },
     setAngularVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "set angular velocity to %n rad/s",
+      spec: "set angular velocity to %n deg/s",
       defaults: [0]
     },
     changeAngularVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "change angular velocity by %n rad/s",
+      spec: "change angular velocity by %n deg/s",
       defaults: [0]
     },
     angularVelocity: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "angular velocity in rad/s"
+      spec: "angular velocity in deg/s"
     },
     startSimulation: {
       type: "command",
@@ -539,7 +539,7 @@ SpriteMorph.prototype.physicsYPosition = function () {
 };
 
 SpriteMorph.prototype.setPhysicsAngle = function (angle) {
-  var heading = -degrees(angle) + 90;
+  var heading = -angle + 90;
   this.phySetHeading(heading);
   this.updatePhysicsPosition();
 };
@@ -549,17 +549,15 @@ SpriteMorph.prototype.changePhysicsAngle = function (delta) {
 };
 
 SpriteMorph.prototype.physicsAngle = function () {
-  var rad = radians(-this.direction() + 90),
-    twopi = 2 * Math.PI;
-
-  return rad - Math.floor(rad / twopi) * twopi;
+  var angle = (-this.direction() + 90) % 360;
+  return angle >= 0 ? angle : angle + 360;
 };
 
 SpriteMorph.prototype.setAngularVelocity = function (speed) {
   if (this.physicsBody && this.physicsMode === "dynamic") {
-    this.physicsBody.angularVelocity = +speed;
+    this.physicsBody.angularVelocity = radians(+speed);
   } else {
-    this.physicsAngularVelocity = +speed;
+    this.physicsAngularVelocity = radians(+speed);
   }
 };
 
@@ -569,22 +567,22 @@ SpriteMorph.prototype.changeAngularVelocity = function (delta) {
 
 SpriteMorph.prototype.angularVelocity = function () {
   if (this.physicsBody && this.physicsMode === "dynamic") {
-    return this.physicsBody.angularVelocity;
+    return degrees(this.physicsBody.angularVelocity);
   } else {
-    return this.physicsAngularVelocity || 0;
+    return degrees(this.physicsAngularVelocity) || 0;
   }
 };
 
 SpriteMorph.prototype.applyForce = function (
   force, direction) {
   if (this.physicsBody) {
-    var r = radians(-direction + 90);
+    var r = radians(direction);
     this.physicsBody.applyForce([force * Math.cos(r), force * Math.sin(r)]);
   }
 };
 
 SpriteMorph.prototype.applyForceForward = function (force) {
-  this.applyForce(force, this.direction());
+  this.applyForce(force, -this.direction() + 90);
 };
 
 SpriteMorph.prototype.angularForce = function (torque) {

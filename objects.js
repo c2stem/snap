@@ -1231,6 +1231,9 @@ SpriteMorph.prototype.initBlockMigrations = function () {
         reportFalse: {
             selector: 'reportBoolean',
             inputs: [false]
+        },
+        reportPhysicsAttrOf: {
+            selector: 'getPhysicsAttrOf'
         }
     };
 };

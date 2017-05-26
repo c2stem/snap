@@ -1209,8 +1209,6 @@ Process.prototype.setPhysicsAttrOf = function (attribute, name, value) {
   var thisObj = this.blockReceiver(),
     thatObj;
 
-  console.log(attribute, name, value);
-
   if (thisObj) {
     this.assertAlive(thisObj);
     thatObj = this.getOtherObject(name, thisObj);

@@ -376,6 +376,11 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       type: "reporter",
       category: "physics",
       spec: "graph data"
+    },
+    clearGraphData: {
+      type: "command",
+      category: "physics",
+      spec: "clear graph data"
     }
   };
 
@@ -451,6 +456,13 @@ SpriteMorph.prototype.friction = function () {
 SpriteMorph.prototype.graphData = function () {
   var stage = this.parentThatIsA(StageMorph);
   return (stage && stage.graphData()) || null;
+};
+
+SpriteMorph.prototype.clearGraphData = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  if (stage) {
+    stage.clearGraphData();
+  }
 };
 
 SpriteMorph.prototype.setMass = function (m) {
@@ -1140,11 +1152,11 @@ StageMorph.prototype.yGravity = function () {
 
 StageMorph.prototype.friction = function () {
   return this.physicsWorld.defaultContactMaterial.friction;
-}
+};
 
 StageMorph.prototype.graphData = function () {
   return this.graphTable.toList();
-}
+};
 
 StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlocksForSimulation;
 
@@ -1189,6 +1201,12 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
   if (attrs.floor) {
     this.setPhysicsFloor(attrs.floor === "true");
   }
+};
+
+StageMorph.prototype.clearGraphData = function () {
+  this.graphTable.clear(3, 0);
+  this.graphTable.setColNames(["time", "x-position", "y-position"]);
+  this.graphTable.addRow([1, 2, 3]);
 };
 
 // ------- ProcessMorph -------
@@ -1570,8 +1588,6 @@ GraphDialogMorph.prototype = new DialogBoxMorph();
 GraphDialogMorph.prototype.constructor = GraphDialogMorph;
 GraphDialogMorph.uber = DialogBoxMorph.prototype;
 
-// TableDialogMorph instance creation:
-
 function GraphDialogMorph(table) {
   this.init(table);
 }
@@ -1639,3 +1655,17 @@ GraphDialogMorph.prototype.popUp = function (world) {
 };
 
 GraphDialogMorph.prototype.fixLayout = BlockEditorMorph.prototype.fixLayout;
+
+// ------- Table -------
+
+Table.prototype.clear = function (cols, rows) {
+  this.colCount = +cols;
+  this.rowCount = +rows;
+  this.colNames = [];
+  this.rowNames = [];
+  this.contents = new Array(+rows);
+  for (var i = 0; i < rows; i += 1) {
+    this.contents[i] = new Array(+cols);
+  }
+  this.lastChanged = Date.now();
+};

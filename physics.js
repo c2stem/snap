@@ -8,7 +8,7 @@ modules.physics = "2016-November-28";
 
 function PhysicsMorph(physicsBody) {
   this.init(physicsBody);
-}
+};
 
 PhysicsMorph.prototype = new Morph();
 PhysicsMorph.prototype.constructor = PhysicsMorph;
@@ -1086,7 +1086,7 @@ StageMorph.prototype.step = function () {
 
 StageMorph.prototype.isSimulationRunning = function () {
   return this.physicsRunning;
-}
+};
 
 StageMorph.prototype.startSimulation = function (norefresh) {
   this.physicsRunning = true;
@@ -1519,7 +1519,7 @@ IDE_Morph.prototype.createSpriteEditor = function () {
 
 IDE_Morph.prototype.openGraphDialog = function () {
   new GraphDialogMorph(this.stage.graphTable).popUp(this.world());
-}
+};
 
 // ------- InputSlotMorph -------
 
@@ -1572,7 +1572,7 @@ InputSlotMorph.prototype.physicsAttrMenu = function () {
 
 function GraphingMorph() {
   this.init();
-}
+};
 
 GraphingMorph.prototype = new Morph();
 GraphingMorph.prototype.constructor = GraphingMorph;
@@ -1590,10 +1590,9 @@ GraphDialogMorph.uber = DialogBoxMorph.prototype;
 
 function GraphDialogMorph(table) {
   this.init(table);
-}
+};
 
 GraphDialogMorph.prototype.init = function (table) {
-  console.log(table);
   // additional properties:
   this.handle = null;
   this.table = table;
@@ -1606,13 +1605,12 @@ GraphDialogMorph.prototype.init = function (table) {
   this.labelString = 'Graph view';
   this.createLabel();
 
-  // build contents
-  this.buildContents(table);
+  this.buildContents();
 };
 
-GraphDialogMorph.prototype.buildContents = function (table) {
+GraphDialogMorph.prototype.buildContents = function () {
   this.tableView = new TableMorph(
-    table,
+    this.table,
     null, // scrollBarSize
     null, // extent
     null, // startRow
@@ -1624,7 +1622,12 @@ GraphDialogMorph.prototype.buildContents = function (table) {
     null // padding
   );
   this.addBody(new TableFrameMorph(this.tableView, true));
-  this.addButton('ok', 'OK');
+  this.addButton('ok', 'Close');
+  this.addButton('exportTable', 'Export');
+};
+
+GraphDialogMorph.prototype.exportTable = function () {
+  console.log(this.table);
 };
 
 GraphDialogMorph.prototype.setInitialDimensions = function () {

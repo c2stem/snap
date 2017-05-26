@@ -1856,7 +1856,8 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('angularForce'));
         blocks.push(block('angularForceLeft'));
         blocks.push('-');
-        blocks.push(block('reportPhysicsAttrOf'));
+        blocks.push(block('getPhysicsAttrOf'));
+        blocks.push(block('setPhysicsAttrOf'));
 
     } else if (cat === 'looks') {
 
@@ -5921,7 +5922,8 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
         blocks.push('-');
-        blocks.push(block('reportPhysicsAttrOf'));
+        blocks.push(block('getPhysicsAttrOf'));
+        blocks.push(block('setPhysicsAttrOf'));
 
     } else if (cat === 'looks') {
 

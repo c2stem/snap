@@ -356,12 +356,20 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "run simulation steps"
     },
-    reportPhysicsAttrOf: {
+    getPhysicsAttrOf: {
       type: "reporter",
       category: "physics",
       spec: "%phy of %spr",
       defaults: [
         ["x position"]
+      ]
+    },
+    setPhysicsAttrOf: {
+      type: "command",
+      category: "physics",
+      spec: "set %phy of %spr to %n",
+      defaults: [
+        ["x position"], null, [0]
       ]
     }
   };
@@ -1166,19 +1174,13 @@ Process.prototype.runSimulationSteps = function () {
   }
 };
 
-Process.prototype.reportPhysicsAttrOf = function (attribute, name) {
+Process.prototype.getPhysicsAttrOf = function (attribute, name) {
   var thisObj = this.blockReceiver(),
-    thatObj,
-    stage;
+    thatObj;
 
   if (thisObj) {
     this.assertAlive(thisObj);
-    stage = thisObj.parentThatIsA(StageMorph);
-    if (stage.name === name) {
-      thatObj = stage;
-    } else {
-      thatObj = this.getOtherObject(name, thisObj, stage);
-    }
+    thatObj = this.getOtherObject(name, thisObj);
     if (thatObj) {
       this.assertAlive(thatObj);
       switch (this.inputOption(attribute)) {
@@ -1199,7 +1201,47 @@ Process.prototype.reportPhysicsAttrOf = function (attribute, name) {
       }
     }
   }
+
   return '';
+};
+
+Process.prototype.setPhysicsAttrOf = function (attribute, name, value) {
+  var thisObj = this.blockReceiver(),
+    thatObj;
+
+  console.log(attribute, name, value);
+
+  if (thisObj) {
+    this.assertAlive(thisObj);
+    thatObj = this.getOtherObject(name, thisObj);
+    if (thatObj) {
+      this.assertAlive(thatObj);
+      value = value || 0;
+      switch (this.inputOption(attribute)) {
+        case 'mass':
+          thatObj.setMass(value);
+          break;
+        case 'x position':
+          thatObj.setPhysicsXPosition(value);
+          break;
+        case 'y position':
+          thatObj.setPhysicsYPosition(value);
+          break;
+        case 'x velocity':
+          thatObj.setXVelocity(value);
+          break;
+        case 'y velocity':
+          thatObj.setYVelocity(value);
+          break;
+        case 'angle':
+          thatObj.setPhysicsAngle(value);
+          break;
+        case 'angular velocity':
+          thatObj.setAngularVelocity(value);
+          break;
+      }
+    }
+  }
 };
 
 // ------- PhysicsTabMorph -------

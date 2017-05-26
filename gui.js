@@ -1502,6 +1502,7 @@ IDE_Morph.prototype.createCorralBar = function () {
     var padding = 5,
         newbutton,
         paintbutton,
+        graphbutton,
         colors = [
             this.groupColor,
             this.frameColor.darker(50),
@@ -1563,6 +1564,28 @@ IDE_Morph.prototype.createCorralBar = function () {
         this.corralBar.left() + padding + newbutton.width() + padding
     );
     this.corralBar.add(paintbutton);
+
+    graphbutton = new PushButtonMorph(
+        this,
+        "paintNewSprite",
+        new SymbolMorph("graph", 15)
+    );
+    graphbutton.corner = 12;
+    graphbutton.color = colors[0];
+    graphbutton.highlightColor = colors[1];
+    graphbutton.pressColor = colors[2];
+    graphbutton.labelMinExtent = new Point(36, 18);
+    graphbutton.padding = 0;
+    graphbutton.labelShadowOffset = new Point(-1, -1);
+    graphbutton.labelShadowColor = colors[1];
+    graphbutton.labelColor = this.buttonLabelColor;
+    graphbutton.contrast = this.buttonContrast;
+    graphbutton.drawNew();
+    graphbutton.hint = "open graphing window";
+    graphbutton.fixLayout();
+    graphbutton.setCenter(this.corralBar.center());
+    graphbutton.setLeft(paintbutton.right() + padding);
+    this.corralBar.add(graphbutton);
 };
 
 IDE_Morph.prototype.createCorral = function () {
@@ -1738,17 +1761,9 @@ IDE_Morph.prototype.fixLayout = function (situation) {
             ));
         }
 
-        if (this.graphing) {
-            this.graphing.setLeft(this.stage.left());
-            this.graphing.setTop(this.stage.bottom() + padding);
-            this.graphing.setWidth(this.stage.width);
-            this.graphing.setHeight(200);
-        }
-
         // corralBar
         this.corralBar.setLeft(this.stage.left());
-        this.corralBar.setTop((this.graphing ? this.graphing.bottom()
-            : this.stage.bottom()) + padding);
+        this.corralBar.setTop(this.stage.bottom() + padding);
         this.corralBar.setWidth(this.stage.width());
 
         // corral

@@ -1815,6 +1815,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
+        blocks.push(block('graphData'));
         blocks.push('-');
         blocks.push(block('setMass'));
         blocks.push(watcherToggle('mass'));
@@ -5920,6 +5921,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
+        blocks.push(block('graphData'));
         blocks.push('-');
         blocks.push(block('reportPhysicsAttrOf'));
 

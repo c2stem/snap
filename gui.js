@@ -1567,7 +1567,7 @@ IDE_Morph.prototype.createCorralBar = function () {
 
     graphbutton = new PushButtonMorph(
         this,
-        "paintNewSprite",
+        "openGraphDialog",
         new SymbolMorph("graph", 15)
     );
     graphbutton.corner = 12;

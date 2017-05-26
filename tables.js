@@ -207,12 +207,12 @@ Table.prototype.setRowNames = function (array) {
 };
 
 Table.prototype.setColName = function (col, name) {
-    this.colNames[col + 1] = name;
+    this.colNames[col - 1] = name;
     this.changed();
 };
 
 Table.prototype.setRowName = function (row, name) {
-    this.rowNames[row + 1] = name;
+    this.rowNames[row - 1] = name;
     this.changed();
 };
 

@@ -1428,6 +1428,22 @@ IDE_Morph.prototype.createSpriteEditor = function () {
   }
 };
 
+IDE_Morph.prototype.createGraphing = function () {
+  if (this.graphing) {
+    this.graphing.destroy();
+  }
+
+  this.graphing = new GraphingMorph();
+  this.graphing.color = this.groupColor;
+  this.add(this.graphing);
+};
+
+IDE_Morph.prototype.phyBuildPanes = IDE_Morph.prototype.buildPanes;
+IDE_Morph.prototype.buildPanes = function () {
+  this.phyBuildPanes();
+  this.createGraphing();
+}
+
 // ------- InputSlotMorph -------
 
 InputSlotMorph.prototype.physicsAttrMenu = function () {
@@ -1473,4 +1489,18 @@ InputSlotMorph.prototype.physicsAttrMenu = function () {
     });
   }
   return dict;
+};
+
+// ------- GraphingMorph -------
+
+function GraphingMorph() {
+  this.init();
+}
+
+GraphingMorph.prototype = new Morph();
+GraphingMorph.prototype.constructor = PhysicsMorph;
+GraphingMorph.uber = Morph.prototype;
+
+GraphingMorph.prototype.init = function () {
+  GraphingMorph.uber.init.call(this);
 };

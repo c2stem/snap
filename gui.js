@@ -1738,9 +1738,17 @@ IDE_Morph.prototype.fixLayout = function (situation) {
             ));
         }
 
+        if (this.graphing) {
+            this.graphing.setLeft(this.stage.left());
+            this.graphing.setTop(this.stage.bottom() + padding);
+            this.graphing.setWidth(this.stage.width);
+            this.graphing.setHeight(200);
+        }
+
         // corralBar
         this.corralBar.setLeft(this.stage.left());
-        this.corralBar.setTop(this.stage.bottom() + padding);
+        this.corralBar.setTop((this.graphing ? this.graphing.bottom()
+            : this.stage.bottom()) + padding);
         this.corralBar.setWidth(this.stage.width());
 
         // corral

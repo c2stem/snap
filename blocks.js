@@ -9753,6 +9753,8 @@ SymbolMorph.prototype.symbolCanvasColored = function (aColor) {
         return this.drawSymbolAtom(canvas, aColor);
     case 'magnifiyingGlass':
         return this.drawSymbolMagnifyingGlass(canvas, aColor);
+    case 'graph':
+        return this.drawSymbolGraph(canvas, aColor);
     default:
         return canvas;
     }
@@ -11047,6 +11049,41 @@ SymbolMorph.prototype.drawSymbolMagnifyingGlass = function (canvas, color) {
 
     return canvas;
 };
+
+SymbolMorph.prototype.drawSymbolGraph = function (canvas, color) {
+    // answer a canvas showing an atom
+    var ctx = canvas.getContext('2d'),
+        w = canvas.width,
+        h = canvas.height,
+        l = Math.max(canvas.width * 0.05, 0.5);
+
+    ctx.fillStyle = color.toString();
+    ctx.strokeStyle = ctx.fillStyle;
+
+    ctx.lineWidth = l;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.1, h * 0.0);
+    ctx.lineTo(w * 0.1, h * 0.9);
+    ctx.lineTo(w * 1.0, h * 0.9);
+    ctx.moveTo(w * 0.0, h * 0.2);
+    ctx.lineTo(w * 0.1, h * 0.0);
+    ctx.lineTo(w * 0.2, h * 0.2);
+    ctx.moveTo(w * 0.8, h * 0.8);
+    ctx.lineTo(w * 1.0, h * 0.9);
+    ctx.lineTo(w * 0.8, h * 1.0);
+    ctx.stroke();
+
+    ctx.lineWidth = 2 * l;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.2, h * 0.8);
+    ctx.lineTo(w * 0.4, h * 0.2);
+    ctx.lineTo(w * 0.6, h * 0.6);
+    ctx.lineTo(w * 0.8, h * 0.1);
+    ctx.lineTo(w * 0.9, h * 0.4);
+    ctx.stroke();
+
+    return canvas;
+}
 
 // ColorSlotMorph //////////////////////////////////////////////////////
 

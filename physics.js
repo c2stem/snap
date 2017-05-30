@@ -305,41 +305,41 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "set angle to %n rad",
+      spec: "set angle to %n deg",
       defaults: [0]
     },
     changePhysicsAngle: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "change angle by %n rad",
+      spec: "change angle by %n deg",
       defaults: [0]
     },
     physicsAngle: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "angle in rad"
+      spec: "angle in deg"
     },
     setAngularVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "set angular velocity to %n rad/s",
+      spec: "set angular velocity to %n deg/s",
       defaults: [0]
     },
     changeAngularVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "change angular velocity by %n rad/s",
+      spec: "change angular velocity by %n deg/s",
       defaults: [0]
     },
     angularVelocity: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "angular velocity in rad/s"
+      spec: "angular velocity in deg/s"
     },
     startSimulation: {
       type: "command",
@@ -356,13 +356,26 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "run simulation steps"
     },
-    reportPhysicsAttrOf: {
+    getPhysicsAttrOf: {
       type: "reporter",
       category: "physics",
       spec: "%phy of %spr",
       defaults: [
         ["x position"]
       ]
+    },
+    setPhysicsAttrOf: {
+      type: "command",
+      category: "physics",
+      spec: "set %phy of %spr to %n",
+      defaults: [
+        ["x position"], null, [0]
+      ]
+    },
+    graphData: {
+      type: "reporter",
+      category: "physics",
+      spec: "graph data"
     }
   };
 
@@ -422,17 +435,22 @@ SpriteMorph.prototype.simulationTime = function () {
 
 SpriteMorph.prototype.xGravity = function () {
   var stage = this.parentThatIsA(StageMorph);
-  return stage && stage.physicsWorld.gravity[0];
+  return (stage && stage.xGravity()) || 0;
 };
 
 SpriteMorph.prototype.yGravity = function () {
   var stage = this.parentThatIsA(StageMorph);
-  return stage && stage.physicsWorld.gravity[1];
+  return (stage && stage.yGravity()) || 0;
 };
 
 SpriteMorph.prototype.friction = function () {
   var stage = this.parentThatIsA(StageMorph);
-  return stage && stage.physicsWorld.defaultContactMaterial.friction;
+  return (stage && stage.friction()) || 0;
+};
+
+SpriteMorph.prototype.graphData = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  return (stage && stage.graphData()) || null;
 };
 
 SpriteMorph.prototype.setMass = function (m) {
@@ -539,7 +557,7 @@ SpriteMorph.prototype.physicsYPosition = function () {
 };
 
 SpriteMorph.prototype.setPhysicsAngle = function (angle) {
-  var heading = -degrees(angle) + 90;
+  var heading = -angle + 90;
   this.phySetHeading(heading);
   this.updatePhysicsPosition();
 };
@@ -549,17 +567,15 @@ SpriteMorph.prototype.changePhysicsAngle = function (delta) {
 };
 
 SpriteMorph.prototype.physicsAngle = function () {
-  var rad = radians(-this.direction() + 90),
-    twopi = 2 * Math.PI;
-
-  return rad - Math.floor(rad / twopi) * twopi;
+  var angle = (-this.direction() + 90) % 360;
+  return angle >= 0 ? angle : angle + 360;
 };
 
 SpriteMorph.prototype.setAngularVelocity = function (speed) {
   if (this.physicsBody && this.physicsMode === "dynamic") {
-    this.physicsBody.angularVelocity = +speed;
+    this.physicsBody.angularVelocity = radians(+speed);
   } else {
-    this.physicsAngularVelocity = +speed;
+    this.physicsAngularVelocity = radians(+speed);
   }
 };
 
@@ -569,22 +585,22 @@ SpriteMorph.prototype.changeAngularVelocity = function (delta) {
 
 SpriteMorph.prototype.angularVelocity = function () {
   if (this.physicsBody && this.physicsMode === "dynamic") {
-    return this.physicsBody.angularVelocity;
+    return degrees(this.physicsBody.angularVelocity);
   } else {
-    return this.physicsAngularVelocity || 0;
+    return degrees(this.physicsAngularVelocity) || 0;
   }
 };
 
 SpriteMorph.prototype.applyForce = function (
   force, direction) {
   if (this.physicsBody) {
-    var r = radians(-direction + 90);
+    var r = radians(direction);
     this.physicsBody.applyForce([force * Math.cos(r), force * Math.sin(r)]);
   }
 };
 
 SpriteMorph.prototype.applyForceForward = function (force) {
-  this.applyForce(force, this.direction());
+  this.applyForce(force, -this.direction() + 90);
 };
 
 SpriteMorph.prototype.angularForce = function (torque) {
@@ -921,6 +937,14 @@ StageMorph.prototype.init = function (globals) {
   this.physicsDeltaTime = 0;
   this.physicsFloor = null;
   this.physicsScale = 10.0;
+
+  this.graphTable = new Table(3, 2); // cols, rows
+  this.graphTable.set(11, 1, 1);
+  this.graphTable.set(21, 2, 1);
+  this.graphTable.set(31, 3, 1);
+  this.graphTable.set(12, 1, 2);
+  this.graphTable.set(22, 2, 2);
+  this.graphTable.set(32, 3, 2);
 };
 
 StageMorph.prototype.hasPhysicsFloor = function () {
@@ -1106,10 +1130,23 @@ StageMorph.prototype.simulationTime = function () {
   return this.physicsSimulationTime;
 };
 
+StageMorph.prototype.xGravity = function () {
+  return this.physicsWorld.gravity[0];
+};
+
+StageMorph.prototype.yGravity = function () {
+  return this.physicsWorld.gravity[1];
+};
+
+StageMorph.prototype.friction = function () {
+  return this.physicsWorld.defaultContactMaterial.friction;
+}
+
+StageMorph.prototype.graphData = function () {
+  return this.graphTable.toList();
+}
+
 StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlocksForSimulation;
-StageMorph.prototype.xGravity = SpriteMorph.prototype.xGravity;
-StageMorph.prototype.yGravity = SpriteMorph.prototype.yGravity;
-StageMorph.prototype.friction = SpriteMorph.prototype.friction;
 
 StageMorph.prototype.physicsSaveToXML = function (serializer) {
   var world = this.physicsWorld,
@@ -1168,19 +1205,13 @@ Process.prototype.runSimulationSteps = function () {
   }
 };
 
-Process.prototype.reportPhysicsAttrOf = function (attribute, name) {
+Process.prototype.getPhysicsAttrOf = function (attribute, name) {
   var thisObj = this.blockReceiver(),
-    thatObj,
-    stage;
+    thatObj;
 
   if (thisObj) {
     this.assertAlive(thisObj);
-    stage = thisObj.parentThatIsA(StageMorph);
-    if (stage.name === name) {
-      thatObj = stage;
-    } else {
-      thatObj = this.getOtherObject(name, thisObj, stage);
-    }
+    thatObj = this.getOtherObject(name, thisObj);
     if (thatObj) {
       this.assertAlive(thatObj);
       switch (this.inputOption(attribute)) {
@@ -1201,7 +1232,45 @@ Process.prototype.reportPhysicsAttrOf = function (attribute, name) {
       }
     }
   }
+
   return '';
+};
+
+Process.prototype.setPhysicsAttrOf = function (attribute, name, value) {
+  var thisObj = this.blockReceiver(),
+    thatObj;
+
+  if (thisObj) {
+    this.assertAlive(thisObj);
+    thatObj = this.getOtherObject(name, thisObj);
+    if (thatObj) {
+      this.assertAlive(thatObj);
+      value = value || 0;
+      switch (this.inputOption(attribute)) {
+        case 'mass':
+          thatObj.setMass(value);
+          break;
+        case 'x position':
+          thatObj.setPhysicsXPosition(value);
+          break;
+        case 'y position':
+          thatObj.setPhysicsYPosition(value);
+          break;
+        case 'x velocity':
+          thatObj.setXVelocity(value);
+          break;
+        case 'y velocity':
+          thatObj.setYVelocity(value);
+          break;
+        case 'angle':
+          thatObj.setPhysicsAngle(value);
+          break;
+        case 'angular velocity':
+          thatObj.setAngularVelocity(value);
+          break;
+      }
+    }
+  }
 };
 
 // ------- PhysicsTabMorph -------
@@ -1430,6 +1499,10 @@ IDE_Morph.prototype.createSpriteEditor = function () {
   }
 };
 
+IDE_Morph.prototype.openGraphDialog = function () {
+  new GraphDialogMorph(this.stage.graphTable).popUp(this.world());
+}
+
 // ------- InputSlotMorph -------
 
 InputSlotMorph.prototype.physicsAttrMenu = function () {
@@ -1476,3 +1549,93 @@ InputSlotMorph.prototype.physicsAttrMenu = function () {
   }
   return dict;
 };
+
+// ------- GraphingMorph -------
+
+function GraphingMorph() {
+  this.init();
+}
+
+GraphingMorph.prototype = new Morph();
+GraphingMorph.prototype.constructor = GraphingMorph;
+GraphingMorph.uber = Morph.prototype;
+
+GraphingMorph.prototype.init = function () {
+  GraphingMorph.uber.init.call(this);
+};
+
+// ------- GraphDialogMorph -------
+
+GraphDialogMorph.prototype = new DialogBoxMorph();
+GraphDialogMorph.prototype.constructor = GraphDialogMorph;
+GraphDialogMorph.uber = DialogBoxMorph.prototype;
+
+// TableDialogMorph instance creation:
+
+function GraphDialogMorph(table) {
+  this.init(table);
+}
+
+GraphDialogMorph.prototype.init = function (table) {
+  console.log(table);
+  // additional properties:
+  this.handle = null;
+  this.table = table;
+  this.tableView = null;
+
+  // initialize inherited properties:
+  GraphDialogMorph.uber.init.call(this);
+
+  // override inherited properites:
+  this.labelString = 'Graph view';
+  this.createLabel();
+
+  // build contents
+  this.buildContents(table);
+};
+
+GraphDialogMorph.prototype.buildContents = function (table) {
+  this.tableView = new TableMorph(
+    table,
+    null, // scrollBarSize
+    null, // extent
+    null, // startRow
+    null, // startCol
+    null, // globalColWidth
+    null, // colWidths
+    null, // rowHeight
+    null, // colLabelHeight
+    null // padding
+  );
+  this.addBody(new TableFrameMorph(this.tableView, true));
+  this.addButton('ok', 'OK');
+};
+
+GraphDialogMorph.prototype.setInitialDimensions = function () {
+  var world = this.world(),
+    mex = world.extent().subtract(new Point(this.padding, this.padding)),
+    th = fontHeight(this.titleFontSize) + this.titlePadding * 3, // hm...
+    bh = this.buttons.height();
+  this.setExtent(
+    this.tableView.globalExtent().add(
+      new Point(this.padding * 2, this.padding * 2 + th + bh)
+    ).min(mex).max(new Point(200, 200))
+  );
+  this.setCenter(this.world().center());
+};
+
+GraphDialogMorph.prototype.popUp = function (world) {
+  if (world) {
+    GraphDialogMorph.uber.popUp.call(this, world);
+    this.setInitialDimensions();
+    this.handle = new HandleMorph(
+      this,
+      100,
+      100,
+      this.corner,
+      this.corner
+    );
+  }
+};
+
+GraphDialogMorph.prototype.fixLayout = BlockEditorMorph.prototype.fixLayout;

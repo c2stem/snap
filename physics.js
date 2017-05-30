@@ -354,7 +354,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     runSimulationSteps: {
       type: "command",
       category: "physics",
-      spec: "run simulation steps"
+      spec: "run simulation step"
     },
     getPhysicsAttrOf: {
       type: "reporter",

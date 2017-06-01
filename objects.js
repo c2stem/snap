@@ -1863,6 +1863,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('setPhysicsAttrOf'));
         blocks.push(block('graphData'));
         blocks.push(block('clearGraphData'));
+        blocks.push(block('recordGraphData'));
 
     } else if (cat === 'looks') {
 
@@ -5931,6 +5932,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('setPhysicsAttrOf'));
         blocks.push(block('graphData'));
         blocks.push(block('clearGraphData'));
+        blocks.push(block('recordGraphData'));
 
     } else if (cat === 'looks') {
 

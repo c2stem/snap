@@ -381,6 +381,11 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       type: "command",
       category: "physics",
       spec: "clear graph data"
+    },
+    recordGraphData: {
+      type: "command",
+      category: "physics",
+      spec: "record graph data"
     }
   };
 
@@ -462,6 +467,13 @@ SpriteMorph.prototype.clearGraphData = function () {
   var stage = this.parentThatIsA(StageMorph);
   if (stage) {
     stage.clearGraphData();
+  }
+};
+
+SpriteMorph.prototype.recordGraphData = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  if (stage) {
+    stage.recordGraphData();
   }
 };
 
@@ -950,13 +962,8 @@ StageMorph.prototype.init = function (globals) {
   this.physicsFloor = null;
   this.physicsScale = 10.0;
 
-  this.graphTable = new Table(3, 2); // cols, rows
-  this.graphTable.set(11, 1, 1);
-  this.graphTable.set(21, 2, 1);
-  this.graphTable.set(31, 3, 1);
-  this.graphTable.set(12, 1, 2);
-  this.graphTable.set(22, 2, 2);
-  this.graphTable.set(32, 3, 2);
+  this.graphWatchers = [];
+  this.graphTable = new Table(0, 0); // cols, rows
 };
 
 StageMorph.prototype.hasPhysicsFloor = function () {
@@ -1060,6 +1067,8 @@ StageMorph.prototype.simulationStep = function () {
         delta = 0.1;
       }
 
+      this.recordGraphData();
+
       this.physicsLastUpdated = time;
       this.physicsDeltaTime = delta;
       this.physicsSimulationTime += delta;
@@ -1091,6 +1100,7 @@ StageMorph.prototype.isSimulationRunning = function () {
 StageMorph.prototype.startSimulation = function (norefresh) {
   this.physicsRunning = true;
   this.physicsLastUpdated = Date.now();
+  this.clearGraphData();
 
   if (!norefresh) {
     var ide = this.parentThatIsA(IDE_Morph);
@@ -1127,7 +1137,6 @@ StageMorph.prototype.fireStopAllEvent = function () {
 
 StageMorph.prototype.phyAdd = StageMorph.prototype.add;
 StageMorph.prototype.add = function (morph) {
-  // console.log("add", morph.physicsMode, !!morph.physicsBody);
   this.phyAdd(morph);
   if (morph.updatePhysicsBody) {
     morph.updatePhysicsBody();
@@ -1204,10 +1213,35 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
 };
 
 StageMorph.prototype.clearGraphData = function () {
-  this.graphTable.clear(3, 0);
-  this.graphTable.setColNames(["time", "x-position", "y-position"]);
-  this.graphTable.addRow([1, 2, 3]);
+  this.graphWatchers = this.watchers().filter(function (w) {
+    return w.isVisible && !w.isTemporary() &&
+      w.target instanceof Morph && typeof w.getter === "string";
+  });
+
+  this.graphTable.clear(1 + this.graphWatchers.length, 0);
+  this.graphTable.setColNames(["Time"].concat(this.graphWatchers.map(
+    function (w) {
+      return w.objName + w.labelText;
+    })));
+
+  var ide = this.parentThatIsA(IDE_Morph);
+  if (ide && ide.graphDialog) {
+    ide.graphDialog.updateData();
+  }
 };
+
+StageMorph.prototype.recordGraphData = function () {
+  this.graphTable.addRow([this.simulationTime()].concat(this.graphWatchers.map(
+    function (w) {
+      return w.target[w.getter]();
+    })));
+
+
+  var ide = this.parentThatIsA(IDE_Morph);
+  if (ide && ide.graphDialog) {
+    ide.graphDialog.updateData();
+  }
+}
 
 // ------- ProcessMorph -------
 
@@ -1518,7 +1552,11 @@ IDE_Morph.prototype.createSpriteEditor = function () {
 };
 
 IDE_Morph.prototype.openGraphDialog = function () {
-  new GraphDialogMorph(this.stage.graphTable).popUp(this.world());
+  if (!this.graphDialog) {
+    this.graphDialog = new GraphDialogMorph(this.stage.graphTable);
+  }
+
+  this.graphDialog.popUp(this.world());
 };
 
 // ------- InputSlotMorph -------
@@ -1638,7 +1676,7 @@ GraphDialogMorph.prototype.setInitialDimensions = function () {
   this.setExtent(
     this.tableView.globalExtent().add(
       new Point(this.padding * 2, this.padding * 2 + th + bh)
-    ).min(mex).max(new Point(200, 200))
+    ).min(mex).max(new Point(300, 300))
   );
   this.setCenter(this.world().center());
 };
@@ -1658,6 +1696,12 @@ GraphDialogMorph.prototype.popUp = function (world) {
 };
 
 GraphDialogMorph.prototype.fixLayout = BlockEditorMorph.prototype.fixLayout;
+
+GraphDialogMorph.prototype.updateData = function () {
+  if (this.body && this.body.tableMorph) {
+    this.body.tableMorph.drawNew();
+  }
+}
 
 // ------- Table -------
 

@@ -1098,13 +1098,14 @@ StageMorph.prototype.isSimulationRunning = function () {
 };
 
 StageMorph.prototype.startSimulation = function (norefresh) {
+  this.physicsSimulationTime = 0.0;
   this.physicsRunning = true;
   this.physicsLastUpdated = Date.now();
   this.clearGraphData();
 
   if (!norefresh) {
     var ide = this.parentThatIsA(IDE_Morph);
-    if (ide) {
+    if (ide && ide.controlBar.physicsButton) {
       ide.controlBar.physicsButton.refresh();
     }
   }
@@ -1115,7 +1116,7 @@ StageMorph.prototype.stopSimulation = function (norefresh) {
 
   if (!norefresh) {
     var ide = this.parentThatIsA(IDE_Morph);
-    if (ide) {
+    if (ide && ide.controlBar.physicsButton) {
       ide.controlBar.physicsButton.refresh();
     }
   }
@@ -1124,7 +1125,8 @@ StageMorph.prototype.stopSimulation = function (norefresh) {
 StageMorph.prototype.phyFireGreenFlagEvent = StageMorph.prototype.fireGreenFlagEvent;
 StageMorph.prototype.fireGreenFlagEvent = function () {
   var r = this.phyFireGreenFlagEvent();
-  this.physicsSimulationTime = 0.0;
+  // this.physicsSimulationTime = 0.0;
+  // this.clearGraphData();
   return r;
 };
 
@@ -1523,7 +1525,9 @@ SnapSerializer.prototype.openProject = function (project, ide) {
   this.phyOpenProject(project, ide);
   ide.stage.setPhysicsFloor(true);
   ide.stage.updateScaleMorph();
-  ide.controlBar.physicsButton.refresh();
+  if (ide.controlBar.physicsButton) {
+    ide.controlBar.physicsButton.refresh();
+  }
 };
 
 // ------- IDE_Morph -------
@@ -1533,7 +1537,9 @@ IDE_Morph.prototype.createStage = function () {
   this.phyCreateStage();
   this.stage.setPhysicsFloor(true);
   this.stage.updateScaleMorph();
-  this.controlBar.physicsButton.refresh();
+  if (this.controlBar.physicsButton) {
+    this.controlBar.physicsButton.refresh();
+  }
 };
 
 IDE_Morph.prototype.phyCreateSpriteEditor = IDE_Morph.prototype.createSpriteEditor;

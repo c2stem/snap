@@ -723,43 +723,45 @@ IDE_Morph.prototype.createControlBar = function () {
     this.controlBar.add(startButton);
     this.controlBar.startButton = startButton;
 
-    // physicsButton
-    button = new ToggleButtonMorph(
-        null, // colors
-        this, // the IDE is the target
-        function() {
-            if (this.stage.isSimulationRunning()) {
-                this.stage.stopSimulation(true);
+    // disable physicsButton
+    if (false) {
+        button = new ToggleButtonMorph(
+            null, // colors
+            this, // the IDE is the target
+            function() {
+                if (this.stage.isSimulationRunning()) {
+                    this.stage.stopSimulation(true);
+                }
+                else {
+                    this.stage.startSimulation(true);
+                }
+            },
+            [
+                new SymbolMorph('atom', 14),
+                new SymbolMorph('atom', 14)
+            ],
+            function() {
+                return this.stage && this.stage.isSimulationRunning();
             }
-            else {
-                this.stage.startSimulation(true);
-            }
-        },
-        [
-            new SymbolMorph('atom', 14),
-            new SymbolMorph('atom', 14)
-        ],
-        function() {
-            return this.stage && this.stage.isSimulationRunning();
-        }
-    );
-    button.corner = 12;
-    button.color = colors[0];
-    button.highlightColor = colors[1];
-    button.pressColor = colors[2];
-    button.labelMinExtent = new Point(36, 18);
-    button.padding = 0;
-    button.labelShadowOffset = new Point(-1, -1);
-    button.labelShadowColor = colors[1];
-    button.labelColor = SpriteMorph.prototype.blockColor.physics;
-    button.contrast = this.buttonContrast;
-    button.drawNew();
-    // button.hint = '(dis)engage physics';
-    button.fixLayout();
-    button.refresh();
-    physicsButton = button;
-    this.controlBar.add(physicsButton);
-    this.controlBar.physicsButton = physicsButton; // for refreshing
+        );
+        button.corner = 12;
+        button.color = colors[0];
+        button.highlightColor = colors[1];
+        button.pressColor = colors[2];
+        button.labelMinExtent = new Point(36, 18);
+        button.padding = 0;
+        button.labelShadowOffset = new Point(-1, -1);
+        button.labelShadowColor = colors[1];
+        button.labelColor = SpriteMorph.prototype.blockColor.physics;
+        button.contrast = this.buttonContrast;
+        button.drawNew();
+        // button.hint = '(dis)engage physics';
+        button.fixLayout();
+        button.refresh();
+        physicsButton = button;
+        this.controlBar.add(physicsButton);
+        this.controlBar.physicsButton = physicsButton; // for refreshing
+    }
 
     // steppingSlider
     slider = new SliderMorph(
@@ -851,7 +853,7 @@ IDE_Morph.prototype.createControlBar = function () {
 
     this.controlBar.fixLayout = function () {
         x = this.right() - padding;
-        [stopButton, pauseButton, startButton, physicsButton].forEach(
+        [stopButton, pauseButton, startButton /*, physicsButton*/].forEach(
             function (button) {
                 button.setCenter(myself.controlBar.center());
                 button.setRight(x);

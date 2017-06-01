@@ -1233,11 +1233,14 @@ StageMorph.prototype.clearGraphData = function () {
 };
 
 StageMorph.prototype.recordGraphData = function () {
+  if (this.graphTable.rows() >= 1000) {
+    return;
+  }
+
   this.graphTable.addRow([this.simulationTime()].concat(this.graphWatchers.map(
     function (w) {
       return w.target[w.getter]();
     })));
-
 
   var ide = this.parentThatIsA(IDE_Morph);
   if (ide && ide.graphDialog) {
@@ -1671,7 +1674,11 @@ GraphDialogMorph.prototype.buildContents = function () {
 };
 
 GraphDialogMorph.prototype.exportTable = function () {
-  console.log(this.table);
+  if (this.parent instanceof WorldMorph) {
+    var ide = this.parent.children[0];
+    ide.saveFileAs(this.table.toCSV(), 'text/csv;chartset=utf-8', 'simdata');
+    this.ok();
+  }
 };
 
 GraphDialogMorph.prototype.setInitialDimensions = function () {
@@ -1722,3 +1729,12 @@ Table.prototype.clear = function (cols, rows) {
   }
   this.lastChanged = Date.now();
 };
+
+// TODO: do proper escaping
+Table.prototype.toCSV = function () {
+  var data = this.colNames.join(',') + '\n';
+  for (var i = 0; i < this.contents.length; i++) {
+    data += this.contents[i].join(',') + '\n';
+  }
+  return data;
+}

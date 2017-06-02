@@ -963,7 +963,11 @@ StageMorph.prototype.init = function (globals) {
   this.physicsScale = 10.0;
 
   this.graphWatchers = [];
-  this.graphTable = new Table(0, 0); // cols, rows
+  this.graphTable = new Table(3, 0); // cols, rows
+  this.graphTable.setColNames(['Time', 'Sprite x position', 'Sprite y position']);
+  for (var t = 0; t < 2.0; t += 0.03) {
+    this.graphTable.addRow([t, 2 * t, Math.sin(t)]);
+  }
 };
 
 StageMorph.prototype.hasPhysicsFloor = function () {
@@ -1617,17 +1621,95 @@ InputSlotMorph.prototype.physicsAttrMenu = function () {
 
 // ------- GraphingMorph -------
 
-function GraphingMorph() {
-  this.init();
+function GraphMorph(table) {
+  this.init(table);
 };
 
-GraphingMorph.prototype = new Morph();
-GraphingMorph.prototype.constructor = GraphingMorph;
-GraphingMorph.uber = Morph.prototype;
+GraphMorph.prototype = new Morph();
+GraphMorph.prototype.constructor = GraphMorph;
+GraphMorph.uber = Morph.prototype;
 
-GraphingMorph.prototype.init = function () {
-  GraphingMorph.uber.init.call(this);
+GraphMorph.prototype.init = function (table) {
+  GraphMorph.uber.init.call(this);
+  this.table = table;
 };
+
+GraphMorph.prototype.colors = ['rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)',
+  'rgb(255,255,0)', 'rgb(255,0,255)', 'rgb(0,255,255)'
+];
+
+GraphMorph.prototype.drawNew = function () {
+  if (!this.table) {
+    return;
+  }
+
+  if (this.image) {
+    this.image.width = this.width();
+    this.image.height = this.height();
+  } else {
+    this.image = newCanvas(this.extent());
+  }
+  var ctx = this.image.getContext('2d');
+
+  var labels = [];
+  for (var r = 1; r < this.table.rows(); r++) {
+    var v = +this.table.get(1, r);
+    labels.push(v.toFixed(3));
+  }
+
+  var datasets = [];
+  for (var c = 2; c <= this.table.cols(); c++) {
+    var data = [],
+      color = this.colors[c - 2 % this.colors.length];
+
+    for (var r = 1; r < this.table.rows(); r++) {
+      data.push(this.table.get(c, r));
+    }
+
+    datasets.push({
+      label: this.table.get(c, 0),
+      borderColor: color,
+      backgroundColor: color,
+      data: data
+    });
+  }
+
+  console.log(labels.length);
+
+  this.chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: datasets
+    },
+    options: {
+      responsive: false,
+      animation: {
+        duration: 0,
+      },
+      hover: {
+        animationDuration: 0,
+      },
+      responsiveAnimationDuration: 0,
+      elements: {
+        line: {
+          fill: false,
+          tension: 0
+        }
+      },
+      scales: {
+        xAxes: [{
+          gridLines: {
+            // color: 'rgba(255,0,0,0.7)'
+          },
+          ticks: {
+            autoSkipPadding: 20
+          }
+        }]
+      }
+    }
+  });
+}
 
 // ------- GraphDialogMorph -------
 
@@ -1649,26 +1731,30 @@ GraphDialogMorph.prototype.init = function (table) {
   GraphDialogMorph.uber.init.call(this);
 
   // override inherited properites:
-  this.labelString = 'Graph view';
+  this.labelString = 'Simulation Data';
   this.createLabel();
 
   this.buildContents();
 };
 
 GraphDialogMorph.prototype.buildContents = function () {
-  this.tableView = new TableMorph(
-    this.table,
-    null, // scrollBarSize
-    null, // extent
-    null, // startRow
-    null, // startCol
-    null, // globalColWidth
-    null, // colWidths
-    null, // rowHeight
-    null, // colLabelHeight
-    null // padding
-  );
-  this.addBody(new TableFrameMorph(this.tableView, true));
+  if (false) {
+    this.tableView = new TableMorph(
+      this.table,
+      null, // scrollBarSize
+      null, // extent
+      null, // startRow
+      null, // startCol
+      null, // globalColWidth
+      null, // colWidths
+      null, // rowHeight
+      null, // colLabelHeight
+      null // padding
+    );
+    this.addBody(new TableFrameMorph(this.tableView, true));
+  } else {
+    this.addBody(new GraphMorph(this.table));
+  }
   this.addButton('ok', 'Close');
   this.addButton('exportTable', 'Export');
 };
@@ -1686,11 +1772,7 @@ GraphDialogMorph.prototype.setInitialDimensions = function () {
     mex = world.extent().subtract(new Point(this.padding, this.padding)),
     th = fontHeight(this.titleFontSize) + this.titlePadding * 3, // hm...
     bh = this.buttons.height();
-  this.setExtent(
-    this.tableView.globalExtent().add(
-      new Point(this.padding * 2, this.padding * 2 + th + bh)
-    ).min(mex).max(new Point(300, 300))
-  );
+  this.setExtent(new Point(300, 300).min(mex));
   this.setCenter(this.world().center());
 };
 
@@ -1698,10 +1780,13 @@ GraphDialogMorph.prototype.popUp = function (world) {
   if (world) {
     GraphDialogMorph.uber.popUp.call(this, world);
     this.setInitialDimensions();
+    if (this.handle) {
+      this.handle.destroy();
+    }
     this.handle = new HandleMorph(
       this,
-      100,
-      100,
+      250,
+      200,
       this.corner,
       this.corner
     );
@@ -1711,8 +1796,11 @@ GraphDialogMorph.prototype.popUp = function (world) {
 GraphDialogMorph.prototype.fixLayout = BlockEditorMorph.prototype.fixLayout;
 
 GraphDialogMorph.prototype.updateData = function () {
-  if (this.body && this.body.tableMorph) {
+  if (this.body instanceof TableFrameMorph) {
     this.body.tableMorph.drawNew();
+  } else if (this.body instanceof GraphMorph) {
+    this.body.drawNew();
+    this.body.changed();
   }
 }
 

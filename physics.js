@@ -1802,6 +1802,7 @@ GraphDialogMorph.prototype.popUp = function (world) {
       this.corner,
       this.corner
     );
+    this.refresh();
   }
 };
 

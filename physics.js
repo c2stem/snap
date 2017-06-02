@@ -963,10 +963,14 @@ StageMorph.prototype.init = function (globals) {
   this.physicsScale = 10.0;
 
   this.graphWatchers = [];
-  this.graphTable = new Table(3, 0); // cols, rows
-  this.graphTable.setColNames(['Time', 'Sprite x position', 'Sprite y position']);
-  for (var t = 0; t < 2.0; t += 0.03) {
-    this.graphTable.addRow([t, 2 * t, Math.sin(t)]);
+  if (false) { // test data
+    this.graphTable = new Table(3, 0); // cols, rows
+    this.graphTable.setColNames(['Time', 'Sprite x position', 'Sprite y position']);
+    for (var t = 0; t < 2.0; t += 0.03) {
+      this.graphTable.addRow([t, 2 * t, Math.sin(t)]);
+    }
+  } else {
+    this.graphTable = new Table(0, 0);
   }
 };
 

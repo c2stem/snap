@@ -1128,6 +1128,8 @@ StageMorph.prototype.stopSimulation = function (norefresh) {
       ide.controlBar.physicsButton.refresh();
     }
   }
+
+  this.refreshGraphViews();
 };
 
 StageMorph.prototype.phyFireGreenFlagEvent = StageMorph.prototype.fireGreenFlagEvent;
@@ -1222,22 +1224,30 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
   }
 };
 
+StageMorph.prototype.refreshGraphViews = function () {
+  var ide = this.parentThatIsA(IDE_Morph);
+  if (ide && ide.graphDialog) {
+    ide.graphDialog.refresh();
+  }
+  if (ide && ide.tableDialog) {
+    ide.tableDialog.refresh();
+  }
+}
+
 StageMorph.prototype.clearGraphData = function () {
   this.graphWatchers = this.watchers().filter(function (w) {
     return w.isVisible && !w.isTemporary() &&
       w.target instanceof Morph && typeof w.getter === "string";
   });
 
+  this.graphChanged = Date.now();
   this.graphTable.clear(1 + this.graphWatchers.length, 0);
   this.graphTable.setColNames(["Time"].concat(this.graphWatchers.map(
     function (w) {
       return w.objName + w.labelText;
     })));
 
-  var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.graphDialog) {
-    // ide.graphDialog.refresh();
-  }
+  this.refreshGraphViews();
 };
 
 StageMorph.prototype.recordGraphData = function () {
@@ -1250,9 +1260,10 @@ StageMorph.prototype.recordGraphData = function () {
       return w.target[w.getter]();
     })));
 
-  var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.graphDialog) {
-    // ide.graphDialog.refresh();
+  var t = Date.now();
+  if (t - this.graphChanged >= 500) {
+    this.graphChanged = t;
+    this.refreshGraphViews();
   }
 }
 

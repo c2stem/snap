@@ -8963,6 +8963,8 @@ SymbolMorph.prototype.symbolCanvasColored = function (aColor) {
         return this.drawSymbolAtom(canvas, aColor);
     case 'graph':
         return this.drawSymbolGraph(canvas, aColor);
+    case 'table':
+        return this.drawSymbolTable(canvas, aColor);
     default:
         return canvas;
     }
@@ -10104,6 +10106,27 @@ SymbolMorph.prototype.drawSymbolGraph = function (canvas, color) {
     ctx.lineTo(w * 0.6, h * 0.6);
     ctx.lineTo(w * 0.8, h * 0.1);
     ctx.lineTo(w * 0.9, h * 0.4);
+    ctx.stroke();
+
+    return canvas;
+}
+
+SymbolMorph.prototype.drawSymbolTable = function (canvas, color) {
+    // answer a canvas showing an atom
+    var ctx = canvas.getContext('2d'),
+        w = canvas.width,
+        h = canvas.height;
+
+    ctx.fillStyle = color.toString();
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = Math.max(canvas.width * 0.05, 0.5);
+    ctx.beginPath();
+    for (var i = 0.1; i < 1.0; i += 0.2) {
+        ctx.moveTo(0.1 * w, i * h);
+        ctx.lineTo(0.9 * w, i * h);
+        ctx.moveTo(i * w, 0.1 * h);
+        ctx.lineTo(i * w, 0.9 * h);
+    }
     ctx.stroke();
 
     return canvas;

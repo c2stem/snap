@@ -1505,6 +1505,7 @@ IDE_Morph.prototype.createCorralBar = function () {
         newbutton,
         paintbutton,
         graphbutton,
+        tablebutton,
         colors = [
             this.groupColor,
             this.frameColor.darker(50),
@@ -1583,11 +1584,33 @@ IDE_Morph.prototype.createCorralBar = function () {
     graphbutton.labelColor = this.buttonLabelColor;
     graphbutton.contrast = this.buttonContrast;
     graphbutton.drawNew();
-    graphbutton.hint = "open graphing window";
+    graphbutton.hint = "open graph view";
     graphbutton.fixLayout();
     graphbutton.setCenter(this.corralBar.center());
     graphbutton.setLeft(paintbutton.right() + padding);
     this.corralBar.add(graphbutton);
+
+    tablebutton = new PushButtonMorph(
+        this,
+        "openTableDialog",
+        new SymbolMorph("table", 15)
+    );
+    tablebutton.corner = 12;
+    tablebutton.color = colors[0];
+    tablebutton.highlightColor = colors[1];
+    tablebutton.pressColor = colors[2];
+    tablebutton.labelMinExtent = new Point(36, 18);
+    tablebutton.padding = 0;
+    tablebutton.labelShadowOffset = new Point(-1, -1);
+    tablebutton.labelShadowColor = colors[1];
+    tablebutton.labelColor = this.buttonLabelColor;
+    tablebutton.contrast = this.buttonContrast;
+    tablebutton.drawNew();
+    tablebutton.hint = "open table view";
+    tablebutton.fixLayout();
+    tablebutton.setCenter(this.corralBar.center());
+    tablebutton.setLeft(graphbutton.right() + padding);
+    this.corralBar.add(tablebutton);
 };
 
 IDE_Morph.prototype.createCorral = function () {

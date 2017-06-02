@@ -1232,7 +1232,7 @@ StageMorph.prototype.clearGraphData = function () {
 
   var ide = this.parentThatIsA(IDE_Morph);
   if (ide && ide.graphDialog) {
-    ide.graphDialog.updateData();
+    // ide.graphDialog.refresh();
   }
 };
 
@@ -1248,7 +1248,7 @@ StageMorph.prototype.recordGraphData = function () {
 
   var ide = this.parentThatIsA(IDE_Morph);
   if (ide && ide.graphDialog) {
-    ide.graphDialog.updateData();
+    // ide.graphDialog.refresh();
   }
 }
 
@@ -1572,6 +1572,14 @@ IDE_Morph.prototype.openGraphDialog = function () {
   this.graphDialog.popUp(this.world());
 };
 
+IDE_Morph.prototype.openTableDialog = function () {
+  if (!this.tableDialog) {
+    this.tableDialog = new GraphDialogMorph(this.stage.graphTable, 'table');
+  }
+
+  this.tableDialog.popUp(this.world());
+};
+
 // ------- InputSlotMorph -------
 
 InputSlotMorph.prototype.physicsAttrMenu = function () {
@@ -1635,7 +1643,7 @@ GraphMorph.prototype.init = function (table) {
 };
 
 GraphMorph.prototype.colors = ['rgb(255,0,0)', 'rgb(0,255,0)', 'rgb(0,0,255)',
-  'rgb(255,255,0)', 'rgb(255,0,255)', 'rgb(0,255,255)'
+  'rgb(255,255,0)', 'rgb(255,0,255)', 'rgb(0,255,255)', 'rgb(0,0,0)'
 ];
 
 GraphMorph.prototype.drawNew = function () {
@@ -1673,8 +1681,6 @@ GraphMorph.prototype.drawNew = function () {
       data: data
     });
   }
-
-  console.log(labels.length);
 
   this.chart = new Chart(ctx, {
     type: 'line',
@@ -1717,15 +1723,15 @@ GraphDialogMorph.prototype = new DialogBoxMorph();
 GraphDialogMorph.prototype.constructor = GraphDialogMorph;
 GraphDialogMorph.uber = DialogBoxMorph.prototype;
 
-function GraphDialogMorph(table) {
-  this.init(table);
+function GraphDialogMorph(table, mode) {
+  this.init(table, mode);
 };
 
-GraphDialogMorph.prototype.init = function (table) {
+GraphDialogMorph.prototype.init = function (table, mode) {
   // additional properties:
   this.handle = null;
   this.table = table;
-  this.tableView = null;
+  this.mode = mode;
 
   // initialize inherited properties:
   GraphDialogMorph.uber.init.call(this);
@@ -1738,7 +1744,7 @@ GraphDialogMorph.prototype.init = function (table) {
 };
 
 GraphDialogMorph.prototype.buildContents = function () {
-  if (false) {
+  if (this.mode === 'table') {
     this.tableView = new TableMorph(
       this.table,
       null, // scrollBarSize
@@ -1757,6 +1763,7 @@ GraphDialogMorph.prototype.buildContents = function () {
   }
   this.addButton('ok', 'Close');
   this.addButton('exportTable', 'Export');
+  this.addButton('refresh', 'Refresh');
 };
 
 GraphDialogMorph.prototype.exportTable = function () {
@@ -1779,14 +1786,15 @@ GraphDialogMorph.prototype.setInitialDimensions = function () {
 GraphDialogMorph.prototype.popUp = function (world) {
   if (world) {
     GraphDialogMorph.uber.popUp.call(this, world);
-    this.setInitialDimensions();
     if (this.handle) {
       this.handle.destroy();
+    } else {
+      this.setInitialDimensions();
     }
     this.handle = new HandleMorph(
       this,
+      280,
       250,
-      200,
       this.corner,
       this.corner
     );
@@ -1795,7 +1803,7 @@ GraphDialogMorph.prototype.popUp = function (world) {
 
 GraphDialogMorph.prototype.fixLayout = BlockEditorMorph.prototype.fixLayout;
 
-GraphDialogMorph.prototype.updateData = function () {
+GraphDialogMorph.prototype.refresh = function () {
   if (this.body instanceof TableFrameMorph) {
     this.body.tableMorph.drawNew();
   } else if (this.body instanceof GraphMorph) {

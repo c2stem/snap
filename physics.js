@@ -1236,9 +1236,10 @@ StageMorph.prototype.refreshGraphViews = function () {
 
 StageMorph.prototype.clearGraphData = function () {
   this.graphWatchers = this.watchers().filter(function (w) {
-    return w.isVisible && !w.isTemporary() &&
-      w.target instanceof Morph && typeof w.getter === "string";
+    return w.isVisible && !w.isTemporary();
   });
+  console.log(this.watchers());
+  console.log(this.graphWatchers);
 
   this.graphChanged = Date.now();
   this.graphTable.clear(1 + this.graphWatchers.length, 0);
@@ -1257,7 +1258,12 @@ StageMorph.prototype.recordGraphData = function () {
 
   this.graphTable.addRow([this.simulationTime()].concat(this.graphWatchers.map(
     function (w) {
-      return w.target[w.getter]();
+      if (w.target instanceof VariableFrame) {
+        var v = w.target.vars[w.getter];
+        return v ? v.value : NaN;
+      } else {
+        return w.target[w.getter]();
+      }
     })));
 
   var t = Date.now();

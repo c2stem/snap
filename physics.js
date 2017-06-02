@@ -1834,3 +1834,17 @@ Table.prototype.toCSV = function () {
   }
   return data;
 }
+
+// ------- TableMorph -------
+
+TableMorph.prototype.step = function () {
+  if (this.dragAnchor) {
+    this.shiftCells(this.world().hand.position());
+  } else if (this.resizeAnchor) {
+    this.resizeCells(this.world().hand.position());
+  }
+
+  if (this.wantsUpdate) {
+    this.update(); // disable automatic refresh
+  }
+};

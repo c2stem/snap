@@ -1814,6 +1814,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('simulationTime'));
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
+        blocks.push(block('setDeltaTime'));
         blocks.push('-');
         blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));
@@ -5923,6 +5924,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('simulationTime'));
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
+        blocks.push(block('setDeltaTime'));
         blocks.push('-');
         blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));

@@ -227,6 +227,12 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "\u2206t in s"
     },
+    setDeltaTime: {
+      type: "command",
+      category: "physics",
+      spec: "set \u2206t to %n in s",
+      defaults: [0]
+    },
     doSimulationStep: {
       type: "hat",
       category: "physics",
@@ -436,6 +442,13 @@ SpriteMorph.prototype.stopSimulation = function () {
 SpriteMorph.prototype.deltaTime = function () {
   var stage = this.parentThatIsA(StageMorph);
   return (stage && stage.deltaTime()) || 0;
+};
+
+SpriteMorph.prototype.setDeltaTime = function (dt) {
+  var stage = this.parentThatIsA(StageMorph);
+  if (stage) {
+    stage.setDeltaTime(dt);
+  }
 };
 
 SpriteMorph.prototype.simulationTime = function () {
@@ -959,6 +972,7 @@ StageMorph.prototype.init = function (globals) {
   this.physicsSimulationTime = 0.0;
   this.physicsLastUpdated = null;
   this.physicsDeltaTime = 0;
+  this.targetDeltaTime = 0;
   this.physicsFloor = null;
   this.physicsScale = 10.0;
 
@@ -1070,9 +1084,11 @@ StageMorph.prototype.simulationStep = function () {
   if (this.physicsLastUpdated) {
     delta = (time - this.physicsLastUpdated) * 0.001;
 
-    if (0.001 < delta) {
-      if (delta > 0.1) {
-        delta = 0.1;
+    if (this.targetDeltaTime + 0.01 < delta) {
+      if (this.targetDeltaTime > 0.0) {
+        delta = this.targetDeltaTime;
+      } else if (delta > 0.2) {
+        delta = 0.2;
       }
 
       this.recordGraphData();
@@ -1159,6 +1175,11 @@ StageMorph.prototype.deltaTime = function () {
   return this.physicsDeltaTime;
 };
 
+StageMorph.prototype.setDeltaTime = function (dt) {
+  this.targetDeltaTime = Math.max(dt || 0, 0);
+  this.physicsDeltaTime = this.targetDeltaTime;
+};
+
 StageMorph.prototype.simulationTime = function () {
   return this.physicsSimulationTime;
 };
@@ -1238,8 +1259,6 @@ StageMorph.prototype.clearGraphData = function () {
   this.graphWatchers = this.watchers().filter(function (w) {
     return w.isVisible && !w.isTemporary();
   });
-  console.log(this.watchers());
-  console.log(this.graphWatchers);
 
   this.graphChanged = Date.now();
   this.graphTable.clear(1 + this.graphWatchers.length, 0);

@@ -1718,7 +1718,9 @@ GraphMorph.prototype.drawNew = function () {
       label: this.table.get(c, 0),
       borderColor: color,
       backgroundColor: color,
-      data: data
+      data: data,
+      borderWidth: 1,
+      pointRadius: 2
     });
   }
 

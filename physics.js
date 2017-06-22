@@ -1870,12 +1870,13 @@ PhysicsTabMorph.prototype.wantsDropOf = function (morph) {
 
 SnapSerializer.prototype.phyOpenProject = SnapSerializer.prototype.openProject;
 SnapSerializer.prototype.openProject = function (project, ide) {
-  this.phyOpenProject(project, ide);
+  var result = this.phyOpenProject(project, ide);
   ide.stage.setPhysicsFloor(true);
   ide.stage.updateScaleMorph();
   if (ide.controlBar.physicsButton) {
     ide.controlBar.physicsButton.refresh();
   }
+  return result;
 };
 
 // ------- IDE_Morph -------

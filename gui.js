@@ -806,43 +806,45 @@ IDE_Morph.prototype.createControlBar = function () {
     this.controlBar.add(startButton);
     this.controlBar.startButton = startButton;
 
-    // physicsButton
-    button = new ToggleButtonMorph(
-        null, // colors
-        this, // the IDE is the target
-        function() {
-            if (this.stage.isSimulationRunning()) {
-                this.stage.stopSimulation(true);
+    // disable physicsButton
+    if (false) {
+        button = new ToggleButtonMorph(
+            null, // colors
+            this, // the IDE is the target
+            function() {
+                if (this.stage.isSimulationRunning()) {
+                    this.stage.stopSimulation(true);
+                }
+                else {
+                    this.stage.startSimulation(true);
+                }
+            },
+            [
+                new SymbolMorph('atom', 14),
+                new SymbolMorph('atom', 14)
+            ],
+            function() {
+                return this.stage && this.stage.isSimulationRunning();
             }
-            else {
-                this.stage.startSimulation(true);
-            }
-        },
-        [
-            new SymbolMorph('atom', 14),
-            new SymbolMorph('atom', 14)
-        ],
-        function() {
-            return this.stage && this.stage.isSimulationRunning();
-        }
-    );
-    button.corner = 12;
-    button.color = colors[0];
-    button.highlightColor = colors[1];
-    button.pressColor = colors[2];
-    button.labelMinExtent = new Point(36, 18);
-    button.padding = 0;
-    button.labelShadowOffset = new Point(-1, -1);
-    button.labelShadowColor = colors[1];
-    button.labelColor = SpriteMorph.prototype.blockColor.physics;
-    button.contrast = this.buttonContrast;
-    button.drawNew();
-    // button.hint = '(dis)engage physics';
-    button.fixLayout();
-    button.refresh();
-    physicsButton = button;
-    this.controlBar.add(physicsButton);
-    this.controlBar.physicsButton = physicsButton; // for refreshing
+        );
+        button.corner = 12;
+        button.color = colors[0];
+        button.highlightColor = colors[1];
+        button.pressColor = colors[2];
+        button.labelMinExtent = new Point(36, 18);
+        button.padding = 0;
+        button.labelShadowOffset = new Point(-1, -1);
+        button.labelShadowColor = colors[1];
+        button.labelColor = SpriteMorph.prototype.blockColor.physics;
+        button.contrast = this.buttonContrast;
+        button.drawNew();
+        // button.hint = '(dis)engage physics';
+        button.fixLayout();
+        button.refresh();
+        physicsButton = button;
+        this.controlBar.add(physicsButton);
+        this.controlBar.physicsButton = physicsButton; // for refreshing
+    }
 
     // steppingSlider
     slider = new SliderMorph(
@@ -934,7 +936,7 @@ IDE_Morph.prototype.createControlBar = function () {
 
     this.controlBar.fixLayout = function () {
         x = this.right() - padding;
-        [stopButton, pauseButton, startButton, physicsButton].forEach(
+        [stopButton, pauseButton, startButton /*, physicsButton*/].forEach(
             function (button) {
                 button.setCenter(myself.controlBar.center());
                 button.setRight(x);
@@ -1593,6 +1595,7 @@ IDE_Morph.prototype.createCorralBar = function () {
         newbutton,
         paintbutton,
         graphbutton,
+        tablebutton,
         colors = [
             this.groupColor,
             this.frameColor.darker(50),
@@ -1671,11 +1674,33 @@ IDE_Morph.prototype.createCorralBar = function () {
     graphbutton.labelColor = this.buttonLabelColor;
     graphbutton.contrast = this.buttonContrast;
     graphbutton.drawNew();
-    graphbutton.hint = "open graphing window";
+    graphbutton.hint = "open graph view";
     graphbutton.fixLayout();
     graphbutton.setCenter(this.corralBar.center());
     graphbutton.setLeft(paintbutton.right() + padding);
     this.corralBar.add(graphbutton);
+
+    tablebutton = new PushButtonMorph(
+        this,
+        "openTableDialog",
+        new SymbolMorph("table", 15)
+    );
+    tablebutton.corner = 12;
+    tablebutton.color = colors[0];
+    tablebutton.highlightColor = colors[1];
+    tablebutton.pressColor = colors[2];
+    tablebutton.labelMinExtent = new Point(36, 18);
+    tablebutton.padding = 0;
+    tablebutton.labelShadowOffset = new Point(-1, -1);
+    tablebutton.labelShadowColor = colors[1];
+    tablebutton.labelColor = this.buttonLabelColor;
+    tablebutton.contrast = this.buttonContrast;
+    tablebutton.drawNew();
+    tablebutton.hint = "open table view";
+    tablebutton.fixLayout();
+    tablebutton.setCenter(this.corralBar.center());
+    tablebutton.setLeft(graphbutton.right() + padding);
+    this.corralBar.add(tablebutton);
 };
 
 IDE_Morph.prototype.createCorral = function () {

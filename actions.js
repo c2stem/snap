@@ -1,6 +1,6 @@
 var logger = {
     log: console.log.bind(console),
-    debug: console.debug.bind(console),
+    debug: console.info.bind(console),
     info: console.info.bind(console),
     warn: console.warn.bind(console),
     error: console.error.bind(console)
@@ -214,6 +214,7 @@ ActionManager.prototype.isCollaborating = function() {
 
 ActionManager.prototype.initialize = function() {
     this.serializer = new SnapSerializer();
+    this.serializer.idProperty = 'actionSerializationID';
     this._ws = null;
     this.supportsCollaboration = null;
     this.isLeader = true;
@@ -1004,14 +1005,16 @@ ActionManager.prototype._addSprite = function(sprite, costume) {
 };
 
 ActionManager.prototype.uniqueIdForImport = function (str) {
-    var myself = this,
-        model = myself.serializer.parse(str),
+    var model = this.serializer.parse(str),
         children = model.allChildren();
 
     // Just add an id to everything... not the most efficient but effective for now
     for (var i = children.length; i--;) {
         if (children[i].attributes) {
             children[i].attributes.collabId = this.newId();
+        }
+        if (children[i].contents) {
+            children[i].contents = this.serializer.escape(children[i].contents);
         }
     }
 

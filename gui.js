@@ -257,6 +257,7 @@ IDE_Morph.prototype.init = function (isAutoFill) {
 
     this.hiddenCategories = [];
     this.hiddenSpriteTabs = [];
+    this.hiddenCorralButtons = [];
 };
 
 IDE_Morph.prototype.openIn = function (world) {
@@ -1510,7 +1511,8 @@ IDE_Morph.prototype.createCorralBar = function () {
             this.groupColor,
             this.frameColor.darker(50),
             this.frameColor.darker(50)
-        ];
+        ],
+        ide = this;
 
     if (this.corralBar) {
         this.corralBar.destroy();
@@ -1521,97 +1523,66 @@ IDE_Morph.prototype.createCorralBar = function () {
     this.corralBar.setHeight(this.logo.height()); // height is fixed
     this.add(this.corralBar);
 
-    // new sprite button
-    newbutton = new PushButtonMorph(
-        this,
-        "addNewSprite",
-        new SymbolMorph("turtle", 14)
-    );
-    newbutton.corner = 12;
-    newbutton.color = colors[0];
-    newbutton.highlightColor = colors[1];
-    newbutton.pressColor = colors[2];
-    newbutton.labelMinExtent = new Point(36, 18);
-    newbutton.padding = 0;
-    newbutton.labelShadowOffset = new Point(-1, -1);
-    newbutton.labelShadowColor = colors[1];
-    newbutton.labelColor = this.buttonLabelColor;
-    newbutton.contrast = this.buttonContrast;
-    newbutton.drawNew();
-    newbutton.hint = "add a new Turtle sprite";
-    newbutton.fixLayout();
-    newbutton.setCenter(this.corralBar.center());
-    newbutton.setLeft(this.corralBar.left() + padding);
-    this.corralBar.add(newbutton);
+    var addButtonPos = ide.corralBar.left() + padding;
+    var addButton = function(action, symbol, hint) {
+        if (contains(ide.hiddenCorralButtons, action)) {
+            return;
+        }
+        var button = new PushButtonMorph(ide, action, symbol);
+        button.corner = 12;
+        button.color = colors[0];
+        button.highlightColor = colors[1];
+        button.pressColor = colors[2];
+        button.labelMinExtent = new Point(36, 18);
+        button.padding = 0;
+        button.labelShadowOffset = new Point(-1, -1);
+        button.labelShadowColor = colors[1];
+        button.labelColor = ide.buttonLabelColor;
+        button.contrast = ide.buttonContrast;
+        button.drawNew();
+        button.hint = hint;
+        button.fixLayout();
+        button.setCenter(ide.corralBar.center());
+        button.setLeft(addButtonPos);
+        button.userMenu = function() {
+            var menu = new MenuMorph(paintbutton);
+            menu.addItem("hide button", function() {
+                ide.hideCorralButton(action);
+            });
+            return menu;
+        };
+        ide.corralBar.add(button);
+        addButtonPos = button.right() + padding;
+    };
 
-    paintbutton = new PushButtonMorph(
-        this,
-        "paintNewSprite",
-        new SymbolMorph("brush", 15)
-    );
-    paintbutton.corner = 12;
-    paintbutton.color = colors[0];
-    paintbutton.highlightColor = colors[1];
-    paintbutton.pressColor = colors[2];
-    paintbutton.labelMinExtent = new Point(36, 18);
-    paintbutton.padding = 0;
-    paintbutton.labelShadowOffset = new Point(-1, -1);
-    paintbutton.labelShadowColor = colors[1];
-    paintbutton.labelColor = this.buttonLabelColor;
-    paintbutton.contrast = this.buttonContrast;
-    paintbutton.drawNew();
-    paintbutton.hint = "paint a new sprite";
-    paintbutton.fixLayout();
-    paintbutton.setCenter(this.corralBar.center());
-    paintbutton.setLeft(
-        this.corralBar.left() + padding + newbutton.width() + padding
-    );
-    this.corralBar.add(paintbutton);
+    addButton("addNewSprite", new SymbolMorph("turtle", 14), "add a new Turtle sprite");
+    addButton("paintNewSprite", new SymbolMorph("brush", 15), "paint a new sprite");
+    addButton("openGraphDialog", new SymbolMorph("graph", 15), "graph the simulation data");
+    addButton("openTableDialog", new SymbolMorph("table", 15), "table view of simulation data");
 
-    graphbutton = new PushButtonMorph(
-        this,
-        "openGraphDialog",
-        new SymbolMorph("graph", 15)
-    );
-    graphbutton.corner = 12;
-    graphbutton.color = colors[0];
-    graphbutton.highlightColor = colors[1];
-    graphbutton.pressColor = colors[2];
-    graphbutton.labelMinExtent = new Point(36, 18);
-    graphbutton.padding = 0;
-    graphbutton.labelShadowOffset = new Point(-1, -1);
-    graphbutton.labelShadowColor = colors[1];
-    graphbutton.labelColor = this.buttonLabelColor;
-    graphbutton.contrast = this.buttonContrast;
-    graphbutton.drawNew();
-    graphbutton.hint = "open graph view";
-    graphbutton.fixLayout();
-    graphbutton.setCenter(this.corralBar.center());
-    graphbutton.setLeft(paintbutton.right() + padding);
-    this.corralBar.add(graphbutton);
-
-    tablebutton = new PushButtonMorph(
-        this,
-        "openTableDialog",
-        new SymbolMorph("table", 15)
-    );
-    tablebutton.corner = 12;
-    tablebutton.color = colors[0];
-    tablebutton.highlightColor = colors[1];
-    tablebutton.pressColor = colors[2];
-    tablebutton.labelMinExtent = new Point(36, 18);
-    tablebutton.padding = 0;
-    tablebutton.labelShadowOffset = new Point(-1, -1);
-    tablebutton.labelShadowColor = colors[1];
-    tablebutton.labelColor = this.buttonLabelColor;
-    tablebutton.contrast = this.buttonContrast;
-    tablebutton.drawNew();
-    tablebutton.hint = "open table view";
-    tablebutton.fixLayout();
-    tablebutton.setCenter(this.corralBar.center());
-    tablebutton.setLeft(graphbutton.right() + padding);
-    this.corralBar.add(tablebutton);
+    if (ide.hiddenCorralButtons.length != 0) {
+        this.corralBar.userMenu = function() {
+            var menu = new MenuMorph(ide);
+            menu.addItem("show hidden buttons", 'showCorralButtons');
+            return menu;
+        }
+    }
 };
+
+IDE_Morph.prototype.hideCorralButton = function (action) {
+    // TODO: consolidate all hidden features into a single field
+    if (!contains(this.hiddenCorralButtons, action)) {
+        this.hiddenCorralButtons.push(action);
+        this.createCorralBar();
+        this.fixLayout();
+    }
+}
+
+IDE_Morph.prototype.showCorralButtons = function () {
+    this.hiddenCorralButtons.length = 0;
+    this.createCorralBar();
+    this.fixLayout();
+}
 
 IDE_Morph.prototype.createCorral = function () {
     // assumes the corral bar has already been created
@@ -3456,11 +3427,13 @@ IDE_Morph.prototype.newProject = function () {
     this.hiddenCategories = [];
     this.hiddenSpriteBar = false;
     this.hiddenSpriteTabs = [];
+    this.hiddenCorralButtons = [];
     this.setProjectName('');
     this.projectNotes = '';
     this.createCategories();
     this.createStage();
     this.add(this.stage);
+    this.createCorralBar();
     this.createCorral();
     this.selectSprite(this.currentSprite);
     this.fixLayout();

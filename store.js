@@ -391,6 +391,8 @@ SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
     project.hiddenSpriteBar = model.stage.attributes.hiddenSpriteBar === 'true';
     project.hiddenSpriteTabs = model.stage.attributes.hiddenSpriteTabs || '';
     project.hiddenSpriteTabs = project.hiddenSpriteTabs === '' ? [] : project.hiddenSpriteTabs.split(' ');
+    project.hiddenCorralButtons = model.stage.attributes.hiddenCorralButtons || '';
+    project.hiddenCorralButtons = project.hiddenCorralButtons === '' ? [] : project.hiddenCorralButtons.split(' ');
     model.pentrails = model.stage.childNamed('pentrails');
     if (model.pentrails) {
         project.pentrails = new Image();
@@ -1422,6 +1424,7 @@ SnapSerializer.prototype.openProject = function (project, ide) {
     ide.hiddenCategories = project.hiddenCategories || [];
     ide.hiddenSpriteBar = project.hiddenSpriteBar === true;
     ide.hiddenSpriteTabs = project.hiddenSpriteTabs || [];
+    ide.hiddenCorralButtons = project.hiddenCorralButtons || [];
     if (stage) {
         stage.destroy();
     }
@@ -1446,6 +1449,7 @@ SnapSerializer.prototype.openProject = function (project, ide) {
     project.stage.drawNew();
     ide.createCategories();
     ide.createPaletteHandle();
+    ide.createCorralBar();
     ide.createCorral();
     ide.selectSprite(sprite);
     ide.fixLayout();
@@ -1515,7 +1519,8 @@ StageMorph.prototype.toXML = function (serializer) {
             'scheduled="@" ' + 
             'hiddenCategories="@" ' +
             'hiddenSpriteBar="@" ' +
-            'hiddenSpriteTabs="@" ~>' +
+            'hiddenSpriteTabs="@" ' +
+            'hiddenCorralButtons="@" ~>' +
             '%' + // physics properties
             '<pentrails>$</pentrails>' +
             '<costumes>%</costumes>' +
@@ -1549,6 +1554,7 @@ StageMorph.prototype.toXML = function (serializer) {
         ide ? ide.hiddenCategories.join(' ') : '',
         ide && ide.hiddenSpriteBar,
         ide ? ide.hiddenSpriteTabs.join(' ') : '',
+        ide ? ide.hiddenCorralButtons.join(' ') : '',
         this.physicsSaveToXML(serializer),
         normalizeCanvas(this.trailsCanvas, true).toDataURL('image/png'),
         serializer.store(this.costumes, this.name + '_cst'),

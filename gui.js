@@ -258,6 +258,7 @@ IDE_Morph.prototype.init = function (isAutoFill) {
     this.hiddenCategories = [];
     this.hiddenSpriteTabs = [];
     this.hiddenCorralButtons = [];
+    this.hiddenControlButtons = [];
 };
 
 IDE_Morph.prototype.openIn = function (world) {
@@ -544,11 +545,8 @@ IDE_Morph.prototype.createControlBar = function () {
         stopButton,
         pauseButton,
         startButton,
-        projectButton,
-        settingsButton,
         stageSizeButton,
         appModeButton,
-        cloudButton,
         physicsButton,
         x,
         colors = [
@@ -781,76 +779,63 @@ IDE_Morph.prototype.createControlBar = function () {
     this.controlBar.add(slider);
     this.controlBar.steppingSlider = slider;
 
-    // projectButton
-    button = new PushButtonMorph(
-        this,
-        'projectMenu',
-        new SymbolMorph('file', 14)
+    var addControlButton = function (action, symbol, hint) {
+        if (contains(myself.hiddenControlButtons, action)) {
+            return null;
+        } else {
+            button = new PushButtonMorph(myself, action, symbol);
+            button.corner = 12;
+            button.color = colors[0];
+            button.highlightColor = colors[1];
+            button.pressColor = colors[2];
+            button.labelMinExtent = new Point(36, 18);
+            button.padding = 0;
+            button.labelShadowOffset = new Point(-1, -1);
+            button.labelShadowColor = colors[1];
+            button.labelColor = myself.buttonLabelColor;
+            button.contrast = myself.buttonContrast;
+            button.drawNew();
+            // button.hint = hint
+            button.userMenu = function() {
+                var menu = new MenuMorph(button);
+                menu.addItem("hide button", function() {
+                    myself.hideControlButton(action);
+                });
+                return menu;
+            };
+            button.fixLayout();
+            myself.controlBar.add(button);
+            return button;
+        }
+    };
+
+    this.controlBar.projectButton = addControlButton(
+        'projectMenu', 
+        new SymbolMorph('file', 14),
+        'open, save, & annotate project'
         //'\u270E'
     );
-    button.corner = 12;
-    button.color = colors[0];
-    button.highlightColor = colors[1];
-    button.pressColor = colors[2];
-    button.labelMinExtent = new Point(36, 18);
-    button.padding = 0;
-    button.labelShadowOffset = new Point(-1, -1);
-    button.labelShadowColor = colors[1];
-    button.labelColor = this.buttonLabelColor;
-    button.contrast = this.buttonContrast;
-    button.drawNew();
-    // button.hint = 'open, save, & annotate project';
-    button.fixLayout();
-    projectButton = button;
-    this.controlBar.add(projectButton);
-    this.controlBar.projectButton = projectButton; // for menu positioning
 
-    // settingsButton
-    button = new PushButtonMorph(
-        this,
+    this.controlBar.settingsButton = addControlButton(
         'settingsMenu',
-        new SymbolMorph('gears', 14)
+        new SymbolMorph('gears', 14),
+        'edit settings'
         //'\u2699'
     );
-    button.corner = 12;
-    button.color = colors[0];
-    button.highlightColor = colors[1];
-    button.pressColor = colors[2];
-    button.labelMinExtent = new Point(36, 18);
-    button.padding = 0;
-    button.labelShadowOffset = new Point(-1, -1);
-    button.labelShadowColor = colors[1];
-    button.labelColor = this.buttonLabelColor;
-    button.contrast = this.buttonContrast;
-    button.drawNew();
-    // button.hint = 'edit settings';
-    button.fixLayout();
-    settingsButton = button;
-    this.controlBar.add(settingsButton);
-    this.controlBar.settingsButton = settingsButton; // for menu positioning
 
-    // cloudButton
-    button = new PushButtonMorph(
-        this,
+    this.controlBar.cloudButton = addControlButton(
         'cloudMenu',
-        new SymbolMorph('cloud', 11)
+        new SymbolMorph('cloud', 11),
+        'cloud operations'
     );
-    button.corner = 12;
-    button.color = colors[0];
-    button.highlightColor = colors[1];
-    button.pressColor = colors[2];
-    button.labelMinExtent = new Point(36, 18);
-    button.padding = 0;
-    button.labelShadowOffset = new Point(-1, -1);
-    button.labelShadowColor = colors[1];
-    button.labelColor = this.buttonLabelColor;
-    button.contrast = this.buttonContrast;
-    button.drawNew();
-    // button.hint = 'cloud operations';
-    button.fixLayout();
-    cloudButton = button;
-    this.controlBar.add(cloudButton);
-    this.controlBar.cloudButton = cloudButton; // for menu positioning
+
+    if (this.hiddenControlButtons.length != 0) {
+        this.controlBar.userMenu = function() {
+            var menu = new MenuMorph(myself);
+            menu.addItem("show hidden buttons", 'showControlButtons');
+            return menu;
+        }
+    }
 
     this.controlBar.fixLayout = function () {
         x = this.right() - padding;
@@ -880,14 +865,16 @@ IDE_Morph.prototype.createControlBar = function () {
         slider.setCenter(myself.controlBar.center());
         slider.setRight(stageSizeButton.left() - padding);
 
-        settingsButton.setCenter(myself.controlBar.center());
-        settingsButton.setLeft(this.left());
-
-        cloudButton.setCenter(myself.controlBar.center());
-        cloudButton.setRight(settingsButton.left() - padding);
-
-        projectButton.setCenter(myself.controlBar.center());
-        projectButton.setRight(cloudButton.left() - padding);
+        x = this.left();
+        [this.settingsButton, this.cloudButton, this.projectButton].forEach(
+            function(button) {
+                if (button) {
+                    button.setCenter(myself.controlBar.center());
+                    button.setRight(x);
+                    x = button.left() - padding;
+                }
+            }
+        );
 
         this.refreshSlider();
         this.updateLabel();
@@ -949,9 +936,23 @@ IDE_Morph.prototype.createControlBar = function () {
         this.label.drawNew();
         this.add(this.label);
         this.label.setCenter(this.center());
-        this.label.setLeft(this.settingsButton.right() + padding);
+        this.label.setLeft(this.left() + padding);
     };
 };
+
+IDE_Morph.prototype.hideControlButton = function (action) {
+    if (!contains(this.hiddenControlButtons, action)) {
+        this.hiddenControlButtons.push(action);
+        this.createControlBar();
+        this.fixLayout();
+    }
+}
+
+IDE_Morph.prototype.showControlButtons = function () {
+    this.hiddenControlButtons.length = 0;
+    this.createControlBar();
+    this.fixLayout();
+}
 
 IDE_Morph.prototype.createCategories = function () {
     var myself = this;
@@ -1545,7 +1546,7 @@ IDE_Morph.prototype.createCorralBar = function () {
         button.setCenter(ide.corralBar.center());
         button.setLeft(addButtonPos);
         button.userMenu = function() {
-            var menu = new MenuMorph(paintbutton);
+            var menu = new MenuMorph(button);
             menu.addItem("hide button", function() {
                 ide.hideCorralButton(action);
             });
@@ -3428,8 +3429,10 @@ IDE_Morph.prototype.newProject = function () {
     this.hiddenSpriteBar = false;
     this.hiddenSpriteTabs = [];
     this.hiddenCorralButtons = [];
+    this.hiddenControlButtons = [];
     this.setProjectName('');
     this.projectNotes = '';
+    this.createControlBar();
     this.createCategories();
     this.createStage();
     this.add(this.stage);
@@ -4447,7 +4450,9 @@ IDE_Morph.prototype.toggleAppMode = function (appMode) {
         this.controlBar.setColor(this.color);
         this.controlBar.appModeButton.refresh();
         elements.forEach(function (e) {
-            e.hide();
+            if (e) {
+                e.hide();
+            }
         });
         world.children.forEach(function (morph) {
             if (morph instanceof DialogBoxMorph) {
@@ -4461,7 +4466,9 @@ IDE_Morph.prototype.toggleAppMode = function (appMode) {
         this.setColor(this.backgroundColor);
         this.controlBar.setColor(this.frameColor);
         elements.forEach(function (e) {
-            e.show();
+            if (e) {
+                e.show();
+            }
         });
         this.stage.setScale(1);
         // show all hidden dialogs

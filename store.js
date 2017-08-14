@@ -393,6 +393,8 @@ SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
     project.hiddenSpriteTabs = project.hiddenSpriteTabs === '' ? [] : project.hiddenSpriteTabs.split(' ');
     project.hiddenCorralButtons = model.stage.attributes.hiddenCorralButtons || '';
     project.hiddenCorralButtons = project.hiddenCorralButtons === '' ? [] : project.hiddenCorralButtons.split(' ');
+    project.hiddenControlButtons = model.stage.attributes.hiddenControlButtons || '';
+    project.hiddenControlButtons = project.hiddenControlButtons === '' ? [] : project.hiddenControlButtons.split(' ');
     model.pentrails = model.stage.childNamed('pentrails');
     if (model.pentrails) {
         project.pentrails = new Image();
@@ -1425,6 +1427,7 @@ SnapSerializer.prototype.openProject = function (project, ide) {
     ide.hiddenSpriteBar = project.hiddenSpriteBar === true;
     ide.hiddenSpriteTabs = project.hiddenSpriteTabs || [];
     ide.hiddenCorralButtons = project.hiddenCorralButtons || [];
+    ide.hiddenControlButtons = project.hiddenControlButtons || [];
     if (stage) {
         stage.destroy();
     }
@@ -1447,6 +1450,7 @@ SnapSerializer.prototype.openProject = function (project, ide) {
         ide.hasChangedMedia = true;
     }
     project.stage.drawNew();
+    ide.createControlBar();
     ide.createCategories();
     ide.createPaletteHandle();
     ide.createCorralBar();
@@ -1520,7 +1524,8 @@ StageMorph.prototype.toXML = function (serializer) {
             'hiddenCategories="@" ' +
             'hiddenSpriteBar="@" ' +
             'hiddenSpriteTabs="@" ' +
-            'hiddenCorralButtons="@" ~>' +
+            'hiddenCorralButtons="@" ' +
+            'hiddenControlButtons="@" ~>' +
             '%' + // physics properties
             '<pentrails>$</pentrails>' +
             '<costumes>%</costumes>' +
@@ -1555,6 +1560,7 @@ StageMorph.prototype.toXML = function (serializer) {
         ide && ide.hiddenSpriteBar,
         ide ? ide.hiddenSpriteTabs.join(' ') : '',
         ide ? ide.hiddenCorralButtons.join(' ') : '',
+        ide ? ide.hiddenControlButtons.join(' ') : '',
         this.physicsSaveToXML(serializer),
         normalizeCanvas(this.trailsCanvas, true).toDataURL('image/png'),
         serializer.store(this.costumes, this.name + '_cst'),

@@ -532,6 +532,14 @@ IDE_Morph.prototype.createLogo = function () {
         myself.snapMenu();
     };
 
+    this.logo.userMenu = function() {
+        if (myself.hiddenControlButtons.length != 0) {
+            var menu = new MenuMorph(myself);
+            menu.addItem("show hidden buttons", 'showControlButtons');
+            return menu;
+        }
+    }
+
     this.logo.color = new Color();
     this.logo.setExtent(new Point(200, 28)); // dimensions are fixed
     this.add(this.logo);
@@ -801,6 +809,11 @@ IDE_Morph.prototype.createControlBar = function () {
                 menu.addItem("hide button", function() {
                     myself.hideControlButton(action);
                 });
+                if (myself.hiddenControlButtons.length != 0) {
+                    menu.addItem("show hidden buttons", function() {
+                        myself.showControlButtons();
+                    });
+                }
                 return menu;
             };
             button.fixLayout();
@@ -828,14 +841,6 @@ IDE_Morph.prototype.createControlBar = function () {
         new SymbolMorph('cloud', 11),
         'cloud operations'
     );
-
-    if (this.hiddenControlButtons.length != 0) {
-        this.controlBar.userMenu = function() {
-            var menu = new MenuMorph(myself);
-            menu.addItem("show hidden buttons", 'showControlButtons');
-            return menu;
-        }
-    }
 
     this.controlBar.fixLayout = function () {
         x = this.right() - padding;

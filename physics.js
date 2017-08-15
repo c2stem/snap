@@ -1262,7 +1262,7 @@ StageMorph.prototype.clearGraphData = function () {
 
   this.graphChanged = Date.now();
   this.graphTable.clear(1 + this.graphWatchers.length, 0);
-  this.graphTable.setColNames(["Time"].concat(this.graphWatchers.map(
+  this.graphTable.setColNames(["Time in s"].concat(this.graphWatchers.map(
     function (w) {
       return w.objName + w.labelText;
     })));

@@ -7,7 +7,7 @@
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2017 by Jens Mönig
+    Copyright (C) 2016 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -57,11 +57,11 @@ BlockMorph, ArgMorph, InputSlotMorph, TemplateSlotMorph, CommandSlotMorph,
 FunctionSlotMorph, MultiArgMorph, ColorSlotMorph, nop, CommentMorph, isNil,
 localize, sizeOf, ArgLabelMorph, SVG_Costume, MorphicPreferences,
 SyntaxElementMorph, Variable, isSnapObject, console, BooleanSlotMorph,
-normalizeCanvas, contains*/
+normalizeCanvas*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.store = '2017-January-27';
+modules.store = '2016-December-27';
 
 
 // XML_Serializer ///////////////////////////////////////////////////////
@@ -148,11 +148,11 @@ XML_Serializer.prototype.undoQueueXML = function (id) {
     );
 };
 
-XML_Serializer.prototype.undoEventsXML = function (events) {
+XML_Serializer.prototype.undoEventsXML = function (events, isReplay) {
     var queue = [],
+        event,
+        args,
         xml;
-
-    // TODO: cache some things...
 
     for (var i = events.length; i--;) {
         event = events[i];
@@ -163,15 +163,22 @@ XML_Serializer.prototype.undoEventsXML = function (events) {
         }
         args = args.join('');
 
-        xml = this.format(
-            '<event id="@" type="@" replayType="@" time="@" user="@">%</event>',
-            event.id,
-            event.type,
-            event.replayType || 0,
-            event.time,
-            event.user,
-            args
-        );
+        if (!isReplay) {
+            xml = this.format(
+                '<event id="@"/>',
+                event.id
+            );
+        } else {
+            xml = this.format(
+                '<event id="@" type="@" replayType="@" time="@" user="@">%</event>',
+                event.id,
+                event.type,
+                event.replayType || 0,
+                event.time,
+                event.user,
+                args
+            );
+        }
         queue.unshift(xml);
     }
 
@@ -268,7 +275,7 @@ XML_Serializer.prototype.historyXML = function (ownerId) {
 };
 
 XML_Serializer.prototype.replayHistory = function () {
-    return this.undoEventsXML(SnapUndo.allEvents);
+    return this.undoEventsXML(SnapUndo.allEvents, true);
 };
 
 XML_Serializer.prototype.add = function (object) {
@@ -559,8 +566,6 @@ SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
     project.stage.setExtent(StageMorph.prototype.dimensions);
     SpriteMorph.prototype.useFlatLineEnds =
         model.stage.attributes.lines === 'flat';
-    BooleanSlotMorph.prototype.isTernary =
-        model.stage.attributes.ternary !== 'false';
     project.stage.isThreadSafe =
         model.stage.attributes.threadsafe === 'true';
     StageMorph.prototype.enableCodeMapping =
@@ -734,8 +739,7 @@ SnapSerializer.prototype.loadReplayHistory = function (xml) {
         event;
 
     for (var e = queue.length; e--;) {
-        // TODO: recover the ownerid
-        event = this.parseEvent(null, queue[e]);
+        event = this.parseEvent(null, queue[e], true);
         SnapUndo.allEvents.unshift(event);
     }
 };
@@ -744,16 +748,29 @@ SnapSerializer.prototype.loadHistory = function (model) {
     var queues = model ? model.children : [],
         queue,
         event,
-        id;
+        id,
+        rIndex,
+        eventId;
 
     for (var i = queues.length; i--;) {
         id = queues[i].attributes.id;
+        rIndex = SnapUndo.allEvents.length - 1;
         SnapUndo.undoCount[id] = +queues[i].attributes['undo-count'] || 0;
         SnapUndo.eventHistory[id] = [];
         queue = queues[i].children;
         for (var e = queue.length; e--;) {
-            event = this.parseEvent(id, queue[e]);
-            SnapUndo.eventHistory[id].unshift(event);
+            eventId = +queue[e].attributes.id;
+            while (rIndex >= 0 && SnapUndo.allEvents[rIndex].id !== eventId) {
+                rIndex--;
+            }
+            if (rIndex >= 0) {
+                event = SnapUndo.allEvents[rIndex];
+                event.owner = id;
+                SnapUndo.eventHistory[id].unshift(event);
+            } else {
+                console.error('Could not load historical event from replay:', queue[e]);
+            }
+
         }
     }
 };
@@ -1038,9 +1055,7 @@ SnapSerializer.prototype.loadCustomBlock = function (element, isGlobal) {
             i += 1;
             definition.declarations[names[i]] = [
                 child.attributes.type,
-                contains(['%b', '%boolUE'], child.attributes.type) ?
-                    (child.contents ? child.contents === 'true' : null)
-                        : child.contents,
+                child.contents,
                 options ? options.contents : undefined,
                 child.attributes.readonly === 'true'
             ];
@@ -1234,8 +1249,7 @@ SnapSerializer.prototype.loadComment = function (model) {
 
 SnapSerializer.prototype.loadBlock = function (model, isReporter) {
     // private
-    var block, info, inputs, isGlobal, rm, receiver, migration,
-        migrationOffset = 0;
+    var block, info, inputs, isGlobal, rm, receiver;
     if (model.tag === 'block') {
         if (Object.prototype.hasOwnProperty.call(
                 model.attributes,
@@ -1258,10 +1272,6 @@ SnapSerializer.prototype.loadBlock = function (model, isReporter) {
         }
         */
         block = SpriteMorph.prototype.blockForSelector(model.attributes.s);
-        migration = SpriteMorph.prototype.blockMigrations[model.attributes.s];
-        if (migration) {
-            migrationOffset = migration.offset;
-        }
     } else if (model.tag === 'custom-block') {
         isGlobal = model.attributes.scope ? false : true;
         receiver = isGlobal ? this.project.stage
@@ -1327,7 +1337,7 @@ SnapSerializer.prototype.loadBlock = function (model, isReporter) {
         } else if (child.tag === 'receiver') {
             nop(); // ignore
         } else {
-            this.loadInput(child, inputs[i + migrationOffset], block);
+            this.loadInput(child, inputs[i], block);
         }
     }, this);
     block.cachedInputs = null;
@@ -1768,7 +1778,6 @@ StageMorph.prototype.toXML = function (serializer) {
             '<stage name="@" width="@" height="@" collabId="@" ' +
             'costume="@" tempo="@" threadsafe="@" ' +
             'lines="@" ' +
-            'ternary="@" ' +
             'codify="@" ' +
             'inheritance="@" ' +
             'sublistIDs="@" ' +
@@ -1808,7 +1817,6 @@ StageMorph.prototype.toXML = function (serializer) {
         this.getTempo(),
         this.isThreadSafe,
         SpriteMorph.prototype.useFlatLineEnds ? 'flat' : 'round',
-        BooleanSlotMorph.prototype.isTernary,
         this.enableCodeMapping,
         this.enableInheritance,
         this.enableSublistIDs,

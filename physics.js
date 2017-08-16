@@ -1764,11 +1764,15 @@ GraphMorph.prototype.drawNew = function () {
   ctx.strokeStyle = ctx.fillStyle;
   ctx.lineWidth = 1;
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.lineTo(this.width() - 1, 0);
+  ctx.moveTo(1, 1);
+  ctx.lineTo(this.width() - 1, 1);
   ctx.lineTo(this.width() - 1, this.height() - 1);
-  ctx.lineTo(0, this.height() - 1);
-  ctx.lineTo(0, 0);
+  ctx.lineTo(1, this.height() - 1);
+  ctx.lineTo(1, 1);
+  ctx.moveTo(0, 0);
+  ctx.lineTo(this.width(), this.height());
+  ctx.moveTo(this.width(), 0);
+  ctx.lineTo(0, this.height());
   ctx.stroke();
 }
 

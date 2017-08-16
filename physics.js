@@ -1759,6 +1759,17 @@ GraphMorph.prototype.drawNew = function () {
       }
     }
   });
+
+  ctx.fillStyle = "red";
+  ctx.strokeStyle = ctx.fillStyle;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.lineTo(this.width() - 1, 0);
+  ctx.lineTo(this.width() - 1, this.height() - 1);
+  ctx.lineTo(0, this.height() - 1);
+  ctx.lineTo(0, 0);
+  ctx.stroke();
 }
 
 // ------- GraphDialogMorph -------

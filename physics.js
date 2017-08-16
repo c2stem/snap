@@ -1699,11 +1699,13 @@ GraphMorph.prototype.drawNew = function () {
     return;
   }
 
+  // ChartJS is trying to be too clever for us
+  var pixelRatioHack = window.devicePixelRatio || 1.0;
   if (this.image) {
-    this.image.width = this.width();
-    this.image.height = this.height();
+    this.image.width = this.width() / pixelRatioHack;
+    this.image.height = this.height() / pixelRatioHack;
   } else {
-    this.image = newCanvas(this.extent());
+    this.image = newCanvas(this.extent().scaleBy(1.0 / pixelRatioHack));
   }
   var ctx = this.image.getContext('2d');
 
@@ -1765,6 +1767,23 @@ GraphMorph.prototype.drawNew = function () {
       }
     }
   });
+
+  if (false) {
+    ctx.fillStyle = "red";
+    ctx.strokeStyle = ctx.fillStyle;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(1, 1);
+    ctx.lineTo(this.width() - 1, 1);
+    ctx.lineTo(this.width() - 1, this.height() - 1);
+    ctx.lineTo(1, this.height() - 1);
+    ctx.lineTo(1, 1);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(this.width(), this.height());
+    ctx.moveTo(this.width(), 0);
+    ctx.lineTo(0, this.height());
+    ctx.stroke();
+  }
 }
 
 // ------- GraphDialogMorph -------

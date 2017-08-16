@@ -1861,7 +1861,15 @@ GraphDialogMorph.prototype.popUp = function (world) {
   }
 };
 
-GraphDialogMorph.prototype.fixLayout = BlockEditorMorph.prototype.fixLayout;
+GraphDialogMorph.prototype.fixLayout = function () {
+  if (this.body) {
+    console.log("fixlayout before", this.body.width(), this.body.height());
+  }
+  BlockEditorMorph.prototype.fixLayout.call(this);
+  if (this.body) {
+    console.log("fixlayout after", this.body.width(), this.body.height());
+  }
+};
 
 GraphDialogMorph.prototype.refresh = function () {
   if (this.body instanceof TableFrameMorph) {

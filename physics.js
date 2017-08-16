@@ -1698,6 +1698,8 @@ GraphMorph.prototype.drawNew = function () {
     this.image = newCanvas(this.extent());
   }
   var ctx = this.image.getContext('2d');
+  console.log(this.width(), this.height(), this.extent());
+  console.log(ctx);
 
   var labels = [];
   for (var r = 1; r < this.table.rows(); r++) {

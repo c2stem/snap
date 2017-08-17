@@ -217,6 +217,39 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       spec: "change y velocity by %n m/s",
       defaults: [0]
     },
+    setAcceleration: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set acceleration to x: %n y: %n m/s\u00b2",
+      defaults: [0, 0]
+    },
+    setXAcceleration: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set x acceleration to %n m/s\u00b2",
+      defaults: [0]
+    },
+    setYAcceleration: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set y acceleration to %n m/s\u00b2",
+      defaults: [0]
+    },
+    xAcceleration: {
+      only: SpriteMorph,
+      type: "reporter",
+      category: "physics",
+      spec: "x acceleration in m/s\u00b2"
+    },
+    yAcceleration: {
+      only: SpriteMorph,
+      type: "reporter",
+      category: "physics",
+      spec: "y acceleration in m/s\u00b2"
+    },
     simulationTime: {
       type: "reporter",
       category: "physics",
@@ -554,6 +587,27 @@ SpriteMorph.prototype.changeXVelocity = function (delta) {
 
 SpriteMorph.prototype.changeYVelocity = function (delta) {
   this.setYVelocity(this.yVelocity() + (+delta || 0));
+};
+
+SpriteMorph.prototype.setAcceleration = function (ax, ay) {
+  this.physicsXAcceleration = +ax;
+  this.physicsYAcceleration = +ay;
+};
+
+SpriteMorph.prototype.setXAcceleration = function (a) {
+  this.physicsXAcceleration = +a;
+};
+
+SpriteMorph.prototype.setYAcceleration = function (a) {
+  this.physicsYAcceleration = +a;
+};
+
+SpriteMorph.prototype.xAcceleration = function () {
+  return this.physicsXAcceleration || 0;
+};
+
+SpriteMorph.prototype.yAcceleration = function () {
+  return this.physicsYAcceleration || 0;
 };
 
 SpriteMorph.prototype.physicsScale = function () {

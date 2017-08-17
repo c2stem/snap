@@ -1331,7 +1331,11 @@ SpriteMorph.prototype.blockAlternatives = {
     changeXVelocity: ['changeYVelocity', 'setXVelocity', 'setYVelocity'],
     changeYVelocity: ['changeXVelocity', 'setXVelocity', 'setYVelocity'],
     setVelocity: ['changeVelocity'],
-    changeVelocity: ['setVelocity']
+    changeVelocity: ['setVelocity'],
+    xAcceleration: ['yAcceleration'],
+    yAcceleration: ['xAcceleration'],
+    setXAcceleration: ['setYAcceleration'],
+    setYAcceleration: ['setXAcceleration']
 };
 
 // SpriteMorph instance creation

@@ -217,6 +217,39 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       spec: "change y velocity by %n m/s",
       defaults: [0]
     },
+    setAcceleration: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set acceleration to x: %n y: %n m/s\u00b2",
+      defaults: [0, 0]
+    },
+    setXAcceleration: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set x acceleration to %n m/s\u00b2",
+      defaults: [0]
+    },
+    setYAcceleration: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set y acceleration to %n m/s\u00b2",
+      defaults: [0]
+    },
+    xAcceleration: {
+      only: SpriteMorph,
+      type: "reporter",
+      category: "physics",
+      spec: "x acceleration in m/s\u00b2"
+    },
+    yAcceleration: {
+      only: SpriteMorph,
+      type: "reporter",
+      category: "physics",
+      spec: "y acceleration in m/s\u00b2"
+    },
     simulationTime: {
       type: "reporter",
       category: "physics",
@@ -311,21 +344,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "set angle to %n deg",
+      spec: "set heading to %n deg",
       defaults: [0]
     },
     changePhysicsAngle: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
-      spec: "change angle by %n deg",
+      spec: "change heading by %n deg",
       defaults: [0]
     },
     physicsAngle: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "angle in deg"
+      spec: "heading in deg"
     },
     setAngularVelocity: {
       only: SpriteMorph,
@@ -554,6 +587,27 @@ SpriteMorph.prototype.changeXVelocity = function (delta) {
 
 SpriteMorph.prototype.changeYVelocity = function (delta) {
   this.setYVelocity(this.yVelocity() + (+delta || 0));
+};
+
+SpriteMorph.prototype.setAcceleration = function (ax, ay) {
+  this.physicsXAcceleration = +ax;
+  this.physicsYAcceleration = +ay;
+};
+
+SpriteMorph.prototype.setXAcceleration = function (a) {
+  this.physicsXAcceleration = +a;
+};
+
+SpriteMorph.prototype.setYAcceleration = function (a) {
+  this.physicsYAcceleration = +a;
+};
+
+SpriteMorph.prototype.xAcceleration = function () {
+  return this.physicsXAcceleration || 0;
+};
+
+SpriteMorph.prototype.yAcceleration = function () {
+  return this.physicsYAcceleration || 0;
 };
 
 SpriteMorph.prototype.physicsScale = function () {
@@ -1326,7 +1380,7 @@ Process.prototype.getPhysicsAttrOf = function (attribute, name) {
           return thatObj.xVelocity ? thatObj.xVelocity() : '';
         case 'y velocity':
           return thatObj.yVelocity ? thatObj.yVelocity() : '';
-        case 'angle':
+        case 'heading':
           return thatObj.physicsAngle ? thatObj.physicsAngle() : '';
         case 'angular velocity':
           return thatObj.angularVelocity ? thatObj.angularVelocity() : '';
@@ -1363,7 +1417,7 @@ Process.prototype.setPhysicsAttrOf = function (attribute, name, value) {
         case 'y velocity':
           thatObj.setYVelocity(value);
           break;
-        case 'angle':
+        case 'heading':
           thatObj.setPhysicsAngle(value);
           break;
         case 'angular velocity':
@@ -1546,7 +1600,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         }
       }));
 
-      elems.add(toggleField("fixed angle", aSprite, function () {
+      elems.add(toggleField("fixed heading", aSprite, function () {
         return this.physicsBody && this.physicsBody.fixedRotation;
       }, function () {
         if (this.physicsBody) {
@@ -1659,7 +1713,7 @@ InputSlotMorph.prototype.physicsAttrMenu = function () {
       'y position in m': ['y position'],
       'x velocity in m/s': ['x velocity'],
       'y velocity in m/s': ['y velocity'],
-      'angle in rad': ['angle'],
+      'heading in rad': ['heading'],
       'angular velocity in rad/s': ['angular velocity']
     };
   } else { // the stage

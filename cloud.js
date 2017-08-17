@@ -34,8 +34,8 @@ modules.cloud = '2015-December-15';
 
 // Global stuff
 
-var SnapCloud = new Cloud(location.origin == 'http://physics.c2stem.org' ?
-    'http://cloud.c2stem.org/SnapCloud/' : location.origin + '/SnapCloud/');
+var SnapCloud = new Cloud(location.origin == 'https://physics.c2stem.org' ?
+    'https://cloud.c2stem.org/SnapCloud/' : location.origin + '/SnapCloud/');
 
 // Cloud /////////////////////////////////////////////////////////////
 

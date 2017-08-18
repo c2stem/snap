@@ -481,6 +481,17 @@ ActionManager.prototype.registerOwner = function(owner, id) {
     this._owners[owner.id] = owner;
 };
 
+ActionManager.prototype.getBlockOwner = function(block) {
+    var blockId = block.id;
+
+    while (!blockId && block) {
+        blockId = block.id;
+        block = block.parent;
+    }
+
+    return this._owners[this._blockToOwnerId[blockId]];
+};
+
 /* * * * * * * * * * * * Preprocess args (before action is accepted) * * * * * * * * * * * */
 // These are decorators which take the args from the public API and return the args for
 // the event to be sent to the other collaborators (and received by the onEventName methods)
@@ -1093,9 +1104,12 @@ ActionManager.prototype._onSetBlockPosition = function(id, x, y, callback) {
         block = this.getBlockFromId(id),
         scripts = block.parentThatIsA(ScriptsMorph),
         afterMove = function() {
+            myself.disconnectBlock(block, scripts);
+
             if (block.justDropped) {block.justDropped(); }
             block.changed();
             block.removeShadow();
+
             myself.updateCommentsPositions(block);
 
             // Save the block definition
@@ -1128,11 +1142,10 @@ ActionManager.prototype._onSetBlockPosition = function(id, x, y, callback) {
         scripts = editor.body.contents;
     }
 
-    this.disconnectBlock(block, scripts);
-
     position = this.getAdjustedPosition(position, scripts);
 
     if (this.__canAnimate()) {
+        this.ide().palette.add(block)
         block.glideTo(
             position,
             null,
@@ -1277,7 +1290,6 @@ ActionManager.prototype._onAddBlock = function(block, ownerId, x, y, callback) {
             firstBlock.setPosition(position);
             owner.scripts.add(firstBlock);
             firstBlock.changed();
-            owner.scripts.adjustBounds();
             afterAdd();
         }
     } else {
@@ -1425,7 +1437,7 @@ ActionManager.prototype.onMoveBlock = function(id, rawTarget) {
         } else {  // basic connection for sprite/stage/etc
             target.element = this.getBlockFromId(target.element);
         }
-        owner = this._owners[this._blockToOwnerId[target.element.id]];
+        owner = this.getBlockOwner(target.element);
         scripts = target.element.parentThatIsA(ScriptsMorph);
         if (block.parent) {
             if (target.loc === 'bottom') {
@@ -1440,7 +1452,7 @@ ActionManager.prototype.onMoveBlock = function(id, rawTarget) {
         this.disconnectBlock(block, scripts);
 
         target = this.getBlockFromId(target);
-        owner = this._owners[this._blockToOwnerId[target.id]];
+        owner = this.getBlockOwner(target);
         scripts = target.parentThatIsA(ScriptsMorph);
 
         // If the target is a RingMorph, it will be overwritten rather than popped out
@@ -1487,15 +1499,20 @@ ActionManager.prototype.onMoveBlock = function(id, rawTarget) {
             myself._positionOf[topBlock.id] = myself.getStandardPosition(scripts, topBlock.position());
         }
 
+        if (block.fixChildrensBlockColor) {
+            block.fixChildrensBlockColor(true);
+        }
+
         myself.updateCommentsPositions(block);
         myself.__updateBlockDefinitions(block);
         myself.__updateActiveEditor(block.id);
+        myself.__updateScriptsMorph(block);
         myself.completeAction(null, block);
     };
 
     // Glide to the given position first
+    this.ide().palette.add(block);
     if (isNewBlock) {
-        this.ide().palette.add(block);
         block.setPosition(this.blockInitPosition());
     }
     if (this.__canAnimate()) {
@@ -1684,6 +1701,7 @@ ActionManager.prototype.__updateScriptsMorph = function(block) {
         isDragging = !scripts;
 
     if (!isDragging) {
+        scripts.adjustBounds();
         scripts.drawNew();
         scripts.changed();
     }

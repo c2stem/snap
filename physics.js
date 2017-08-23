@@ -95,8 +95,8 @@ PhysicsMorph.prototype.updateMorphicPosition = function () {
     center = stage.center(),
     scale = stage.scale * this.physicsScale(),
     pos = new Point(
-      center.x + stage.physicsOrigin.x + aabb.lowerBound[0] * scale,
-      center.y - stage.physicsOrigin.y - aabb.upperBound[1] * scale);
+      center.x + stage.physicsOrigin.x * stage.scale + aabb.lowerBound[0] * scale,
+      center.y - stage.physicsOrigin.y * stage.scale - aabb.upperBound[1] * scale);
 
   this.setPosition(pos);
   this.drawNew();

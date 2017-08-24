@@ -1150,21 +1150,46 @@ StageMorph.prototype.setPhysicsScale = function (scale) {
 
 StageMorph.prototype.physicsXOrigin = function () {
   return this.physicsOrigin.x;
-}
+};
 
 StageMorph.prototype.physicsYOrigin = function () {
   return this.physicsOrigin.y;
-}
+};
 
 StageMorph.prototype.setPhysicsXOrigin = function (x) {
   this.physicsOrigin.x = x;
   this.setPhysicsFloor(!!this.physicsFloor);
-}
+  if (this.coordinateMorph) {
+    this.toggleCoordinateAxes();
+    this.toggleCoordinateAxes();
+  }
+};
 
 StageMorph.prototype.setPhysicsYOrigin = function (y) {
   this.physicsOrigin.y = y;
   this.setPhysicsFloor(!!this.physicsFloor);
-}
+  if (this.coordinateMorph) {
+    this.toggleCoordinateAxes();
+    this.toggleCoordinateAxes();
+  }
+};
+
+StageMorph.prototype.toggleCoordinateAxes = function () {
+  if (this.coordinateMorph) {
+    this.coordinateMorph.destroy();
+    this.coordinateMorph = null;
+  } else {
+    var size = Math.max(this.width() + 2 * Math.abs(this.physicsOrigin.x),
+      this.height() + 2 * Math.abs(this.physicsOrigin.y));
+    this.coordinateMorph = new SymbolMorph("coordinateAxes", size, new Color(120, 120, 120, 0.3));
+    this.add(this.coordinateMorph);
+    this.coordinateMorph.setPosition(this.center().subtract(0.5 * size).add(this.physicsOrigin));
+  }
+};
+
+StageMorph.prototype.isCoordinateAxesEnabled = function () {
+  return !!this.coordinateMorph;
+};
 
 StageMorph.prototype.updateMorphicPosition = function () {
   this.children.forEach(function (morph) {

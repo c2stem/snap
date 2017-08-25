@@ -1180,10 +1180,13 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
     this.coordinateMorph = null;
   } else {
     var size = Math.max(this.width() + 2 * Math.abs(this.physicsOrigin.x),
-      this.height() + 2 * Math.abs(this.physicsOrigin.y));
+        this.height() + 2 * Math.abs(this.physicsOrigin.y)),
+      pos = this.center().subtract(0.5 * size);
+    pos.x += this.physicsOrigin.x;
+    pos.y -= this.physicsOrigin.y;
     this.coordinateMorph = new SymbolMorph("coordinateAxes", size, new Color(120, 120, 120, 0.3));
     this.add(this.coordinateMorph);
-    this.coordinateMorph.setPosition(this.center().subtract(0.5 * size).add(this.physicsOrigin));
+    this.coordinateMorph.setPosition(pos);
   }
 };
 

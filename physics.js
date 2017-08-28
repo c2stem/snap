@@ -1179,12 +1179,13 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
     this.coordinateMorph.destroy();
     this.coordinateMorph = null;
   } else {
-    var size = Math.max(this.width() + 2 * Math.abs(this.physicsOrigin.x),
-        this.height() + 2 * Math.abs(this.physicsOrigin.y)),
+    var size = Math.max(this.width() + 2 * Math.abs(this.physicsOrigin.x * this.scale),
+        this.height() + 2 * Math.abs(this.physicsOrigin.y * this.scale)),
       pos = this.center().subtract(0.5 * size);
-    pos.x += this.physicsOrigin.x;
-    pos.y -= this.physicsOrigin.y;
+    pos.x += this.physicsOrigin.x * this.scale;
+    pos.y -= this.physicsOrigin.y * this.scale;
     this.coordinateMorph = new SymbolMorph("coordinateAxes", size, new Color(120, 120, 120, 0.3));
+    this.coordinateMorph.fixLayout = function() { console.log("fixlayout"); }
     this.add(this.coordinateMorph);
     this.coordinateMorph.setPosition(pos);
   }

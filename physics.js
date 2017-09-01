@@ -48,9 +48,9 @@ PhysicsMorph.prototype.drawNew = function () {
     if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
         x = xOffset + bodyCos * shape.position[0] -
-        bodySin * shape.position[1],
+          bodySin * shape.position[1],
         y = yOffset - bodySin * shape.position[0] -
-        bodyCos * shape.position[1],
+          bodyCos * shape.position[1],
         s = Math.sin(bodyAngle + shape.angle),
         c = Math.cos(bodyAngle + shape.angle);
 
@@ -1180,12 +1180,12 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
     this.coordinateMorph = null;
   } else {
     var size = Math.max(this.width() + 2 * Math.abs(this.physicsOrigin.x * this.scale),
-        this.height() + 2 * Math.abs(this.physicsOrigin.y * this.scale)),
+      this.height() + 2 * Math.abs(this.physicsOrigin.y * this.scale)),
       pos = this.center().subtract(0.5 * size);
     pos.x += this.physicsOrigin.x * this.scale;
     pos.y -= this.physicsOrigin.y * this.scale;
     this.coordinateMorph = new SymbolMorph("coordinateAxes", size, new Color(120, 120, 120, 0.3));
-    this.coordinateMorph.fixLayout = function() { console.log("fixlayout"); }
+    this.coordinateMorph.fixLayout = function () { console.log("fixlayout"); }
     this.add(this.coordinateMorph);
     this.coordinateMorph.setPosition(pos);
   }
@@ -1193,6 +1193,15 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
 
 StageMorph.prototype.isCoordinateAxesEnabled = function () {
   return !!this.coordinateMorph;
+};
+
+StageMorph.prototype.phyDrawNew = StageMorph.prototype.drawNew;
+StageMorph.prototype.drawNew = function () {
+  this.phyDrawNew();
+  if (this.coordinateMorph) {
+    this.toggleCoordinateAxes();
+    this.toggleCoordinateAxes();
+  }
 };
 
 StageMorph.prototype.updateMorphicPosition = function () {
@@ -1633,19 +1642,19 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     elems.add(inputField("mass:", aSprite, "mass", "setMass", 0, 1e6, "kg"));
 
     var radioDisabled = toggleField(
-        "physics disabled", aSprite,
-        function () {
-          return !this.physicsMode;
-        },
-        function () {
-          if (this.physicsMode) {
-            this.physicsMode = "";
-            radioStatic.toggle.refresh();
-            radioDynamic.toggle.refresh();
-            aSprite.updatePhysicsBody();
-          }
-        },
-        true),
+      "physics disabled", aSprite,
+      function () {
+        return !this.physicsMode;
+      },
+      function () {
+        if (this.physicsMode) {
+          this.physicsMode = "";
+          radioStatic.toggle.refresh();
+          radioDynamic.toggle.refresh();
+          aSprite.updatePhysicsBody();
+        }
+      },
+      true),
       radioStatic = toggleField(
         "static object", aSprite,
         function () {

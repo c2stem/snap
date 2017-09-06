@@ -1336,7 +1336,11 @@ SpriteMorph.prototype.blockAlternatives = {
     changeXVelocity: ['changeYVelocity', 'setXVelocity', 'setYVelocity'],
     changeYVelocity: ['changeXVelocity', 'setXVelocity', 'setYVelocity'],
     setVelocity: ['changeVelocity'],
-    changeVelocity: ['setVelocity']
+    changeVelocity: ['setVelocity'],
+    xAcceleration: ['yAcceleration'],
+    yAcceleration: ['xAcceleration'],
+    setXAcceleration: ['setYAcceleration'],
+    setYAcceleration: ['setXAcceleration']
 };
 
 // SpriteMorph instance creation
@@ -1373,6 +1377,8 @@ SpriteMorph.prototype.init = function (globals) {
     this.rotationOffset = new Point(); // not to be serialized (!)
     this.idx = 0; // not to be serialized (!) - used for de-serialization
     this.wasWarped = false; // not to be serialized, used for fast-tracking
+
+    this.locallyHiddenPrimitives = {};
 
     this.graphicsValues = {
         'color': 0,
@@ -1703,7 +1709,8 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         inheritedVars = this.inheritedVariableNames();
 
     function block(selector) {
-        if (StageMorph.prototype.hiddenPrimitives[selector]) {
+        if (StageMorph.prototype.hiddenPrimitives[selector] 
+            || myself.locallyHiddenPrimitives[selector]) {
             return null;
         }
         var newBlock = SpriteMorph.prototype.blockForSelector(selector, true);
@@ -1722,7 +1729,8 @@ SpriteMorph.prototype.blockTemplates = function (category) {
     }
 
     function watcherToggle(selector) {
-        if (StageMorph.prototype.hiddenPrimitives[selector]) {
+        if (StageMorph.prototype.hiddenPrimitives[selector]
+            || myself.locallyHiddenPrimitives[selector]) {
             return null;
         }
         var info = SpriteMorph.prototype.blocks[selector];
@@ -2349,11 +2357,17 @@ SpriteMorph.prototype.freshPalette = function (category) {
 
         function hasHiddenPrimitives() {
             var defs = SpriteMorph.prototype.blocks,
-                hiddens = StageMorph.prototype.hiddenPrimitives;
-            return Object.keys(hiddens).some(function (any) {
+                hiddens = StageMorph.prototype.hiddenPrimitives,
+                ret;
+            ret = Object.keys(hiddens).some(function (any) {
                 return !isNil(defs[any]) && (defs[any].category === category
                     || contains((more[category] || []), any));
             });
+            ret = ret || Object.keys(myself.locallyHiddenPrimitives).some(function (sel) {
+                    return defs[sel] && (defs[sel].category === category
+                        || contains((more[category] || []), sel));
+            });
+            return ret;
         }
 
         function canHidePrimitives() {
@@ -2397,6 +2411,11 @@ SpriteMorph.prototype.freshPalette = function (category) {
                     Object.keys(hiddens).forEach(function (sel) {
                         if (defs[sel] && (defs[sel].category === category)) {
                             delete StageMorph.prototype.hiddenPrimitives[sel];
+                        }
+                    });
+                    Object.keys(myself.locallyHiddenPrimitives).forEach(function (sel) {
+                        if (defs[sel] && (defs[sel].category === category)) {
+                            delete myself.locallyHiddenPrimitives[sel];
                         }
                     });
                     (more[category] || []).forEach(function (sel) {
@@ -5474,6 +5493,8 @@ StageMorph.prototype.init = function (globals) {
     this.trailsCanvas = null;
     this.isThreadSafe = false;
 
+    this.locallyHiddenPrimitives = {};
+
     this.graphicsValues = {
         'color': 0,
         'fisheye': 0,
@@ -6091,7 +6112,8 @@ StageMorph.prototype.blockTemplates = function (category) {
         cat = category || 'motion', txt;
 
     function block(selector) {
-        if (myself.hiddenPrimitives[selector]) {
+        if (myself.hiddenPrimitives[selector]
+            || myself.locallyHiddenPrimitives[selector]) {
             return null;
         }
         var newBlock = SpriteMorph.prototype.blockForSelector(selector, true);
@@ -6107,7 +6129,8 @@ StageMorph.prototype.blockTemplates = function (category) {
     }
 
     function watcherToggle(selector) {
-        if (myself.hiddenPrimitives[selector]) {
+        if (myself.hiddenPrimitives[selector]
+            || myself.locallyHiddenPrimitives[selector]) {
             return null;
         }
         var info = SpriteMorph.prototype.blocks[selector];

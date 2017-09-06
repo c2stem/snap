@@ -1600,16 +1600,12 @@ IDE_Morph.prototype.createSpriteEditor = function () {
 IDE_Morph.prototype.createCorralBar = function () {
     // assumes the stage has already been created
     var padding = 5,
-        newbutton,
-        paintbutton,
-        graphbutton,
-        tablebutton,
         colors = [
             this.groupColor,
             this.frameColor.darker(50),
             this.frameColor.darker(50)
         ],
-        ide = this;
+        myself = this;
 
     if (this.corralBar) {
         this.corralBar.destroy();
@@ -1620,12 +1616,12 @@ IDE_Morph.prototype.createCorralBar = function () {
     this.corralBar.setHeight(this.logo.height()); // height is fixed
     this.add(this.corralBar);
 
-    var addButtonPos = ide.corralBar.left() + padding;
+    var addButtonPos = myself.corralBar.left() + padding;
     var addButton = function(action, symbol, hint) {
-        if (contains(ide.hiddenCorralButtons, action)) {
+        if (contains(myself.hiddenCorralButtons, action)) {
             return;
         }
-        var button = new PushButtonMorph(ide, action, symbol);
+        var button = new PushButtonMorph(myself, action, symbol);
         button.corner = 12;
         button.color = colors[0];
         button.highlightColor = colors[1];
@@ -1634,21 +1630,21 @@ IDE_Morph.prototype.createCorralBar = function () {
         button.padding = 0;
         button.labelShadowOffset = new Point(-1, -1);
         button.labelShadowColor = colors[1];
-        button.labelColor = ide.buttonLabelColor;
-        button.contrast = ide.buttonContrast;
+        button.labelColor = myself.buttonLabelColor;
+        button.contrast = myself.buttonContrast;
         button.drawNew();
         button.hint = hint;
         button.fixLayout();
-        button.setCenter(ide.corralBar.center());
+        button.setCenter(myself.corralBar.center());
         button.setLeft(addButtonPos);
         button.userMenu = function() {
             var menu = new MenuMorph(button);
             menu.addItem("hide button", function() {
-                ide.hideCorralButton(action);
+                myself.hideCorralButton(action);
             });
             return menu;
         };
-        ide.corralBar.add(button);
+        myself.corralBar.add(button);
         addButtonPos = button.right() + padding;
     };
 
@@ -1657,9 +1653,44 @@ IDE_Morph.prototype.createCorralBar = function () {
     addButton("openGraphDialog", new SymbolMorph("graph", 15), "graph the simulation data");
     addButton("openTableDialog", new SymbolMorph("table", 15), "table view of simulation data");
 
-    if (ide.hiddenCorralButtons.length != 0) {
+    if (!contains(myself.hiddenCorralButtons, "toggleCoordinateAxes")) {
+        var button = new ToggleButtonMorph(
+            null,
+            this.stage,
+            "toggleCoordinateAxes",
+            new SymbolMorph('coordinateAxes', 14),
+            "isCoordinateAxesEnabled"
+        );
+        button.corner = 12;
+        button.color = colors[0];
+        button.highlightColor = colors[1];
+        button.pressColor = colors[2];
+        button.labelMinExtent = new Point(36, 18);
+        button.padding = 0;
+        button.labelShadowOffset = new Point(-1, -1);
+        button.labelShadowColor = colors[1];
+        button.labelColor = this.buttonLabelColor;
+        button.contrast = this.buttonContrast;
+        button.drawNew();
+        button.hint = "toggle the coordinate axes";
+        button.fixLayout();
+        button.refresh();
+        button.setCenter(myself.corralBar.center());
+        button.setLeft(addButtonPos);
+        button.userMenu = function() {
+            var menu = new MenuMorph(button);
+            menu.addItem("hide button", function() {
+                myself.hideCorralButton("toggleCoordinateAxes");
+            });
+            return menu;
+        };
+        myself.corralBar.add(button);
+        addButtonPos = button.right() + padding;
+    }
+
+    if (myself.hiddenCorralButtons.length != 0) {
         this.corralBar.userMenu = function() {
-            var menu = new MenuMorph(ide);
+            var menu = new MenuMorph(myself);
             menu.addItem("show hidden buttons", 'showCorralButtons');
             return menu;
         }

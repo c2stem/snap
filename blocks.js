@@ -2438,10 +2438,8 @@ BlockMorph.prototype.userMenu = function () {
                     );
                 }
             } else if (this.selector !== 'evaluateCustomBlock') {
-                menu.addItem(
-                    "hide",
-                    'hidePrimitive'
-                );
+                menu.addItem("hide for all", 'hidePrimitive');
+                menu.addItem("hide for me", "locallyHidePrimitive");
             }
             if (StageMorph.prototype.enableCodeMapping) {
                 menu.addLine();
@@ -2623,6 +2621,18 @@ BlockMorph.prototype.developersMenu = function () {
         );
     });
     return menu;
+};
+
+BlockMorph.prototype.locallyHidePrimitive = function () {
+    var ide = this.parentThatIsA(IDE_Morph);
+    if (ide) {
+        var obj = ide.currentSprite instanceof SpriteMorph ?
+            ide.currentSprite : ide.stage;
+
+        obj.locallyHiddenPrimitives[this.selector] = true;
+        ide.flushBlocksCache(this.category);
+        ide.refreshPalette();
+    }
 };
 
 BlockMorph.prototype.hidePrimitive = function () {
@@ -9621,6 +9631,8 @@ SymbolMorph.prototype.symbolCanvasColored = function (aColor) {
         return this.drawSymbolGraph(canvas, aColor);
     case 'table':
         return this.drawSymbolTable(canvas, aColor);
+    case 'coordinateAxes':
+        return this.drawSymbolCoordinateAxes(canvas, aColor);
     default:
         return canvas;
     }
@@ -10971,6 +10983,23 @@ SymbolMorph.prototype.drawSymbolTable = function (canvas, color) {
 
     return canvas;
 }
+
+SymbolMorph.prototype.drawSymbolCoordinateAxes = function (canvas, color) {
+    var ctx = canvas.getContext('2d'),
+        w = canvas.width,
+        h = canvas.height,
+        l = 0.5;
+
+    ctx.strokeStyle = color.toString();
+    ctx.lineWidth = l * 2;
+    ctx.moveTo(l, h / 2);
+    ctx.lineTo(w - l, h / 2);
+    ctx.stroke();
+    ctx.moveTo(w / 2, l);
+    ctx.lineTo(w / 2, h - l);
+    ctx.stroke();
+    return canvas;
+};
 
 // ColorSlotMorph //////////////////////////////////////////////////////
 

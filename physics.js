@@ -2,7 +2,7 @@
 
 "use strict";
 
-modules.physics = "2016-November-28";
+modules.physics = "2017-August-18";
 
 // ------- PhysicsMorph -------
 
@@ -48,9 +48,9 @@ PhysicsMorph.prototype.drawNew = function () {
     if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
         x = xOffset + bodyCos * shape.position[0] -
-        bodySin * shape.position[1],
+          bodySin * shape.position[1],
         y = yOffset - bodySin * shape.position[0] -
-        bodyCos * shape.position[1],
+          bodyCos * shape.position[1],
         s = Math.sin(bodyAngle + shape.angle),
         c = Math.cos(bodyAngle + shape.angle);
 
@@ -80,6 +80,11 @@ PhysicsMorph.prototype.physicsScale = function () {
   return (stage && stage.physicsScale) || 1.0;
 };
 
+PhysicsMorph.prototype.physicsOrigin = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  return (stage && stage.physicsOrigin) || new Point(0, 0);
+};
+
 PhysicsMorph.prototype.updateMorphicPosition = function () {
   var stage = this.parentThatIsA(StageMorph);
   if (!stage) {
@@ -90,8 +95,8 @@ PhysicsMorph.prototype.updateMorphicPosition = function () {
     center = stage.center(),
     scale = stage.scale * this.physicsScale(),
     pos = new Point(
-      center.x + aabb.lowerBound[0] * scale,
-      center.y - aabb.upperBound[1] * scale);
+      center.x + stage.physicsOrigin.x * stage.scale + aabb.lowerBound[0] * scale,
+      center.y - stage.physicsOrigin.y * stage.scale - aabb.upperBound[1] * scale);
 
   this.setPosition(pos);
   this.drawNew();
@@ -458,66 +463,79 @@ SpriteMorph.prototype.init = function (globals) {
   this.physicsMass = 100;
 };
 
-SpriteMorph.prototype.startSimulation = function () {
+SpriteMorph.prototype.getStage = function () {
   var stage = this.parentThatIsA(StageMorph);
+  if (!stage) {
+    var hand = this.parentThatIsA(HandMorph);
+    if (hand.world instanceof WorldMorph &&
+      hand.world.children[0] instanceof IDE_Morph &&
+      hand.world.children[0].stage instanceof StageMorph) {
+      stage = hand.world.children[0].stage;
+    }
+  }
+  return stage;
+}
+
+SpriteMorph.prototype.startSimulation = function () {
+  var stage = this.getStage();
   if (stage) {
     stage.startSimulation();
   }
 };
 
 SpriteMorph.prototype.stopSimulation = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   if (stage) {
     stage.stopSimulation();
   }
 };
 
 SpriteMorph.prototype.deltaTime = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   return (stage && stage.deltaTime()) || 0;
 };
 
 SpriteMorph.prototype.setDeltaTime = function (dt) {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   if (stage) {
     stage.setDeltaTime(dt);
   }
 };
 
 SpriteMorph.prototype.simulationTime = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   return (stage && stage.simulationTime()) || 0;
 };
 
 SpriteMorph.prototype.xGravity = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   return (stage && stage.xGravity()) || 0;
 };
 
 SpriteMorph.prototype.yGravity = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   return (stage && stage.yGravity()) || 0;
 };
 
 SpriteMorph.prototype.friction = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   return (stage && stage.friction()) || 0;
 };
 
 SpriteMorph.prototype.graphData = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   return (stage && stage.graphData()) || null;
 };
 
 SpriteMorph.prototype.clearGraphData = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   if (stage) {
     stage.clearGraphData();
   }
 };
 
 SpriteMorph.prototype.recordGraphData = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   if (stage) {
     stage.recordGraphData();
   }
@@ -611,28 +629,41 @@ SpriteMorph.prototype.yAcceleration = function () {
 };
 
 SpriteMorph.prototype.physicsScale = function () {
-  var stage = this.parentThatIsA(StageMorph);
+  var stage = this.getStage();
   return (stage && stage.physicsScale) || 1.0;
 };
 
+SpriteMorph.prototype.physicsOrigin = function () {
+  var stage = this.getStage();
+  return (stage && stage.physicsOrigin) || new Point(0, 0);
+};
+
 SpriteMorph.prototype.setPhysicsPosition = function (x, y) {
-  this.gotoXY(+x * this.physicsScale(), +y * this.physicsScale());
+  var s = this.physicsScale();
+  var o = this.physicsOrigin();
+  this.gotoXY(+x * s + o.x, +y * s + o.y);
 };
 
 SpriteMorph.prototype.setPhysicsXPosition = function (pos) {
-  this.setXPosition(+pos * this.physicsScale());
+  var s = this.physicsScale();
+  var o = this.physicsOrigin();
+  this.setXPosition(+pos * s + o.x);
 };
 
 SpriteMorph.prototype.setPhysicsYPosition = function (pos) {
-  this.setYPosition(+pos * this.physicsScale());
+  var s = this.physicsScale();
+  var o = this.physicsOrigin();
+  this.setYPosition(+pos * s + o.y);
 };
 
 SpriteMorph.prototype.changePhysicsXPosition = function (delta) {
-  this.changeXPosition(+delta * this.physicsScale());
+  var s = this.physicsScale();
+  this.changeXPosition(+delta * s);
 };
 
 SpriteMorph.prototype.changePhysicsYPosition = function (delta) {
-  this.changeYPosition(+delta * this.physicsScale());
+  var s = this.physicsScale();
+  this.changeYPosition(+delta * s);
 };
 
 SpriteMorph.prototype.changePhysicsPosition = function (dx, dy) {
@@ -640,11 +671,15 @@ SpriteMorph.prototype.changePhysicsPosition = function (dx, dy) {
 };
 
 SpriteMorph.prototype.physicsXPosition = function () {
-  return this.xPosition() / this.physicsScale();
+  var s = this.physicsScale();
+  var o = this.physicsOrigin();
+  return (this.xPosition() - o.x) / s;
 };
 
 SpriteMorph.prototype.physicsYPosition = function () {
-  return this.yPosition() / this.physicsScale();
+  var s = this.physicsScale();
+  var o = this.physicsOrigin();
+  return (this.yPosition() - o.y) / s;
 };
 
 SpriteMorph.prototype.setPhysicsAngle = function (angle) {
@@ -714,7 +749,7 @@ SpriteMorph.prototype.fullCopy = function (forClone) {
 SpriteMorph.prototype.updatePhysicsBody = function () {
   var body = this.physicsBody;
   if (this.physicsMode) {
-    var stage = this.parentThatIsA(StageMorph);
+    var stage = this.getStage();
     if (stage && !body) {
       body = this.getPhysicsContour();
       if (body) {
@@ -810,8 +845,9 @@ SpriteMorph.prototype.updateMorphicPosition = function () {
   this.phyMorphicUpdating = true;
 
   var scale = this.physicsScale(),
-    posX = this.physicsBody.position[0] * scale,
-    posY = this.physicsBody.position[1] * scale,
+    origin = this.physicsOrigin(),
+    posX = this.physicsBody.position[0] * scale + origin.x,
+    posY = this.physicsBody.position[1] * scale + origin.y,
     heading = -degrees(this.physicsBody.angle) + 90,
     delta = Math.abs(this.heading - heading) % 360;
 
@@ -1023,12 +1059,13 @@ StageMorph.prototype.init = function (globals) {
   // this.physicsWorld.setGlobalStiffness(1e18); // make it stiffer
 
   this.physicsRunning = false;
-  this.physicsSimulationTime = 0.0;
+  this.physicsSimulationTime = 0;
   this.physicsLastUpdated = null;
   this.physicsDeltaTime = 0;
   this.targetDeltaTime = 0;
   this.physicsFloor = null;
-  this.physicsScale = 10.0;
+  this.physicsScale = 10;
+  this.physicsOrigin = new Point(0, 0);
 
   this.graphWatchers = [];
   if (false) { // test data
@@ -1057,11 +1094,12 @@ StageMorph.prototype.setPhysicsFloor = function (enable) {
       body = new p2.Body({
         position: [0, 0],
         type: p2.Body.STATIC
-      });
-    body.addShape(new p2.Plane(), [0, -ext.y / 2]);
-    body.addShape(new p2.Plane(), [ext.x / 2, 0], Math.PI * 0.5);
-    body.addShape(new p2.Plane(), [0, ext.y / 2], Math.PI);
-    body.addShape(new p2.Plane(), [-ext.x / 2, 0], Math.PI * 1.5);
+      }),
+      o = this.physicsOrigin.multiplyBy(1.0 / this.physicsScale);
+    body.addShape(new p2.Plane(), [-o.y, -o.y - ext.y / 2]);
+    body.addShape(new p2.Plane(), [-o.x + ext.x / 2, -o.x], Math.PI * 0.5);
+    body.addShape(new p2.Plane(), [-o.y, -o.y + ext.y / 2], Math.PI);
+    body.addShape(new p2.Plane(), [-o.x - ext.x / 2, -o.x], Math.PI * 1.5);
     this.physicsWorld.addBody(body);
     this.physicsFloor = body;
   }
@@ -1108,6 +1146,62 @@ StageMorph.prototype.setPhysicsScale = function (scale) {
 
   this.physicsScale = scale;
   this.updateScaleMorph();
+};
+
+StageMorph.prototype.physicsXOrigin = function () {
+  return this.physicsOrigin.x;
+};
+
+StageMorph.prototype.physicsYOrigin = function () {
+  return this.physicsOrigin.y;
+};
+
+StageMorph.prototype.setPhysicsXOrigin = function (x) {
+  this.physicsOrigin.x = x;
+  this.setPhysicsFloor(!!this.physicsFloor);
+  if (this.coordinateMorph) {
+    this.toggleCoordinateAxes();
+    this.toggleCoordinateAxes();
+  }
+};
+
+StageMorph.prototype.setPhysicsYOrigin = function (y) {
+  this.physicsOrigin.y = y;
+  this.setPhysicsFloor(!!this.physicsFloor);
+  if (this.coordinateMorph) {
+    this.toggleCoordinateAxes();
+    this.toggleCoordinateAxes();
+  }
+};
+
+StageMorph.prototype.toggleCoordinateAxes = function () {
+  if (this.coordinateMorph) {
+    this.coordinateMorph.destroy();
+    this.coordinateMorph = null;
+  } else {
+    var size = Math.max(this.width() + 2 * Math.abs(this.physicsOrigin.x * this.scale),
+      this.height() + 2 * Math.abs(this.physicsOrigin.y * this.scale)),
+      pos = this.center().subtract(0.5 * size);
+    pos.x += this.physicsOrigin.x * this.scale;
+    pos.y -= this.physicsOrigin.y * this.scale;
+    this.coordinateMorph = new SymbolMorph("coordinateAxes", size, new Color(120, 120, 120, 0.3));
+    this.coordinateMorph.fixLayout = function () { console.log("fixlayout"); }
+    this.add(this.coordinateMorph);
+    this.coordinateMorph.setPosition(pos);
+  }
+};
+
+StageMorph.prototype.isCoordinateAxesEnabled = function () {
+  return !!this.coordinateMorph;
+};
+
+StageMorph.prototype.phyDrawNew = StageMorph.prototype.drawNew;
+StageMorph.prototype.drawNew = function () {
+  this.phyDrawNew();
+  if (this.coordinateMorph) {
+    this.toggleCoordinateAxes();
+    this.toggleCoordinateAxes();
+  }
 };
 
 StageMorph.prototype.updateMorphicPosition = function () {
@@ -1176,7 +1270,7 @@ StageMorph.prototype.isSimulationRunning = function () {
 };
 
 StageMorph.prototype.startSimulation = function (norefresh) {
-  this.physicsSimulationTime = 0.0;
+  this.physicsSimulationTime = 0;
   this.physicsRunning = true;
   this.physicsLastUpdated = Date.now();
   this.clearGraphData();
@@ -1205,7 +1299,7 @@ StageMorph.prototype.stopSimulation = function (norefresh) {
 StageMorph.prototype.phyFireGreenFlagEvent = StageMorph.prototype.fireGreenFlagEvent;
 StageMorph.prototype.fireGreenFlagEvent = function () {
   var r = this.phyFireGreenFlagEvent();
-  // this.physicsSimulationTime = 0.0;
+  // this.physicsSimulationTime = 0;
   // this.clearGraphData();
   return r;
 };
@@ -1268,12 +1362,16 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
     " restitution=\"@\"" +
     " scale=\"@\"" +
     " floor=\"@\"" +
+    " xorigin=\"@\"" +
+    " yorigin=\"@\"" +
     "></physics>",
     world.gravity[0],
     world.gravity[1],
     material.friction,
     material.restitution,
-    this.physicsScale, !!this.physicsFloor
+    this.physicsScale, !!this.physicsFloor,
+    this.physicsOrigin.x,
+    this.physicsOrigin.y
   );
 };
 
@@ -1293,6 +1391,8 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
   loadFloat(material, "friction", "friction");
   loadFloat(material, "restitution", "restitution");
   loadFloat(this, "physicsScale", "scale");
+  loadFloat(this.physicsOrigin, "x", "xorigin");
+  loadFloat(this.physicsOrigin, "y", "yorigin");
 
   if (attrs.floor) {
     this.setPhysicsFloor(attrs.floor === "true");
@@ -1307,7 +1407,7 @@ StageMorph.prototype.refreshGraphViews = function () {
   if (ide && ide.tableDialog) {
     ide.tableDialog.refresh();
   }
-}
+};
 
 StageMorph.prototype.clearGraphData = function () {
   this.graphWatchers = this.watchers().filter(function (w) {
@@ -1344,7 +1444,7 @@ StageMorph.prototype.recordGraphData = function () {
     this.graphChanged = t;
     this.refreshGraphViews();
   }
-}
+};
 
 // ------- ProcessMorph -------
 
@@ -1380,6 +1480,10 @@ Process.prototype.getPhysicsAttrOf = function (attribute, name) {
           return thatObj.xVelocity ? thatObj.xVelocity() : '';
         case 'y velocity':
           return thatObj.yVelocity ? thatObj.yVelocity() : '';
+        case 'x acceleration':
+          return thatObj.xAcceleration ? thatObj.xAcceleration() : '';
+        case 'y acceleration':
+          return thatObj.yAcceleration ? thatObj.yAcceleration() : '';
         case 'heading':
           return thatObj.physicsAngle ? thatObj.physicsAngle() : '';
         case 'angular velocity':
@@ -1416,6 +1520,12 @@ Process.prototype.setPhysicsAttrOf = function (attribute, name, value) {
           break;
         case 'y velocity':
           thatObj.setYVelocity(value);
+          break;
+        case 'x acceleration':
+          thatObj.setXAcceleration(value);
+          break;
+        case 'y acceleration':
+          thatObj.setYAcceleration(value);
           break;
         case 'heading':
           thatObj.setPhysicsAngle(value);
@@ -1508,42 +1618,43 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
   if (aSprite instanceof StageMorph) {
     var world = aSprite.physicsWorld;
 
-    elems.add(
-      inputField(
-        "gravity x:", world.gravity, "0", "0", -100, 100, "m/s\u00b2"));
-    elems.add(
-      inputField(
-        "gravity y:", world.gravity, "1", "1", -100, 100, "m/s\u00b2"));
-    elems.add(
-      inputField(
-        "friction:", world.defaultContactMaterial, "friction", "friction",
-        0, 100));
-    elems.add(
-      inputField(
-        "restitution:", world.defaultContactMaterial, "restitution",
-        "restitution", 0, 1));
-    elems.add(
-      inputField(
-        "scale:", aSprite, "physicsScale", "setPhysicsScale", 0.01, 100,
-        "pixel/m"));
+    elems.add(inputField(
+      "gravity x:", world.gravity, "0", "0", -100, 100, "m/s\u00b2"));
+    elems.add(inputField(
+      "gravity y:", world.gravity, "1", "1", -100, 100, "m/s\u00b2"));
+    elems.add(inputField(
+      "friction:", world.defaultContactMaterial, "friction", "friction",
+      0, 100));
+    elems.add(inputField(
+      "restitution:", world.defaultContactMaterial, "restitution",
+      "restitution", 0, 1));
+    elems.add(inputField(
+      "scale:", aSprite, "physicsScale", "setPhysicsScale", 0.01, 100,
+      "pixel/m"));
+    elems.add(inputField(
+      "origin x:", aSprite, "physicsXOrigin", "setPhysicsXOrigin", -1000, 1000, "pixel"
+    ));
+    elems.add(inputField(
+      "origin y:", aSprite, "physicsYOrigin", "setPhysicsYOrigin", -1000, 1000, "pixel"
+    ));
     elems.add(toggleField("enable ground", aSprite, "hasPhysicsFloor", "togglePhysicsFloor"));
   } else if (aSprite instanceof SpriteMorph) {
     elems.add(inputField("mass:", aSprite, "mass", "setMass", 0, 1e6, "kg"));
 
     var radioDisabled = toggleField(
-        "physics disabled", aSprite,
-        function () {
-          return !this.physicsMode;
-        },
-        function () {
-          if (this.physicsMode) {
-            this.physicsMode = "";
-            radioStatic.toggle.refresh();
-            radioDynamic.toggle.refresh();
-            aSprite.updatePhysicsBody();
-          }
-        },
-        true),
+      "physics disabled", aSprite,
+      function () {
+        return !this.physicsMode;
+      },
+      function () {
+        if (this.physicsMode) {
+          this.physicsMode = "";
+          radioStatic.toggle.refresh();
+          radioDynamic.toggle.refresh();
+          aSprite.updatePhysicsBody();
+        }
+      },
+      true),
       radioStatic = toggleField(
         "static object", aSprite,
         function () {
@@ -1838,7 +1949,7 @@ GraphMorph.prototype.drawNew = function () {
     ctx.lineTo(0, this.height());
     ctx.stroke();
   }
-}
+};
 
 // ------- GraphDialogMorph -------
 
@@ -1934,7 +2045,7 @@ GraphDialogMorph.prototype.refresh = function () {
     this.body.drawNew();
     this.body.changed();
   }
-}
+};
 
 // ------- Table -------
 
@@ -1957,7 +2068,7 @@ Table.prototype.toCSV = function () {
     data += this.contents[i].join(',') + '\n';
   }
   return data;
-}
+};
 
 // ------- TableMorph -------
 

@@ -248,10 +248,11 @@ ActionManager.prototype.completeAction = function(err, result) {
 
     // Call 'success' or 'reject', if relevant
     if (action.user === this.id) {
-        if (this._onAccept[action.id]) {
-            this._onAccept[action.id](result);
-            delete this._onAccept[action.id];
+        var dictName = err ? '_onReject' : '_onAccept';
+        if (this[dictName][action.id]) {
+            this[dictName][action.id](result);
         }
+        delete this._onAccept[action.id];
         delete this._onReject[action.id];
 
         // We can call reject for any ids less than the given id...
@@ -481,6 +482,10 @@ ActionManager.prototype.registerOwner = function(owner, id) {
     this._owners[owner.id] = owner;
 };
 
+ActionManager.prototype.getOwnerFromId = function(id) {
+    return this._owners[id];
+};
+
 ActionManager.prototype.getBlockOwner = function(block) {
     var blockId = block.id;
 
@@ -489,7 +494,7 @@ ActionManager.prototype.getBlockOwner = function(block) {
         block = block.parent;
     }
 
-    return this._owners[this._blockToOwnerId[blockId]];
+    return this.getOwnerFromId(this._blockToOwnerId[blockId]);
 };
 
 /* * * * * * * * * * * * Preprocess args (before action is accepted) * * * * * * * * * * * */
@@ -1144,13 +1149,18 @@ ActionManager.prototype._onSetBlockPosition = function(id, x, y, callback) {
 
     position = this.getAdjustedPosition(position, scripts);
 
-    if (this.__canAnimate()) {
-        this.ide().palette.add(block)
+    if (this.canAnimate(this.getBlockOwner(block))) {
         block.glideTo(
             position,
             null,
             null,
-            afterMove
+            function() {
+                try {
+                    afterMove();
+                } catch(e) {
+                    callback(e);
+                }
+            }
         );
     } else {
         block.setPosition(position);
@@ -1225,14 +1235,17 @@ ActionManager.prototype.onReplaceBlock = function(block, newBlock) {
     ownerId = this._blockToOwnerId[block.id];
     position = this._positionOf[block.id];
 
-    this._onRemoveBlock(block.id, true, function() {
+    this._onRemoveBlock(block.id, true, function(err) {
+        if (err) {
+            return myself.completeAction(err);
+        }
         myself._onAddBlock(
             newBlock,
             ownerId,
             position.x,
             position.y,
-            function(result) {
-                myself.completeAction(null, result);
+            function(err, result) {
+                myself.completeAction(err, result);
             }
         );
     });
@@ -1257,7 +1270,7 @@ ActionManager.prototype._onAddBlock = function(block, ownerId, x, y, callback) {
             myself.registerBlocks(firstBlock, owner);
             myself.__updateScriptsMorph(firstBlock);
             myself.__updateActiveEditor(firstBlock.id);
-            callback(firstBlock);
+            callback(null, firstBlock);
         };
 
 
@@ -1270,7 +1283,7 @@ ActionManager.prototype._onAddBlock = function(block, ownerId, x, y, callback) {
     if (!this._customBlocks[ownerId]) {  // not a custom block
         position = this.getAdjustedPosition(position, owner.scripts);
 
-        if (this.__canAnimate()) {
+        if (this.canAnimate(owner)) {
             var palette = ide.palette;
             
             firstBlock.setPosition(palette.position()
@@ -1282,8 +1295,12 @@ ActionManager.prototype._onAddBlock = function(block, ownerId, x, y, callback) {
                 null,
                 null,
                 function() {
-                    owner.scripts.add(firstBlock);
-                    afterAdd();
+                    try {
+                        owner.scripts.add(firstBlock);
+                        afterAdd();
+                    } catch(e) {
+                        callback(e);
+                    }
                 }
             );
         } else {
@@ -1317,8 +1334,8 @@ ActionManager.prototype._onAddBlock = function(block, ownerId, x, y, callback) {
 ActionManager.prototype.onAddBlock = function(block, ownerId, x, y) {
     var myself = this;
 
-    this._onAddBlock(block, ownerId, x, y, function(block) {
-        myself.completeAction(null, block);
+    this._onAddBlock(block, ownerId, x, y, function(err, block) {
+        myself.completeAction(err, block);
     });
 };
 
@@ -1353,8 +1370,9 @@ ActionManager.prototype._getCustomBlockEditor = function(id, block) {
     return editor;
 };
 
-ActionManager.prototype.getOwnerFromId = function(id) {
-    return this._owners[id];
+ActionManager.prototype.getBlockOwner = function(block) {
+    var ownerId = this._blockToOwnerId[block.id];
+    return this._owners[ownerId];
 };
 
 ActionManager.prototype.getBlockFromId = function(id) {
@@ -1511,18 +1529,24 @@ ActionManager.prototype.onMoveBlock = function(id, rawTarget) {
     };
 
     // Glide to the given position first
-    this.ide().palette.add(block);
     if (isNewBlock) {
+        this.ide().palette.add(block);
         block.setPosition(this.blockInitPosition());
     }
-    if (this.__canAnimate()) {
+    if (this.canAnimate(owner)) {
         var position = this.computeMovePosition(block, target);
 
         block.glideTo(
             position,
             null,
             null,
-            afterMove
+            function() {
+                try {
+                    afterMove();
+                } catch(e) {
+                    myself.completeAction(e);
+                }
+            }
         );
     } else {
         afterMove();
@@ -1650,7 +1674,7 @@ ActionManager.prototype._onRemoveBlock = function(id, userDestroy, callback) {
         // blocks. That is, we are either deleting all following blocks or there
         // are no following blocks
         var hasNextBlock = block.nextBlock && block.nextBlock(),
-            canAnimate = this.__canAnimate() &&
+            canAnimate = this.canAnimate(this.getBlockOwner(block)) &&
                 (method === 'destroy' || !hasNextBlock);
 
         if (canAnimate) {
@@ -1663,7 +1687,13 @@ ActionManager.prototype._onRemoveBlock = function(id, userDestroy, callback) {
                 this.blockInitPosition(),
                 null,
                 null,
-                afterRemove
+                function() {
+                    try {
+                        afterRemove();
+                    } catch(e) {
+                        callback(e);
+                    }
+                }
             );
         } else {
             afterRemove();
@@ -1691,9 +1721,16 @@ ActionManager.prototype.onRemoveBlock = function(id, userDestroy) {
     });
 };
 
-ActionManager.prototype.__canAnimate = function() {
-    return this.ide().isReplayMode || this.currentEvent.replayType ||
-        this.currentEvent.user !== this.id;
+ActionManager.prototype.canAnimate = function(owner) {
+    // Animate action if:
+    //   - in replay mode
+    //   - undo/redo action
+    //   - done by another user
+    //   - AND viewing the given owner
+    var viewingOwner = this.ide().currentSprite === owner;
+
+    return viewingOwner && (this.ide().isReplayMode ||
+        this.currentEvent.replayType || this.currentEvent.user !== this.id);
 };
 
 ActionManager.prototype.__updateScriptsMorph = function(block) {
@@ -1818,8 +1855,10 @@ ActionManager.prototype.onSetField = function(fieldId, value) {
 
 ActionManager.prototype.onSetColorField = function(fieldId, desc) {
     var block = this.getBlockFromId(fieldId),
-        color = new Color(desc.r, desc.g, desc.b, desc.a);
+        color;
 
+    desc = desc || {};
+    color = new Color(desc.r, desc.g, desc.b, desc.a);
     block.setColor(color);
     this.fieldValues[fieldId] = color;
     this.__updateBlockDefinitions(block);
@@ -2749,13 +2788,13 @@ ActionManager.prototype.onMessage = function(msg) {
     } else if (msg.type === 'session-id') {
         this.sessionId = msg.value;
         location.hash = 'collaborate=' + this.sessionId;
-    } else if (this.isLeader) {  // block action
+    } else if (this.isLeader) {
         // Verify that the lastSeen value is the same as the current
         accepted = this.lastSeen === (msg.id - 1);
         if (accepted) {
             this.acceptEvent(msg);
         }
-    } else {  // block action
+    } else {
         this._applyEvent(msg);
     }
 };

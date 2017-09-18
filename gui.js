@@ -3053,6 +3053,16 @@ IDE_Morph.prototype.settingsMenu = function () {
         'check to enable replay mode',
         false
     );
+    addPreference(
+        'Save replay history',
+        function() {
+            SnapSerializer.prototype.isSavingHistory = !SnapSerializer.prototype.isSavingHistory;
+        },
+        SnapSerializer.prototype.isSavingHistory,
+        'uncheck to only save project',
+        'check to save replay with project',
+        false
+    );
     menu.addLine(); // everything below this line is stored in the project
     addPreference(
         'Thread safe scripts',

@@ -2822,7 +2822,7 @@ BlockMorph.prototype.setSelector = function (aSelector) {
     surplus = this.restoreInputs(oldInputs);
     this.fixLabelColor();
 
-    // place surplus blocks on scipts
+    // place surplus blocks on scripts
     if (scripts && surplus.length) {
         surplus.forEach(function (blk) {
             blk.moveBy(10);
@@ -2866,7 +2866,7 @@ BlockMorph.prototype.restoreInputs = function (oldInputs) {
         old = oldInputs[i];
         if (old instanceof ReporterBlockMorph) {
             leftOver.push(old);
-        } else if (old instanceof CommandSlotMorph) {
+        } else if (old instanceof CommandSlotMorph && old.nestedBlock()) {
             leftOver.push(old.nestedBlock());
         }
     }
@@ -5105,9 +5105,15 @@ ReporterBlockMorph.prototype.exportResultPic = function () {
 
 ReporterBlockMorph.prototype.userDestroy = function () {
     // make sure to restore default slot of parent block
+    var world = this.world(),
+        hand;
+
+    if (world) {
+        hand = world.hand;
+    }
 
     this.topBlock().fullChanged();
-    this.prepareToBeGrabbed(this.world().hand);
+    this.prepareToBeGrabbed(hand);
     this.destroy();
 };
 

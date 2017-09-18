@@ -1927,6 +1927,10 @@ GraphMorph.prototype.drawNew = function () {
           },
           ticks: {
             autoSkipPadding: 20
+          },
+          scaleLabel: {
+            display: true,
+            labelString: 'Time in s'
           }
         }]
       }

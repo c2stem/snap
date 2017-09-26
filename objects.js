@@ -5257,6 +5257,7 @@ StageMorph.prototype.init = function (globals) {
     this.trailsCanvas = null;
     this.isThreadSafe = false;
 
+    this.isBrowserSaveable = true;
     this.locallyHiddenPrimitives = {};
 
     this.graphicsValues = {

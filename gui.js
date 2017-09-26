@@ -2866,6 +2866,13 @@ IDE_Morph.prototype.settingsMenu = function () {
         'check to enable\nsaving linked sublist identities',
         true
     );
+    addPreference(
+        'Allow saving to the browser',
+        function () {stage.isBrowserSaveable = !stage.isBrowserSaveable; },
+        this.stage.isBrowserSaveable,
+        'uncheck to force\nsaving to the cloud',
+        'check to allow\nsaving to the browser'
+    );
     menu.popup(world, pos);
 };
 
@@ -3481,6 +3488,9 @@ IDE_Morph.prototype.newProject = function () {
 IDE_Morph.prototype.save = function () {
     if (this.source === 'examples') {
         this.source = 'local'; // cannot save to examples
+    }
+    if (this.source === 'local' && !this.stage.isBrowserSaveable) {
+        this.source = 'cloud';
     }
     if (this.projectName) {
         if (this.source === 'local') { // as well as 'examples'
@@ -4632,6 +4642,9 @@ IDE_Morph.prototype.saveProjectsBrowser = function () {
     if (this.source === 'examples') {
         this.source = 'local'; // cannot save to examples
     }
+    if (this.source === 'local' && !this.stage.isBrowserSaveable) {
+        this.source = 'cloud';
+    }
     new ProjectDialogMorph(this, 'save').popUp();
 };
 
@@ -5418,7 +5431,8 @@ ProjectDialogMorph.prototype.buildContents = function () {
     }
 
     this.addSourceButton('cloud', localize('Cloud'), 'cloud');
-    this.addSourceButton('local', localize('Browser'), 'storage');
+    if (this.task !== 'save' || this.ide.stage.isBrowserSaveable)
+        this.addSourceButton('local', localize('Browser'), 'storage');
     if (this.task === 'open') {
         this.addSourceButton('examples', localize('Examples'), 'poster');
     }

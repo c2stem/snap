@@ -421,8 +421,8 @@ SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
         model.stage.attributes.lines === 'flat';
     project.stage.isThreadSafe =
         model.stage.attributes.threadsafe === 'true';
-    project.stage.isBrowserSaveable = 
-        model.stage.attributes.browsersaveable !== 'false';
+    project.stage.isSaveToCloud = 
+        model.stage.attributes.savetocloud === 'true';
     StageMorph.prototype.enableCodeMapping =
         model.stage.attributes.codify === 'true';
     StageMorph.prototype.enableInheritance =
@@ -1517,7 +1517,7 @@ StageMorph.prototype.toXML = function (serializer) {
             '<notes>$</notes>' +
             '<thumbnail>$</thumbnail>' +
             '<stage name="@" width="@" height="@" ' +
-            'costume="@" tempo="@" threadsafe="@" browsersaveable="@" ' +
+            'costume="@" tempo="@" threadsafe="@" savetocloud="@" ' +
             'lines="@" ' +
             'codify="@" ' +
             'inheritance="@" ' +
@@ -1553,7 +1553,7 @@ StageMorph.prototype.toXML = function (serializer) {
         this.getCostumeIdx(),
         this.getTempo(),
         this.isThreadSafe,
-        this.isBrowserSaveable,
+        this.isSaveToCloud,
         SpriteMorph.prototype.useFlatLineEnds ? 'flat' : 'round',
         this.enableCodeMapping,
         this.enableInheritance,

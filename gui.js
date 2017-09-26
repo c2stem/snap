@@ -2867,11 +2867,11 @@ IDE_Morph.prototype.settingsMenu = function () {
         true
     );
     addPreference(
-        'Allow saving to the browser',
-        function () {stage.isBrowserSaveable = !stage.isBrowserSaveable; },
-        this.stage.isBrowserSaveable,
-        'uncheck to force\nsaving to the cloud',
-        'check to allow\nsaving to the browser'
+        'Save only to the cloud',
+        function () {stage.isSaveToCloud = !stage.isSaveToCloud; },
+        this.stage.isSaveToCloud,
+        'uncheck to allow\nsaving to the browser',
+        'check to force\nsaving to the cloud'
     );
     menu.popup(world, pos);
 };
@@ -3489,7 +3489,7 @@ IDE_Morph.prototype.save = function () {
     if (this.source === 'examples') {
         this.source = 'local'; // cannot save to examples
     }
-    if (this.source === 'local' && !this.stage.isBrowserSaveable) {
+    if (this.source === 'local' && this.stage.isSaveToCloud) {
         this.source = 'cloud';
     }
     if (this.projectName) {
@@ -4642,7 +4642,7 @@ IDE_Morph.prototype.saveProjectsBrowser = function () {
     if (this.source === 'examples') {
         this.source = 'local'; // cannot save to examples
     }
-    if (this.source === 'local' && !this.stage.isBrowserSaveable) {
+    if (this.source === 'local' && this.stage.isSaveToCloud) {
         this.source = 'cloud';
     }
     new ProjectDialogMorph(this, 'save').popUp();
@@ -5431,7 +5431,7 @@ ProjectDialogMorph.prototype.buildContents = function () {
     }
 
     this.addSourceButton('cloud', localize('Cloud'), 'cloud');
-    if (this.task !== 'save' || this.ide.stage.isBrowserSaveable)
+    if (this.task !== 'save' || !this.ide.stage.isSaveToCloud)
         this.addSourceButton('local', localize('Browser'), 'storage');
     if (this.task === 'open') {
         this.addSourceButton('examples', localize('Examples'), 'poster');

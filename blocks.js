@@ -1181,6 +1181,7 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
                 'physicsAttrMenu',
                 true
             );
+            part.isStatic = true;
             break;
         case '%fun':
             part = new InputSlotMorph(

@@ -1878,7 +1878,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('angularForceLeft'));
         blocks.push('-');
         blocks.push(block('getPhysicsAttrOf'));
-        blocks.push(block('setPhysicsAttrOf'));
+        // blocks.push(block('setPhysicsAttrOf'));
         blocks.push(block('graphData'));
         blocks.push(block('clearGraphData'));
         blocks.push(block('recordGraphData'));
@@ -5963,7 +5963,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('friction'));
         blocks.push('-');
         blocks.push(block('getPhysicsAttrOf'));
-        blocks.push(block('setPhysicsAttrOf'));
+        // blocks.push(block('setPhysicsAttrOf'));
         blocks.push(block('graphData'));
         blocks.push(block('clearGraphData'));
         blocks.push(block('recordGraphData'));

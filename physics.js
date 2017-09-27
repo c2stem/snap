@@ -1816,7 +1816,7 @@ InputSlotMorph.prototype.physicsAttrMenu = function () {
       'y position in m': ['y position'],
       'x velocity in m/s': ['x velocity'],
       'y velocity in m/s': ['y velocity'],
-      'heading in rad': ['heading'],
+      'heading in deg': ['heading'],
       'angular velocity in rad/s': ['angular velocity']
     };
   } else { // the stage

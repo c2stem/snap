@@ -3525,7 +3525,7 @@ IDE_Morph.prototype.rawSaveProject = function (name) {
                 localStorage['-snap-project-' + name]
                     = str = this.serializer.serialize(this.stage);
                 this.setURL('#open:' + str);
-                this.showMessage('Saved!', 1);
+                this.showMessage('Saved to this browser.', 1);
             } catch (err) {
                 this.showMessage('Save failed: ' + err);
             }
@@ -3533,7 +3533,7 @@ IDE_Morph.prototype.rawSaveProject = function (name) {
             localStorage['-snap-project-' + name]
                 = str = this.serializer.serialize(this.stage);
             this.setURL('#open:' + str);
-            this.showMessage('Saved!', 1);
+            this.showMessage('Saved to this browser.', 1);
         }
     }
 };
@@ -5083,7 +5083,7 @@ IDE_Morph.prototype.saveProjectToCloud = function (name) {
         this.setProjectName(name);
         SnapCloud.saveProject(
             this,
-            function () {myself.showMessage('saved.', 2); },
+            function () {myself.showMessage('Saved to the cloud.', 2); },
             this.cloudError()
         );
     }
@@ -6010,7 +6010,7 @@ ProjectDialogMorph.prototype.saveCloudProject = function () {
         this.ide,
         function () {
             myself.ide.source = 'cloud';
-            myself.ide.showMessage('saved.', 2);
+            myself.ide.showMessage('Saved to the cloud.', 2);
         },
         this.ide.cloudError()
     );

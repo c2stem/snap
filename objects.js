@@ -932,6 +932,11 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'operators',
             spec: '%n mod %n'
         },
+        reportPower: {
+            type: 'reporter',
+            category: 'operators',
+            spec: '%n power %n'
+        },
         reportRandom: {
             type: 'reporter',
             category: 'operators',
@@ -2106,6 +2111,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportQuotient'));
         blocks.push('-');
         blocks.push(block('reportModulus'));
+        blocks.push(block('reportPower'));
         blocks.push(block('reportRound'));
         blocks.push(block('reportMonadic'));
         blocks.push(block('reportRandom'));
@@ -6157,6 +6163,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportQuotient'));
         blocks.push('-');
         blocks.push(block('reportModulus'));
+        blocks.push(block('reportPower'));
         blocks.push(block('reportRound'));
         blocks.push(block('reportMonadic'));
         blocks.push(block('reportRandom'));

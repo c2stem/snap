@@ -2366,6 +2366,10 @@ Process.prototype.reportModulus = function (a, b) {
     return ((x % y) + y) % y;
 };
 
+Process.prototype.reportPower = function (a, b) {
+    return Math.pow(+a, +b);
+};
+
 Process.prototype.reportRandom = function (min, max) {
     var floor = +min,
         ceil = +max;

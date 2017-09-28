@@ -932,6 +932,11 @@ SpriteMorph.prototype.initBlocks = function () {
             category: 'operators',
             spec: '%n mod %n'
         },
+        reportPower: {
+            type: 'reporter',
+            category: 'operators',
+            spec: '%n power %n'
+        },
         reportRandom: {
             type: 'reporter',
             category: 'operators',
@@ -1880,7 +1885,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('angularForceLeft'));
         blocks.push('-');
         blocks.push(block('getPhysicsAttrOf'));
-        blocks.push(block('setPhysicsAttrOf'));
+        // blocks.push(block('setPhysicsAttrOf'));
         blocks.push(block('graphData'));
         blocks.push(block('clearGraphData'));
         blocks.push(block('recordGraphData'));
@@ -2108,6 +2113,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportQuotient'));
         blocks.push('-');
         blocks.push(block('reportModulus'));
+        blocks.push(block('reportPower'));
         blocks.push(block('reportRound'));
         blocks.push(block('reportMonadic'));
         blocks.push(block('reportRandom'));
@@ -5493,6 +5499,7 @@ StageMorph.prototype.init = function (globals) {
     this.trailsCanvas = null;
     this.isThreadSafe = false;
 
+    this.isSaveToCloud = false;
     this.locallyHiddenPrimitives = {};
 
     this.graphicsValues = {
@@ -6207,7 +6214,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('friction'));
         blocks.push('-');
         blocks.push(block('getPhysicsAttrOf'));
-        blocks.push(block('setPhysicsAttrOf'));
+        // blocks.push(block('setPhysicsAttrOf'));
         blocks.push(block('graphData'));
         blocks.push(block('clearGraphData'));
         blocks.push(block('recordGraphData'));
@@ -6400,6 +6407,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('reportQuotient'));
         blocks.push('-');
         blocks.push(block('reportModulus'));
+        blocks.push(block('reportPower'));
         blocks.push(block('reportRound'));
         blocks.push(block('reportMonadic'));
         blocks.push(block('reportRandom'));

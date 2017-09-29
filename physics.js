@@ -1868,13 +1868,6 @@ PhysicsTabMorph.prototype.wantsDropOf = function (morph) {
 
 // ------- SnapSerializer -------
 
-SnapSerializer.prototype.phyInit = SnapSerializer.prototype.init;
-SnapSerializer.prototype.init = function () {
-    var result = SnapSerializer.prototype.phyInit.call(this);
-    this.isSavingHistory = false;
-    return result;
-};
-
 SnapSerializer.prototype.phyOpenProject = SnapSerializer.prototype.openProject;
 SnapSerializer.prototype.openProject = function (project, ide) {
   var result = this.phyOpenProject(project, ide);

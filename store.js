@@ -395,7 +395,7 @@ SnapSerializer.uber = XML_Serializer.prototype;
 SnapSerializer.prototype.app = 'Snap! 4.0, http://snap.berkeley.edu';
 
 SnapSerializer.prototype.thumbnailSize = new Point(160, 120);
-SnapSerializer.prototype.isSavingHistory = false;
+SnapSerializer.prototype.isSavingHistory = true;
 
 SnapSerializer.prototype.watcherLabels = {
     xPosition: 'x position',

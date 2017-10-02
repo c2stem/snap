@@ -1203,24 +1203,37 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
     this.coordinateMorph.destroy();
     this.coordinateMorph = null;
   } else {
-    var img = newCanvas(this.extent()),
-      ctx = img.getContext('2d'),
-      xorigin = img.width * 0.5 + this.physicsOrigin.x * this.scale,
-      yorigin = img.height * 0.5 - this.physicsOrigin.y * this.scale;
-
-    ctx.strokeStyle = (new Color(120, 120, 120, 0.3)).toString();
-    ctx.lineWidth = 1;
-    ctx.moveTo(0, yorigin);
-    ctx.lineTo(img.width, yorigin);
-    ctx.stroke();
-    ctx.moveTo(xorigin, 0);
-    ctx.lineTo(xorigin, img.height);
-    ctx.stroke();
+    var stage = this;
 
     this.coordinateMorph = new Morph();
-    this.coordinateMorph.image = img;
-    this.coordinateMorph.silentSetWidth(img.width);
-    this.coordinateMorph.silentSetHeight(img.height);
+    this.coordinateMorph.drawNew = function () {
+      this.image = newCanvas(stage.extent());
+
+      var angle = this.physicsAxisAngle % 90;
+      if (angle < -45) {
+        angle += 90;
+      } else if (angle > 45) {
+        angle -= 90;
+      }
+
+      var ctx = this.image.getContext('2d'),
+        xorigin = this.image.width * 0.5 + stage.physicsOrigin.x * stage.scale,
+        yorigin = this.image.height * 0.5 - stage.physicsOrigin.y * stage.scale;
+
+      ctx.strokeStyle = (new Color(120, 120, 120, 0.3)).toString();
+      ctx.lineWidth = 1;
+      ctx.moveTo(0, yorigin);
+      ctx.lineTo(this.image.width, yorigin);
+      ctx.stroke();
+      ctx.moveTo(xorigin, 0);
+      ctx.lineTo(xorigin, this.image.height);
+      ctx.stroke();
+
+      this.silentSetWidth(this.image.width);
+      this.silentSetHeight(this.image.height);
+    }
+
+    this.coordinateMorph.drawNew();
     this.add(this.coordinateMorph);
     this.coordinateMorph.setPosition(this.topLeft());
   }
@@ -1228,15 +1241,6 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
 
 StageMorph.prototype.isCoordinateAxesEnabled = function () {
   return !!this.coordinateMorph;
-};
-
-StageMorph.prototype.phyDrawNew = StageMorph.prototype.drawNew;
-StageMorph.prototype.drawNew = function () {
-  this.phyDrawNew();
-  if (this.coordinateMorph) {
-    this.toggleCoordinateAxes();
-    this.toggleCoordinateAxes();
-  }
 };
 
 StageMorph.prototype.updateMorphicPosition = function () {

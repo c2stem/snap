@@ -48,9 +48,9 @@ PhysicsMorph.prototype.drawNew = function () {
     if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
         x = xOffset + bodyCos * shape.position[0] -
-          bodySin * shape.position[1],
+        bodySin * shape.position[1],
         y = yOffset - bodySin * shape.position[0] -
-          bodyCos * shape.position[1],
+        bodyCos * shape.position[1],
         s = Math.sin(bodyAngle + shape.angle),
         c = Math.cos(bodyAngle + shape.angle);
 
@@ -83,6 +83,11 @@ PhysicsMorph.prototype.physicsScale = function () {
 PhysicsMorph.prototype.physicsOrigin = function () {
   var stage = this.parentThatIsA(StageMorph);
   return (stage && stage.physicsOrigin) || new Point(0, 0);
+};
+
+PhysicsMorph.prototype.physicsAxisAngle = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  return (stage && stage.physicsAxisAngle) || 0;
 };
 
 PhysicsMorph.prototype.updateMorphicPosition = function () {
@@ -630,12 +635,17 @@ SpriteMorph.prototype.yAcceleration = function () {
 
 SpriteMorph.prototype.physicsScale = function () {
   var stage = this.getStage();
-  return (stage && stage.physicsScale) || 1.0;
+  return (stage && stage.physicsScale) || 1;
 };
 
 SpriteMorph.prototype.physicsOrigin = function () {
   var stage = this.getStage();
   return (stage && stage.physicsOrigin) || new Point(0, 0);
+};
+
+SpriteMorph.prototype.physicsAxisAngle = function () {
+  var stage = this.getStage();
+  return (stage && stage.physicsAxisAngle) || 0;
 };
 
 SpriteMorph.prototype.setPhysicsPosition = function (x, y) {
@@ -1066,6 +1076,7 @@ StageMorph.prototype.init = function (globals) {
   this.physicsFloor = null;
   this.physicsScale = 10;
   this.physicsOrigin = new Point(0, 0);
+  this.physicsAxisAngle = 0;
 
   this.graphWatchers = [];
   if (false) { // test data
@@ -1156,6 +1167,10 @@ StageMorph.prototype.physicsYOrigin = function () {
   return this.physicsOrigin.y;
 };
 
+SpriteMorph.prototype.physicsAxisAngle = function () {
+  return this.physicsAxisAngle;
+};
+
 StageMorph.prototype.setPhysicsXOrigin = function (x) {
   this.physicsOrigin.x = x;
   this.setPhysicsFloor(!!this.physicsFloor);
@@ -1174,20 +1189,40 @@ StageMorph.prototype.setPhysicsYOrigin = function (y) {
   }
 };
 
+StageMorph.prototype.setPhysicsAxisAngle = function (a) {
+  this.physicsAxisAngle = a;
+  this.setPhysicsFloor(!!this.physicsFloor);
+  if (this.coordinateMorph) {
+    this.toggleCoordinateAxes();
+    this.toggleCoordinateAxes();
+  }
+};
+
 StageMorph.prototype.toggleCoordinateAxes = function () {
   if (this.coordinateMorph) {
     this.coordinateMorph.destroy();
     this.coordinateMorph = null;
   } else {
-    var size = Math.max(this.width() + 2 * Math.abs(this.physicsOrigin.x * this.scale),
-      this.height() + 2 * Math.abs(this.physicsOrigin.y * this.scale)),
-      pos = this.center().subtract(0.5 * size);
-    pos.x += this.physicsOrigin.x * this.scale;
-    pos.y -= this.physicsOrigin.y * this.scale;
-    this.coordinateMorph = new SymbolMorph("coordinateAxes", size, new Color(120, 120, 120, 0.3));
-    this.coordinateMorph.fixLayout = function () { console.log("fixlayout"); }
+    var img = newCanvas(this.extent()),
+      ctx = img.getContext('2d'),
+      xorigin = img.width * 0.5 + this.physicsOrigin.x * this.scale,
+      yorigin = img.height * 0.5 - this.physicsOrigin.y * this.scale;
+
+    ctx.strokeStyle = (new Color(120, 120, 120, 0.3)).toString();
+    ctx.lineWidth = 1;
+    ctx.moveTo(0, yorigin);
+    ctx.lineTo(img.width, yorigin);
+    ctx.stroke();
+    ctx.moveTo(xorigin, 0);
+    ctx.lineTo(xorigin, img.height);
+    ctx.stroke();
+
+    this.coordinateMorph = new Morph();
+    this.coordinateMorph.image = img;
+    this.coordinateMorph.silentSetWidth(img.width);
+    this.coordinateMorph.silentSetHeight(img.height);
     this.add(this.coordinateMorph);
-    this.coordinateMorph.setPosition(pos);
+    this.coordinateMorph.setPosition(this.topLeft());
   }
 };
 
@@ -1364,6 +1399,7 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
     " floor=\"@\"" +
     " xorigin=\"@\"" +
     " yorigin=\"@\"" +
+    " axisangle=\"@\"" +
     "></physics>",
     world.gravity[0],
     world.gravity[1],
@@ -1371,7 +1407,8 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
     material.restitution,
     this.physicsScale, !!this.physicsFloor,
     this.physicsOrigin.x,
-    this.physicsOrigin.y
+    this.physicsOrigin.y,
+    this.physicsAxisAngle
   );
 };
 
@@ -1380,19 +1417,22 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
     world = this.physicsWorld,
     material = world.defaultContactMaterial;
 
-  var loadFloat = function (object, property, name) {
+  var loadFloat = function (object, property, name, defval) {
     if (attrs[name]) {
       object[property] = parseFloat(attrs[name]);
+    } else {
+      object[property] = defval;
     }
   };
 
-  loadFloat(world.gravity, 0, "xgravity");
-  loadFloat(world.gravity, 1, "ygravity");
-  loadFloat(material, "friction", "friction");
-  loadFloat(material, "restitution", "restitution");
-  loadFloat(this, "physicsScale", "scale");
-  loadFloat(this.physicsOrigin, "x", "xorigin");
-  loadFloat(this.physicsOrigin, "y", "yorigin");
+  loadFloat(world.gravity, 0, "xgravity", 0);
+  loadFloat(world.gravity, 1, "ygravity", -9.81);
+  loadFloat(material, "friction", "friction", 0.3);
+  loadFloat(material, "restitution", "restitution", 0);
+  loadFloat(this, "physicsScale", "scale", 10);
+  loadFloat(this.physicsOrigin, "x", "xorigin", 0);
+  loadFloat(this.physicsOrigin, "y", "yorigin", 0);
+  loadFloat(this, "physicsAxisAngle", "axisangle", 0);
 
   if (attrs.floor) {
     this.setPhysicsFloor(attrs.floor === "true");
@@ -1637,24 +1677,27 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     elems.add(inputField(
       "origin y:", aSprite, "physicsYOrigin", "setPhysicsYOrigin", -1000, 1000, "pixel"
     ));
+    elems.add(inputField(
+      "axis angle:", aSprite, "physicsAxisAngle", "setPhysicsAxisAngle", -360, 360, "deg"
+    ));
     elems.add(toggleField("enable ground", aSprite, "hasPhysicsFloor", "togglePhysicsFloor"));
   } else if (aSprite instanceof SpriteMorph) {
     elems.add(inputField("mass:", aSprite, "mass", "setMass", 0, 1e6, "kg"));
 
     var radioDisabled = toggleField(
-      "physics disabled", aSprite,
-      function () {
-        return !this.physicsMode;
-      },
-      function () {
-        if (this.physicsMode) {
-          this.physicsMode = "";
-          radioStatic.toggle.refresh();
-          radioDynamic.toggle.refresh();
-          aSprite.updatePhysicsBody();
-        }
-      },
-      true),
+        "physics disabled", aSprite,
+        function () {
+          return !this.physicsMode;
+        },
+        function () {
+          if (this.physicsMode) {
+            this.physicsMode = "";
+            radioStatic.toggle.refresh();
+            radioDynamic.toggle.refresh();
+            aSprite.updatePhysicsBody();
+          }
+        },
+        true),
       radioStatic = toggleField(
         "static object", aSprite,
         function () {

@@ -2492,6 +2492,7 @@ Process.prototype.reportMonadic = function (fname, n) {
         break;
     case 'sign':
         result = Math.sign(x);
+        break;
     default:
         nop();
     }

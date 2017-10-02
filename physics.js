@@ -1209,24 +1209,26 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
     this.coordinateMorph.drawNew = function () {
       this.image = newCanvas(stage.extent());
 
-      var angle = this.physicsAxisAngle % 90;
+
+      var ctx = this.image.getContext('2d'),
+        xorigin = this.image.width * 0.5 + stage.physicsOrigin.x * stage.scale,
+        yorigin = this.image.height * 0.5 - stage.physicsOrigin.y * stage.scale,
+        angle = stage.physicsAxisAngle % 90;
+
       if (angle < -45) {
         angle += 90;
       } else if (angle > 45) {
         angle -= 90;
       }
-
-      var ctx = this.image.getContext('2d'),
-        xorigin = this.image.width * 0.5 + stage.physicsOrigin.x * stage.scale,
-        yorigin = this.image.height * 0.5 - stage.physicsOrigin.y * stage.scale;
+      angle = Math.sin(radians(angle));
 
       ctx.strokeStyle = (new Color(120, 120, 120, 0.3)).toString();
       ctx.lineWidth = 1;
-      ctx.moveTo(0, yorigin);
-      ctx.lineTo(this.image.width, yorigin);
+      ctx.moveTo(0, yorigin + xorigin * angle);
+      ctx.lineTo(this.image.width, yorigin - (this.image.width - xorigin) * angle);
       ctx.stroke();
-      ctx.moveTo(xorigin, 0);
-      ctx.lineTo(xorigin, this.image.height);
+      ctx.moveTo(xorigin - yorigin * angle, 0);
+      ctx.lineTo(xorigin + (this.image.height - yorigin) * angle, this.image.height);
       ctx.stroke();
 
       this.silentSetWidth(this.image.width);

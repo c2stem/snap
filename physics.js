@@ -48,9 +48,9 @@ PhysicsMorph.prototype.drawNew = function () {
     if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
         x = xOffset + bodyCos * shape.position[0] -
-          bodySin * shape.position[1],
+        bodySin * shape.position[1],
         y = yOffset - bodySin * shape.position[0] -
-          bodyCos * shape.position[1],
+        bodyCos * shape.position[1],
         s = Math.sin(bodyAngle + shape.angle),
         c = Math.cos(bodyAngle + shape.angle);
 
@@ -83,6 +83,11 @@ PhysicsMorph.prototype.physicsScale = function () {
 PhysicsMorph.prototype.physicsOrigin = function () {
   var stage = this.parentThatIsA(StageMorph);
   return (stage && stage.physicsOrigin) || new Point(0, 0);
+};
+
+PhysicsMorph.prototype.getPhysicsAxisAngle = function () {
+  var stage = this.parentThatIsA(StageMorph);
+  return (stage && stage.physicsAxisAngle) || 0;
 };
 
 PhysicsMorph.prototype.updateMorphicPosition = function () {
@@ -254,6 +259,60 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       type: "reporter",
       category: "physics",
       spec: "y acceleration in m/s\u00b2"
+    },
+    setNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set net force to x: %n y: %n N",
+      defaults: [0, 0]
+    },
+    setXNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set x net force to %n N",
+      defaults: [0]
+    },
+    setYNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set y net force to %n N",
+      defaults: [0]
+    },
+    xNetForce: {
+      only: SpriteMorph,
+      type: "reporter",
+      category: "physics",
+      spec: "x net force in N"
+    },
+    yNetForce: {
+      only: SpriteMorph,
+      type: "reporter",
+      category: "physics",
+      spec: "y net force in N"
+    },
+    changeNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "change net force by x: %n y: %n N",
+      defaults: [0, 0]
+    },
+    changeXNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "change x net force by %n N",
+      defaults: [0]
+    },
+    changeYNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "change y net force by %n N",
+      defaults: [0]
     },
     simulationTime: {
       type: "reporter",
@@ -628,9 +687,43 @@ SpriteMorph.prototype.yAcceleration = function () {
   return this.physicsYAcceleration || 0;
 };
 
+SpriteMorph.prototype.setNetForce = function (x, y) {
+  this.physicsXNetForce = +x;
+  this.physicsYNetForce = +y;
+};
+
+SpriteMorph.prototype.setXNetForce = function (x) {
+  this.physicsXNetForce = +x;
+};
+
+SpriteMorph.prototype.setYNetForce = function (y) {
+  this.physicsYNetForce = +y;
+};
+
+SpriteMorph.prototype.xNetForce = function () {
+  return this.physicsXNetForce || 0;
+};
+
+SpriteMorph.prototype.yNetForce = function () {
+  return this.physicsYNetForce || 0;
+};
+
+SpriteMorph.prototype.changeNetForce = function (x, y) {
+  this.physicsXNetForce = (this.physicsXNetForce || 0) + +x;
+  this.physicsYNetForce = (this.physicsYNetForce || 0) + +y;
+};
+
+SpriteMorph.prototype.changeXNetForce = function (x) {
+  this.physicsXNetForce = (this.physicsXNetForce || 0) + +x;
+};
+
+SpriteMorph.prototype.changeYNetForce = function (y) {
+  this.physicsYNetForce = (this.physicsYNetForce || 0) + +y;
+};
+
 SpriteMorph.prototype.physicsScale = function () {
   var stage = this.getStage();
-  return (stage && stage.physicsScale) || 1.0;
+  return (stage && stage.physicsScale) || 1;
 };
 
 SpriteMorph.prototype.physicsOrigin = function () {
@@ -638,32 +731,35 @@ SpriteMorph.prototype.physicsOrigin = function () {
   return (stage && stage.physicsOrigin) || new Point(0, 0);
 };
 
+SpriteMorph.prototype.getPhysicsAxisAngle = function () {
+  var stage = this.getStage();
+  return (stage && stage.physicsAxisAngle) || 0;
+};
+
 SpriteMorph.prototype.setPhysicsPosition = function (x, y) {
-  var s = this.physicsScale();
-  var o = this.physicsOrigin();
-  this.gotoXY(+x * s + o.x, +y * s + o.y);
+  var s = this.physicsScale(),
+    o = this.physicsOrigin(),
+    a = radians(this.getPhysicsAxisAngle());
+  this.gotoXY((+x * Math.cos(a) - +y * Math.sin(a)) * s + o.x,
+    (x * Math.sin(a) + +y * Math.cos(a)) * s + o.y);
 };
 
-SpriteMorph.prototype.setPhysicsXPosition = function (pos) {
-  var s = this.physicsScale();
-  var o = this.physicsOrigin();
-  this.setXPosition(+pos * s + o.x);
+SpriteMorph.prototype.setPhysicsXPosition = function (x) {
+  this.setPhysicsPosition(+x, this.physicsYPosition());
 };
 
-SpriteMorph.prototype.setPhysicsYPosition = function (pos) {
-  var s = this.physicsScale();
-  var o = this.physicsOrigin();
-  this.setYPosition(+pos * s + o.y);
+SpriteMorph.prototype.setPhysicsYPosition = function (y) {
+  this.setPhysicsPosition(this.physicsXPosition(), +y);
 };
 
-SpriteMorph.prototype.changePhysicsXPosition = function (delta) {
-  var s = this.physicsScale();
-  this.changeXPosition(+delta * s);
+SpriteMorph.prototype.changePhysicsXPosition = function (dx) {
+  this.setPhysicsPosition(this.physicsXPosition() + +dx,
+    this.physicsYPosition());
 };
 
-SpriteMorph.prototype.changePhysicsYPosition = function (delta) {
-  var s = this.physicsScale();
-  this.changeYPosition(+delta * s);
+SpriteMorph.prototype.changePhysicsYPosition = function (dy) {
+  this.setPhysicsPosition(this.physicsXPosition(),
+    this.physicsYPosition() + +dy);
 };
 
 SpriteMorph.prototype.changePhysicsPosition = function (dx, dy) {
@@ -671,29 +767,31 @@ SpriteMorph.prototype.changePhysicsPosition = function (dx, dy) {
 };
 
 SpriteMorph.prototype.physicsXPosition = function () {
-  var s = this.physicsScale();
-  var o = this.physicsOrigin();
-  return (this.xPosition() - o.x) / s;
+  var s = this.physicsScale(),
+    o = this.physicsOrigin(),
+    a = radians(this.getPhysicsAxisAngle());
+  return ((this.xPosition() - o.x) * Math.cos(-a) -
+    (this.yPosition() - o.y) * Math.sin(-a)) / s;
 };
 
 SpriteMorph.prototype.physicsYPosition = function () {
-  var s = this.physicsScale();
-  var o = this.physicsOrigin();
-  return (this.yPosition() - o.y) / s;
+  var s = this.physicsScale(),
+    o = this.physicsOrigin(),
+    a = radians(this.getPhysicsAxisAngle());
+  return ((this.xPosition() - o.x) * Math.sin(-a) +
+    (this.yPosition() - o.y) * Math.cos(-a)) / s;
 };
 
 SpriteMorph.prototype.setPhysicsAngle = function (angle) {
-  var heading = -angle + 90;
-  this.phySetHeading(heading);
-  this.updatePhysicsPosition();
+  this.setHeading(-angle + 90 - this.getPhysicsAxisAngle());
 };
 
 SpriteMorph.prototype.changePhysicsAngle = function (delta) {
-  this.setPhysicsAngle(this.physicsAngle() + delta);
+  this.setHeading(this.direction() - delta);
 };
 
 SpriteMorph.prototype.physicsAngle = function () {
-  var angle = (-this.direction() + 90) % 360;
+  var angle = (-this.direction() + 90 - this.getPhysicsAxisAngle()) % 360;
   return angle >= 0 ? angle : angle + 360;
 };
 
@@ -1066,6 +1164,7 @@ StageMorph.prototype.init = function (globals) {
   this.physicsFloor = null;
   this.physicsScale = 10;
   this.physicsOrigin = new Point(0, 0);
+  this.physicsAxisAngle = 0;
 
   this.graphWatchers = [];
   if (false) { // test data
@@ -1156,21 +1255,34 @@ StageMorph.prototype.physicsYOrigin = function () {
   return this.physicsOrigin.y;
 };
 
+StageMorph.prototype.getPhysicsAxisAngle = function () {
+  return this.physicsAxisAngle;
+};
+
 StageMorph.prototype.setPhysicsXOrigin = function (x) {
-  this.physicsOrigin.x = x;
+  this.physicsOrigin.x = +x;
   this.setPhysicsFloor(!!this.physicsFloor);
   if (this.coordinateMorph) {
-    this.toggleCoordinateAxes();
-    this.toggleCoordinateAxes();
+    this.coordinateMorph.drawNew();
+    this.coordinateMorph.changed();
   }
 };
 
 StageMorph.prototype.setPhysicsYOrigin = function (y) {
-  this.physicsOrigin.y = y;
+  this.physicsOrigin.y = +y;
   this.setPhysicsFloor(!!this.physicsFloor);
   if (this.coordinateMorph) {
-    this.toggleCoordinateAxes();
-    this.toggleCoordinateAxes();
+    this.coordinateMorph.drawNew();
+    this.coordinateMorph.changed();
+  }
+};
+
+StageMorph.prototype.setPhysicsAxisAngle = function (a) {
+  this.physicsAxisAngle = +a;
+  this.setPhysicsFloor(!!this.physicsFloor);
+  if (this.coordinateMorph) {
+    this.coordinateMorph.drawNew();
+    this.coordinateMorph.changed();
   }
 };
 
@@ -1179,29 +1291,45 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
     this.coordinateMorph.destroy();
     this.coordinateMorph = null;
   } else {
-    var size = Math.max(this.width() + 2 * Math.abs(this.physicsOrigin.x * this.scale),
-      this.height() + 2 * Math.abs(this.physicsOrigin.y * this.scale)),
-      pos = this.center().subtract(0.5 * size);
-    pos.x += this.physicsOrigin.x * this.scale;
-    pos.y -= this.physicsOrigin.y * this.scale;
-    this.coordinateMorph = new SymbolMorph("coordinateAxes", size, new Color(120, 120, 120, 0.3));
-    this.coordinateMorph.fixLayout = function () { console.log("fixlayout"); }
+    var stage = this;
+
+    this.coordinateMorph = new Morph();
+    this.coordinateMorph.drawNew = function () {
+      this.image = newCanvas(stage.extent());
+
+      var ctx = this.image.getContext('2d'),
+        xorigin = this.image.width * 0.5 + stage.physicsOrigin.x * stage.scale,
+        yorigin = this.image.height * 0.5 - stage.physicsOrigin.y * stage.scale,
+        angle = stage.physicsAxisAngle % 90;
+
+      if (angle < -45) {
+        angle += 90;
+      } else if (angle > 45) {
+        angle -= 90;
+      }
+      angle = Math.sin(radians(angle));
+
+      ctx.strokeStyle = (new Color(120, 120, 120, 0.3)).toString();
+      ctx.lineWidth = 1;
+      ctx.moveTo(0, yorigin + xorigin * angle);
+      ctx.lineTo(this.image.width, yorigin - (this.image.width - xorigin) * angle);
+      ctx.stroke();
+      ctx.moveTo(xorigin - yorigin * angle, 0);
+      ctx.lineTo(xorigin + (this.image.height - yorigin) * angle, this.image.height);
+      ctx.stroke();
+
+      this.silentSetWidth(this.image.width);
+      this.silentSetHeight(this.image.height);
+    }
+
+    this.coordinateMorph.drawNew();
     this.add(this.coordinateMorph);
-    this.coordinateMorph.setPosition(pos);
+    this.coordinateMorph.setPosition(this.topLeft());
   }
 };
 
 StageMorph.prototype.isCoordinateAxesEnabled = function () {
   return !!this.coordinateMorph;
-};
-
-StageMorph.prototype.phyDrawNew = StageMorph.prototype.drawNew;
-StageMorph.prototype.drawNew = function () {
-  this.phyDrawNew();
-  if (this.coordinateMorph) {
-    this.toggleCoordinateAxes();
-    this.toggleCoordinateAxes();
-  }
 };
 
 StageMorph.prototype.updateMorphicPosition = function () {
@@ -1364,6 +1492,7 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
     " floor=\"@\"" +
     " xorigin=\"@\"" +
     " yorigin=\"@\"" +
+    " axisangle=\"@\"" +
     "></physics>",
     world.gravity[0],
     world.gravity[1],
@@ -1371,7 +1500,8 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
     material.restitution,
     this.physicsScale, !!this.physicsFloor,
     this.physicsOrigin.x,
-    this.physicsOrigin.y
+    this.physicsOrigin.y,
+    this.physicsAxisAngle
   );
 };
 
@@ -1380,19 +1510,22 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
     world = this.physicsWorld,
     material = world.defaultContactMaterial;
 
-  var loadFloat = function (object, property, name) {
+  var loadFloat = function (object, property, name, defval) {
     if (attrs[name]) {
       object[property] = parseFloat(attrs[name]);
+    } else {
+      object[property] = defval;
     }
   };
 
-  loadFloat(world.gravity, 0, "xgravity");
-  loadFloat(world.gravity, 1, "ygravity");
-  loadFloat(material, "friction", "friction");
-  loadFloat(material, "restitution", "restitution");
-  loadFloat(this, "physicsScale", "scale");
-  loadFloat(this.physicsOrigin, "x", "xorigin");
-  loadFloat(this.physicsOrigin, "y", "yorigin");
+  loadFloat(world.gravity, 0, "xgravity", 0);
+  loadFloat(world.gravity, 1, "ygravity", -9.81);
+  loadFloat(material, "friction", "friction", 0.3);
+  loadFloat(material, "restitution", "restitution", 0);
+  loadFloat(this, "physicsScale", "scale", 10);
+  loadFloat(this.physicsOrigin, "x", "xorigin", 0);
+  loadFloat(this.physicsOrigin, "y", "yorigin", 0);
+  loadFloat(this, "physicsAxisAngle", "axisangle", 0);
 
   if (attrs.floor) {
     this.setPhysicsFloor(attrs.floor === "true");
@@ -1637,24 +1770,27 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     elems.add(inputField(
       "origin y:", aSprite, "physicsYOrigin", "setPhysicsYOrigin", -1000, 1000, "pixel"
     ));
+    elems.add(inputField(
+      "axis angle:", aSprite, "physicsAxisAngle", "setPhysicsAxisAngle", -360, 360, "deg"
+    ));
     elems.add(toggleField("enable ground", aSprite, "hasPhysicsFloor", "togglePhysicsFloor"));
   } else if (aSprite instanceof SpriteMorph) {
     elems.add(inputField("mass:", aSprite, "mass", "setMass", 0, 1e6, "kg"));
 
     var radioDisabled = toggleField(
-      "physics disabled", aSprite,
-      function () {
-        return !this.physicsMode;
-      },
-      function () {
-        if (this.physicsMode) {
-          this.physicsMode = "";
-          radioStatic.toggle.refresh();
-          radioDynamic.toggle.refresh();
-          aSprite.updatePhysicsBody();
-        }
-      },
-      true),
+        "physics disabled", aSprite,
+        function () {
+          return !this.physicsMode;
+        },
+        function () {
+          if (this.physicsMode) {
+            this.physicsMode = "";
+            radioStatic.toggle.refresh();
+            radioDynamic.toggle.refresh();
+            aSprite.updatePhysicsBody();
+          }
+        },
+        true),
       radioStatic = toggleField(
         "static object", aSprite,
         function () {

@@ -260,6 +260,60 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "y acceleration in m/s\u00b2"
     },
+    setNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set net force to x: %n y: %n N",
+      defaults: [0, 0]
+    },
+    setXNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set x net force to %n N",
+      defaults: [0]
+    },
+    setYNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "set y net force to %n N",
+      defaults: [0]
+    },
+    xNetForce: {
+      only: SpriteMorph,
+      type: "reporter",
+      category: "physics",
+      spec: "x net force in N"
+    },
+    yNetForce: {
+      only: SpriteMorph,
+      type: "reporter",
+      category: "physics",
+      spec: "y net force in N"
+    },
+    changeNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "change net force by x: %n y: %n N",
+      defaults: [0, 0]
+    },
+    changeXNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "change x net force by %n N",
+      defaults: [0]
+    },
+    changeYNetForce: {
+      only: SpriteMorph,
+      type: "command",
+      category: "physics",
+      spec: "change y net force by %n N",
+      defaults: [0]
+    },
     simulationTime: {
       type: "reporter",
       category: "physics",
@@ -631,6 +685,40 @@ SpriteMorph.prototype.xAcceleration = function () {
 
 SpriteMorph.prototype.yAcceleration = function () {
   return this.physicsYAcceleration || 0;
+};
+
+SpriteMorph.prototype.setNetForce = function (x, y) {
+  this.physicsXNetForce = +x;
+  this.physicsYNetForce = +y;
+};
+
+SpriteMorph.prototype.setXNetForce = function (x) {
+  this.physicsXNetForce = +x;
+};
+
+SpriteMorph.prototype.setYNetForce = function (y) {
+  this.physicsYNetForce = +y;
+};
+
+SpriteMorph.prototype.xNetForce = function () {
+  return this.physicsXNetForce || 0;
+};
+
+SpriteMorph.prototype.yNetForce = function () {
+  return this.physicsYNetForce || 0;
+};
+
+SpriteMorph.prototype.changeNetForce = function (x, y) {
+  this.physicsXNetForce = (this.physicsXNetForce || 0) + +x;
+  this.physicsYNetForce = (this.physicsYNetForce || 0) + +y;
+};
+
+SpriteMorph.prototype.changeXNetForce = function (x) {
+  this.physicsXNetForce = (this.physicsXNetForce || 0) + +x;
+};
+
+SpriteMorph.prototype.changeYNetForce = function (y) {
+  this.physicsYNetForce = (this.physicsYNetForce || 0) + +y;
 };
 
 SpriteMorph.prototype.physicsScale = function () {

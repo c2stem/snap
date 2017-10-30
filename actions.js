@@ -153,7 +153,8 @@ ActionManager.prototype.initializeRecords = function() {
     this._blockToOwnerId = {};
 };
 
-ActionManager.URL = 'ws://' + window.location.host;
+ActionManager.URL = SnapCould.url === 'https://cloud.c2stem.org/SnapCloud/' ?
+    'wss://cloud.c2stem.org' : 'ws://' + window.location.host;
 ActionManager.prototype.enableCollaboration = function() {
     if (this.supportsCollaboration === false) {
         // Display error message

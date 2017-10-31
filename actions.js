@@ -287,7 +287,7 @@ ActionManager.prototype._joinSession = function(sessionId, error) {
     var request = new XMLHttpRequest();
     request.open(
         'POST',
-        window.location.origin + '/collaboration/join'
+        ActionManager.URL.replace(/^ws/, 'http') + '/collaboration/join'
             + '?id=' + encodeURIComponent(SnapActions.id)
             + '&sessionId=' + encodeURIComponent(sessionId),
         true

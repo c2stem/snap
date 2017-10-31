@@ -153,7 +153,8 @@ ActionManager.prototype.initializeRecords = function() {
     this._blockToOwnerId = {};
 };
 
-ActionManager.URL = window.location.host === 'physdev.c2stem.org' ?
+ActionManager.URL = window.location.host === 'physdev.c2stem.org' ||
+    window.location.host === 'physics.c2stem.org' ?
     'wss://cloud.c2stem.org' : 'ws://' + window.location.host;
 ActionManager.prototype.enableCollaboration = function() {
     if (this.supportsCollaboration === false) {

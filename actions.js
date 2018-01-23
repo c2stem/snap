@@ -16,6 +16,10 @@ function ActionManager() {
     this.initialize();
 }
 
+ActionManager.prototype.configure = function(ide) {
+    this.__ide = ide;
+};
+
 ActionManager.prototype.addActions = function() {
     var actions = Array.prototype.slice.call(arguments),
         myself = this;
@@ -123,7 +127,7 @@ ActionManager.prototype.initializeEventMethods = function() {
 
 ActionManager.prototype.initializeRecords = function() {
     this.currentBatch = null;
-    this.lastSeen = 0;
+    this.lastSeen = -1;
     this.lastSent = null;
     this.idCount = 0;
 
@@ -242,18 +246,29 @@ ActionManager.prototype.completeAction = function(err, result) {
     }
 
     this.isApplyingAction = false;
-    this.lastSeen = action.id;
     this.idCount = 0;
     if (!err) {
         SnapUndo.record(action);
     }
 
     // Call 'success' or 'reject', if relevant
+    var fn;
     if (action.user === this.id) {
-        var dictName = err ? '_onReject' : '_onAccept';
-        if (this[dictName][action.id]) {
-            this[dictName][action.id](result);
+        if (err) {
+            if (this._onReject[action.id]) {
+                fn = this._onReject[action.id];
+                delete this._onReject[action.id];
+                delete this._onAccept[action.id];
+                fn(err);
+            }
+        } else if (this._onAccept[action.id]){
+            fn = this._onAccept[action.id];
+            delete this._onAccept[action.id];
+            delete this._onReject[action.id];
+            fn(result);
         }
+
+        // Ensure that the handlers are removed
         delete this._onAccept[action.id];
         delete this._onReject[action.id];
 
@@ -271,9 +286,17 @@ ActionManager.prototype.completeAction = function(err, result) {
     this.afterActionApplied(action);
     this.currentEvent = null;
 
-    if (this.queuedActions.length) {
+    if (this.queuedActions.length && this.isNextAction(this.queuedActions[0])) {
         setTimeout(this._applyEvent.bind(this), 0, this.queuedActions.shift());
     }
+};
+
+ActionManager.prototype.isNextAction = function(action) {
+    return action.id === (this.lastSeen + 1);
+};
+
+ActionManager.prototype.isPreviousAction = function(action) {
+    return action.id < (this.lastSeen + 1);
 };
 
 ActionManager.prototype.joinSession = function(sessionId, error) {
@@ -322,7 +345,7 @@ Action.prototype.reject = function(fn) {
 
 ActionManager.prototype.applyEvent = function(event) {
     event.user = this.id;
-    event.id = event.id || this.lastSeen + 1;
+    event.id = this.lastSeen + 1;
     event.time = event.time || Date.now();
 
     // Skip duplicate undo/redo events
@@ -331,26 +354,28 @@ ActionManager.prototype.applyEvent = function(event) {
     }
 
     // if in replay mode, check that the event is a replay event
+    this.submitIfAllowed(event);
+
+    return new Action(this, event);
+};
+
+ActionManager.prototype.submitIfAllowed = function(event) {
     var myself = this,
         ide = this.ide();
 
-    if (ide.isReplayMode && !event.isReplay) {
+    if (event.type === 'openProject') {
+        this.submitAction(event);
+    } else if (ide.isReplayMode && !event.isReplay) {
         ide.promptExitReplay(function() {
-            if (myself.isLeader) {
-                myself.acceptEvent(event);
-            } else {
-                myself.send(event);
-            }
+            myself.submitIfAllowed(event);
         });
     } else {
-        if (this.isLeader) {
-            this.acceptEvent(event);
-        } else {
-            this.send(event);
-        }
+        this.submitAction(event);
     }
+};
 
-    return new Action(this, event);
+ActionManager.prototype.mightRejectActions = function() {
+    return this.ide().isReplayMode || this.isCollaborating();
 };
 
 ActionManager.prototype._getMethodFor = function(action) {
@@ -365,21 +390,42 @@ ActionManager.prototype.acceptEvent = function(msg) {
     // If we are undo/redo-ing, make sure it hasn't already been sent
     this.send(msg);
 
-    if (this.isApplyingAction) {  // Queue events if in transaction
-        this.queuedActions.push(msg);
-    } else {
-        setTimeout(this._applyEvent.bind(this), 0, msg);
-    }
+    setTimeout(this.onReceiveAction.bind(this), 0, msg);
 };
 
 ActionManager.prototype._isBatchEvent = function(msg) {
     return msg.type === 'batch';
 };
 
+ActionManager.prototype.onReceiveAction = function(msg) {
+    if (this.isPreviousAction(msg)) return;
+
+    if (this.isNextAction(msg) && !this.isApplyingAction) {
+        this._applyEvent(msg);
+    } else {
+        this.addActionToQueue(msg);
+    }
+};
+
+ActionManager.prototype.addActionToQueue = function(msg) {
+    // insert into the queue
+    var i = 0;
+    var len = this.queuedActions.length;
+    while (i < len && this.queuedActions[i].id < msg.id) {
+        i++;
+    }
+    // Make sure it isn't a duplicate
+    var isDuplicate = this.queuedActions[i] && msg.id === this.queuedActions[i].id;
+    if (!isDuplicate) {
+        this.queuedActions.splice(i, 0, msg);
+    }
+};
+
 ActionManager.prototype._applyEvent = function(msg) {
     logger.debug('received event:', msg);
     this.currentEvent = msg;
     this.isApplyingAction = true;
+    this.lastSeen = this.currentEvent.id;
 
     if (this._isBatchEvent(msg)) {
         this.currentBatch = msg;
@@ -402,10 +448,19 @@ ActionManager.prototype._rawApplyEvent = function(event) {
     }
 };
 
+ActionManager.prototype.submitAction = function(action) {
+    if (this.isLeader || !this.isCollaborating() || action.type === 'openProject') {
+        return this.acceptEvent(action);
+    } else {
+        return this.send(action);
+    }
+};
+
 ActionManager.prototype.send = function(json) {
+    var canSend = this._ws && this._ws.readyState === WebSocket.OPEN;
     json.id = json.id || this.lastSeen + 1;
     this.lastSent = json.id;
-    if (this._ws && this._ws.readyState === WebSocket.OPEN) {
+    if (this.isCollaborating() && json.type !== 'openProject' && canSend) {
         this._ws.send(JSON.stringify(json));
     }
 };
@@ -1031,6 +1086,11 @@ ActionManager.prototype._addSprite = function(sprite, costume) {
     return [serialized, this.id, sprite.id];
 };
 
+ActionManager.prototype._openProject = function(str) {
+    this.initializeRecords();
+    return [str];
+};
+
 ActionManager.prototype.uniqueIdForImport = function (str) {
     var model = this.serializer.parse(str),
         children = model.allChildren();
@@ -1039,9 +1099,6 @@ ActionManager.prototype.uniqueIdForImport = function (str) {
     for (var i = children.length; i--;) {
         if (children[i].attributes) {
             children[i].attributes.collabId = this.newId();
-        }
-        if (children[i].contents) {
-            children[i].contents = this.serializer.escape(children[i].contents);
         }
     }
 
@@ -1126,6 +1183,7 @@ ActionManager.prototype._onSetBlockPosition = function(id, x, y, callback) {
         },
         editor;
 
+    this.ensureNotDragging(block);
     // If there is a block connected to the 'top' of this block, clear the given
     // target
     if (this._targetFor[id]) {
@@ -1381,10 +1439,20 @@ ActionManager.prototype.getBlockFromId = function(id) {
     var ids = id.split('/'),
         blockId = ids.shift(),
         block = this._blocks[blockId],
-        editor = block.parentThatIsA(BlockEditorMorph),
-        customBlockId;
+        customBlockId,
+        editor;
+
+    // If the id is a custom block id, it is referencing the PrototypeHatBlockMorph
+    if (this._customBlocks[id]) {
+        return this._getCustomBlockEditor(id)
+            .body.contents  // get ScriptsMorph of BlockEditorMorph
+            .children.find(function(child) {
+                return child instanceof PrototypeHatBlockMorph;
+            });
+    }
 
     // If the block is part of a custom block def, refresh it
+    editor = block.parentThatIsA(BlockEditorMorph);
     if (editor) {
         var currentEditor,
             found = false,
@@ -1443,20 +1511,13 @@ ActionManager.prototype.onMoveBlock = function(id, rawTarget) {
         scripts,
         owner;
 
+    this.ensureNotDragging(block);
     this.__recordTarget(block.id, rawTarget);
 
     // Resolve the target
     if (block instanceof CommandBlockMorph) {
-        // Check if connecting to the beginning of a custom block definition
-        if (this._customBlocks[target.element]) {
-            target.element = this._getCustomBlockEditor(target.element, block)
-                .body.contents  // get ScriptsMorph of BlockEditorMorph
-                .children.find(function(child) {
-                    return child instanceof PrototypeHatBlockMorph;
-                });
-        } else {  // basic connection for sprite/stage/etc
-            target.element = this.getBlockFromId(target.element);
-        }
+        target.element = this.getBlockFromId(target.element);
+        this.ensureNotDragging(target.element);
         owner = this.getBlockOwner(target.element);
         scripts = target.element.parentThatIsA(ScriptsMorph);
         if (block.parent) {
@@ -1472,6 +1533,7 @@ ActionManager.prototype.onMoveBlock = function(id, rawTarget) {
         this.disconnectBlock(block, scripts);
 
         target = this.getBlockFromId(target);
+        this.ensureNotDragging(target);
         owner = this.getBlockOwner(target);
         scripts = target.parentThatIsA(ScriptsMorph);
 
@@ -1636,12 +1698,40 @@ ActionManager.prototype.blockInitPosition = function() {
     return new Point(palette.width()/2, palette.height()/4);
 };
 
+ActionManager.prototype.ensureNotDragging = function(block) {
+    var hand = block.parentThatIsA(HandMorph);
+    if (hand) {  // drop the item back on the world
+        var situation = hand.grabOrigin;
+
+        block = hand.children[0];  // get the top block
+        block.cachedFullImage = null;
+        block.cachedFullBounds = null;
+        block.changed();
+        block.removeShadow();
+        hand.children = [];
+        hand.destroyTemporaries();
+        hand.contextMenuEnabled = true;
+        hand.morphToGrab = null;
+        hand.grabPosition = null;
+
+        block.justDropped(hand);
+
+        // Put it back in the grab origin (immediately)
+        block.setPosition(situation.origin.position().add(situation.position));
+        situation.origin.add(block);
+        if (block.justDropped) {block.justDropped(); }
+        if (situation.origin.reactToDropOf) {
+            situation.origin.reactToDropOf(block);
+        }
+    }
+};
+
 ActionManager.prototype._onRemoveBlock = function(id, userDestroy, callback) {
     var myself = this,
         block = this.getBlockFromId(id),
         method = userDestroy && block.userDestroy ? 'userDestroy' : 'destroy',
-        scripts = block.parentThatIsA(ScriptsMorph),
-        parent = block.parent,
+        scripts,
+        parent,
         afterRemove = function() {
             block[method]();
 
@@ -1649,6 +1739,9 @@ ActionManager.prototype._onRemoveBlock = function(id, userDestroy, callback) {
             callback();
         };
 
+    this.ensureNotDragging(block);
+    scripts = block.parentThatIsA(ScriptsMorph);
+    parent = block.parent;
     if (block) {
         // Check the parent and revert to default input
         if (block.prepareToBeGrabbed) {
@@ -1811,6 +1904,7 @@ ActionManager.prototype.disconnectBlock = function(block, scripts) {
 ActionManager.prototype.onAddListInput = function(id, count) {
     var block = this.getBlockFromId(id);
 
+    this.ensureNotDragging(block);
     count = count || 1;
     for (var i = 0; i < count; i++) {
         block.addInput();
@@ -1824,6 +1918,7 @@ ActionManager.prototype.onAddListInput = function(id, count) {
 ActionManager.prototype.onRemoveListInput = function(id, count) {
     var block = this.getBlockFromId(id);
 
+    this.ensureNotDragging(block);
     count = count || 1;
     for (var i = 0; i < count; i++) {
         block.removeInput();
@@ -1837,6 +1932,7 @@ ActionManager.prototype.onRemoveListInput = function(id, count) {
 
 ActionManager.prototype.onSetBlockSpec = function(id, spec) {
     var block = this.getBlockFromId(id);
+    this.ensureNotDragging(block);
     block.userSetSpec(spec);
     this.__updateBlockDefinitions(block);
     this.completeAction();
@@ -1870,6 +1966,7 @@ ActionManager.prototype.onSetColorField = function(fieldId, desc) {
 ActionManager.prototype.onSetCommentText = function(id, text) {
     var block = this.getBlockFromId(id);
 
+    this.ensureNotDragging(block);
     block.contents.text = text;
     block.contents.drawNew();
     block.contents.changed();
@@ -1884,6 +1981,7 @@ ActionManager.prototype.onSetSelector = function(id, sel) {
     var block = this.getBlockFromId(id),
         myself = this;
 
+    this.ensureNotDragging(block);
     block.setSelector(sel);
     block.changed();
     // update input block records
@@ -1897,7 +1995,7 @@ ActionManager.prototype.onSetSelector = function(id, sel) {
 ActionManager.prototype.onAddVariable = function(name, ownerId) {
     // Get the sprite or the stage
     var owner,
-        isGlobal = ownerId === true;
+        isGlobal = ownerId.toString() === 'true';
 
     if (!isGlobal) {
         owner = this._owners[ownerId];
@@ -1917,7 +2015,7 @@ ActionManager.prototype.onAddVariable = function(name, ownerId) {
 };
 
 ActionManager.prototype.onDeleteVariable = function(name, ownerId) {
-    var isGlobal = ownerId === true,
+    var isGlobal = ownerId.toString() === 'true',
         owner = isGlobal ? this._owners[Object.keys(this._owners)[0]] :
             this._owners[ownerId];
 
@@ -1927,11 +2025,15 @@ ActionManager.prototype.onDeleteVariable = function(name, ownerId) {
 
 ActionManager.prototype.onRingify = function(blockId, ringId) {
     var block = this.getBlockFromId(blockId),
-        ownerId = this._blockToOwnerId[block.id];
+        ownerId = this._blockToOwnerId[block.id],
+        scripts,
+        ring;
 
     if (block) {
-        var ring = block.ringify(),
-            scripts = ring.parentThatIsA(ScriptsMorph);
+        this.ensureNotDragging(block);
+
+        ring = block.ringify();
+        scripts = ring.parentThatIsA(ScriptsMorph);
 
         ring.id = ringId;
         this._blocks[ring.id] = ring;
@@ -1956,6 +2058,7 @@ ActionManager.prototype.onRingify = function(blockId, ringId) {
 ActionManager.prototype.onUnringify = function(id) {
     var block = this.getBlockFromId(id);
     if (block) {
+        this.ensureNotDragging(block);
         var ring = block.unringify();
         delete this._blocks[ring.id];
     }
@@ -2119,11 +2222,6 @@ ActionManager.prototype.onSetCustomBlockType = function(id, cat, type) {
 
 ////////////////////////// Sprites //////////////////////////
 ActionManager.prototype.ide = function() {
-    if (!this.__ide) {
-        var ownerId = Object.keys(this._owners)[0];
-        this.__ide = this._owners[ownerId].parentThatIsA(IDE_Morph);
-    }
-
     return this.__ide;
 };
 
@@ -2150,13 +2248,15 @@ ActionManager.prototype._loadCostume = function(savedCostume, callback) {
 ActionManager.prototype.onDuplicateSprite =
 ActionManager.prototype.onAddSprite = function(serialized, creatorId) {
     var ide = this.ide(),
-        sprites;
+        allSprites,
+        sprite;
 
-    sprites = this.serializer.loadSprites(serialized, ide);
+    allSprites = this.serializer.loadSprites(serialized, ide);
+    sprite = allSprites[allSprites.length-1];
     if (creatorId === this.id) {
-        ide.selectSprite(sprites[sprites.length-1]);
+        ide.selectSprite(sprite);
     }
-    this.completeAction();
+    this.completeAction(null, sprite);
 };
 
 ActionManager.prototype.onRemoveSprite = function(spriteId) {
@@ -2176,7 +2276,7 @@ ActionManager.prototype.onRenameSprite = function(spriteId, name) {
     if (ide.currentSprite === sprite) {
         ide.spriteBar.nameField.setContents(name);
     }
-    this.completeAction();
+    this.completeAction(null, name);
 };
 
 ActionManager.prototype.onToggleDraggable = function(spriteId, draggable) {
@@ -2365,51 +2465,49 @@ ActionManager.prototype.onImportBlocks = function(aString, lbl) {
 };
 
 ActionManager.prototype.onOpenProject = function(str) {
-    if (str) {
-        if (str.indexOf('<project') === 0) {
-            this.ide().rawOpenProjectString(str);
-        } else if (str.indexOf('<snapdata') === 0) {
-            this.ide().rawOpenCloudDataString(str);
-        }
-    } else {
-        this.initializeRecords();
-        this.ide().newProject();
-    }
-    this.completeAction();
-};
-
-//////////////////// Loading Projects ////////////////////
-ActionManager.prototype.loadProject = function(ide, lastSeen, serialized) {
     var myself = this,
-        event;
+        project = null,
+        event = this.currentEvent,
+        ide = this.ide();
 
-    // Clear old info
+    SnapUndo.reset();
     this.initializeRecords();
 
-    // Record the event
-    event = {
-        type: 'openProject',
-        time: Date.now(),
-        args: []
-    };
+    if (str) {
+        if (str.indexOf('<project') === 0) {
+            project = this.ide().rawOpenProjectString(str);
+        } else if (str.indexOf('<snapdata') === 0) {
+            project = this.ide().rawOpenCloudDataString(str);
+        }
 
-    if (serialized) {
-        event.args.push(serialized);
+    } else {
+        this.ide().newProject();
     }
-    if (SnapUndo.allEvents.length === 0) {
-        SnapUndo.record(event);
-    }
-
-    // Update the id counter
-    this.lastSeen = lastSeen || 0;
 
     // Load the owners
     ide.sprites.asArray().concat(ide.stage).forEach(function(sprite) {
         return myself.loadOwner(sprite);
     });
 
-    this.__ide = ide;
-    return event;
+    this.lastSeen = event.id;  // don't reset lastSeen
+    this.completeAction();
+
+    if (!this.ide().isReplayMode) {
+        // Load the replay and action manager state from project
+        var len = SnapUndo.allEvents.length;
+
+        // Remove the openProject event from the replay history.
+        // In the future, this information would be good to collect
+        // but it will not be recorded for now since it will exponentially
+        // inflate the project size...
+        if (event === SnapUndo.allEvents[len-1]) {
+            SnapUndo.allEvents.pop();
+        }
+
+        if (project && project.collabStartIndex !== undefined) {
+            this.lastSeen = project.collabStartIndex;
+        }
+    }
 };
 
 ActionManager.prototype._getCurrentTarget = function(block) {
@@ -2609,19 +2707,24 @@ ActionManager.prototype.traverse = function(block, fn) {
 
 ActionManager.prototype.getBlockInputs = function(block) {
     var allInputs = [],
-        inputs;
+        inputs,
+        input;
 
     if (block.inputs) {  // Add nested blocks
         inputs = block.inputs();
         for (var j = inputs.length; j--;) {
-            if (inputs[j] instanceof ReporterBlockMorph) {
-                allInputs.push(inputs[j]);
-            } else if (inputs[j] instanceof MultiArgMorph) {
-                allInputs = allInputs.concat(this.getBlockInputs(inputs[j]));
+            input = inputs[j];
+            if (input instanceof ReporterBlockMorph) {
+                allInputs.push(input);
+            } else if (input instanceof ArgMorph && !(input instanceof TemplateSlotMorph)) {
+                // Get all the children of any ArgMorphs. Skip TemplateSlotMorphs
+                // since they cannot actually be moved and aren't really a block
+                // in their own right
+                allInputs = allInputs.concat(this.getBlockInputs(input));
+            }
 
-            } else if (inputs[j].nestedBlock && inputs[j].nestedBlock()) {
-
-                allInputs.push(inputs[j].nestedBlock());
+            if (input.nestedBlock && input.nestedBlock()) {
+                allInputs.push(input.nestedBlock());
             }
         }
     }
@@ -2792,12 +2895,11 @@ ActionManager.prototype.onMessage = function(msg) {
         location.hash = 'collaborate=' + this.sessionId;
     } else if (this.isLeader) {
         // Verify that the lastSeen value is the same as the current
-        accepted = this.lastSeen === (msg.id - 1);
-        if (accepted) {
+        if (this.isNextAction(msg)) {
             this.acceptEvent(msg);
         }
     } else {
-        this._applyEvent(msg);
+        this.onReceiveAction(msg);
     }
 };
 

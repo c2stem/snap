@@ -1168,6 +1168,8 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
                     'right arrow': ['right arrow'],
                     'left arrow': ['left arrow'],
                     space : ['space'],
+                    '+' : ['+'],
+                    '-' : ['-'],
                     a : ['a'],
                     b : ['b'],
                     c : ['c'],
@@ -6216,11 +6218,12 @@ ScriptsMorph.prototype.addUndoControls = function () {
 
 ScriptsMorph.prototype.updateUndoControls = function () {
     var sf = this.parentThatIsA(ScrollFrameMorph),
-        owner = this.undoOwnerId(),
-        changed = false;
+        changed = false,
+        owner;
 
     if (!sf) {return; }
 
+    owner = this.undoOwnerId();
     if (!sf.toolBar) {
         sf.toolBar = this.addUndoControls();
         sf.add(sf.toolBar);
@@ -6374,13 +6377,13 @@ ScriptsMorph.prototype.setBlockPosition = function (block, hand) {
 
     if (hand) {
         if (hand.grabOrigin.origin === this) {  // on the same script
-            if (SnapActions.isCollaborating()) {
+            if (SnapActions.mightRejectActions()) {
                 originPosition = hand.grabOrigin.position.add(hand.grabOrigin.origin.position());
                 block.setPosition(originPosition);
             }
         } else {  // move between scripts!
 
-            if (SnapActions.isCollaborating()) {
+            if (SnapActions.mightRejectActions()) {
                 // Revert the block back to the origin in case this fails
                 originPosition = hand.grabOrigin.position.add(hand.grabOrigin.origin.position());
                 block.setPosition(originPosition);
@@ -9532,6 +9535,10 @@ SymbolMorph.prototype.symbolCanvasColored = function (aColor) {
     switch (this.name) {
     case 'square':
         return this.drawSymbolStop(canvas, aColor);
+    case 'plus':
+        return this.drawSymbolPlus(canvas, aColor);
+    case 'mail':
+        return this.drawSymbolMail(canvas, aColor);
     case 'pointRight':
         return this.drawSymbolPointRight(canvas, aColor);
     case 'doubleArrowForward':
@@ -9594,6 +9601,8 @@ SymbolMorph.prototype.symbolCanvasColored = function (aColor) {
         return this.drawSymbolCircle(canvas, aColor);
     case 'circleSolid':
         return this.drawSymbolCircleSolid(canvas, aColor);
+    case 'encircledCircle':
+        return this.drawSymbolEncircledCircle(canvas, aColor);
     case 'line':
         return this.drawSymbolLine(canvas, aColor);
     case 'crosshairs':
@@ -9663,6 +9672,7 @@ SymbolMorph.prototype.symbolWidth = function () {
         return size * 1.2;
     case 'turtle':
     case 'turtleOutline':
+    case 'mail':
     case 'stage':
         return size * 1.3;
     case 'cloud':
@@ -9685,6 +9695,45 @@ SymbolMorph.prototype.drawSymbolStop = function (canvas, color) {
 
     ctx.fillStyle = color.toString();
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    return canvas;
+};
+
+SymbolMorph.prototype.drawSymbolPlus = function (canvas, color) {
+    var ctx = canvas.getContext('2d'),
+        w = canvas.width,
+        l = Math.max(w / 12, 1),
+        h = canvas.height;
+
+    ctx.lineWidth = l;
+    ctx.strokeStyle = color.toString();
+    ctx.fillStyle = color.toString();
+
+    ctx.moveTo(0, h/2);
+    ctx.lineTo(w, h/2);
+    ctx.moveTo(w/2, 0);
+    ctx.lineTo(w/2, h);
+    ctx.stroke();
+
+    return canvas;
+};
+
+SymbolMorph.prototype.drawSymbolMail = function(canvas, color) {
+    var ctx = canvas.getContext('2d'),
+        w = canvas.width,
+        l = Math.max(w / 12, 1),
+        h = canvas.height;
+
+    ctx.lineWidth = l;
+    ctx.fillStyle = color.toString();
+    ctx.strokeStyle = color.darker(50).toString();
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.rect(0, 0, w, h);
+    ctx.moveTo(0, 0);
+    ctx.lineTo(w/2, 2*h/3);
+    ctx.lineTo(w, 0);
+    ctx.stroke();
+
     return canvas;
 };
 
@@ -10429,6 +10478,26 @@ SymbolMorph.prototype.drawSymbolCircleSolid = function (canvas, color) {
     ctx.fillStyle = color.toString();
     ctx.arc(w / 2, w / 2, w / 2, radians(0), radians(360), false);
     ctx.fill();
+    return canvas;
+};
+
+SymbolMorph.prototype.drawSymbolEncircledCircle = function(canvas, color) {
+    var ctx = canvas.getContext('2d'),
+        w = canvas.width,
+        l = Math.max(w / 30, 0.5);
+
+    ctx.strokeStyle = color.toString();
+    ctx.fillStyle = color.toString();
+
+    ctx.beginPath();
+    ctx.arc(w / 2, w / 2, w / 4, radians(0), radians(360), false);
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.lineWidth = l * 2;
+    ctx.arc(w / 2, w / 2, w / 2 - l, radians(0), radians(360), false);
+    ctx.stroke();
+
     return canvas;
 };
 

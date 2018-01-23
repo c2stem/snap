@@ -1615,6 +1615,7 @@ SnapSerializer.prototype.loadValue = function (model) {
                 v = new SVG_Costume(null, name, center);
                 image.onload = function () {
                     v.contents = image;
+                    v.imageSrc = null;
                     v.version = +new Date();
                     if (typeof v.loaded === 'function') {
                         v.loaded();
@@ -1632,6 +1633,7 @@ SnapSerializer.prototype.loadValue = function (model) {
                         context = canvas.getContext('2d');
                     context.drawImage(image, 0, 0);
                     v.contents = canvas;
+                    v.imageSrc = null;
                     v.version = +new Date();
                     if (typeof v.loaded === 'function') {
                         v.loaded();
@@ -1641,6 +1643,7 @@ SnapSerializer.prototype.loadValue = function (model) {
                 };
             }
             image.src = model.attributes.image;
+            v.imageSrc = model.attributes.image;
         }
         v.id = model.attributes.collabId;
         record();
@@ -1925,14 +1928,21 @@ SpriteMorph.prototype.toXML = function (serializer) {
 Costume.prototype[XML_Serializer.prototype.mediaDetectionProperty] = true;
 
 Costume.prototype.toXML = function (serializer) {
+    // if serializing before the image is loaded, use the raw source. Otherwise,
+    // we will serialize as normal
+    var imageData = this.imageSrc;
+    if (!imageData) {
+        imageData = this instanceof SVG_Costume ? this.contents.src
+            : normalizeCanvas(this.contents).toDataURL('image/png');
+    }
+
     return serializer.format(
         '<costume name="@" collabId="@" center-x="@" center-y="@" image="@" ~/>',
         this.name,
         this.id,
         this.rotationCenter.x,
         this.rotationCenter.y,
-        this instanceof SVG_Costume ? this.contents.src
-                : normalizeCanvas(this.contents).toDataURL('image/png')
+        imageData
     );
 };
 

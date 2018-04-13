@@ -3133,11 +3133,15 @@ SpriteMorph.prototype.userMenu = function () {
     if (this.anchor) {
         menu.addItem(
             localize('detach from') + ' ' + this.anchor.name,
-            'detachFromAnchor'
+            function() {
+                SnapActions.detachParts([this]);
+            }
         );
     }
     if (this.parts.length) {
-        menu.addItem('detach all parts', 'detachAllParts');
+        menu.addItem('detach all parts', function() {
+            SnapActions.detachParts(this.parts);
+        });
     }
     menu.addItem("export...", 'exportSprite');
     return menu;
@@ -5377,7 +5381,7 @@ SpriteMorph.prototype.wantsDropOf = function (morph) {
 
 SpriteMorph.prototype.reactToDropOf = function (morph, hand) {
     this.removeHighlight();
-    this.attachPart(morph.object);
+    SnapActions.attachParts(this, [morph.object]);
     this.world().add(morph);
     morph.slideBackTo(hand.grabOrigin);
 };
@@ -5816,7 +5820,7 @@ StageMorph.prototype.wantsDropOf = function (aMorph) {
 StageMorph.prototype.reactToDropOf = function (morph, hand) {
     if (morph instanceof SpriteIconMorph) { // detach sprite from anchor
         if (morph.object.anchor) {
-            morph.object.anchor.detachPart(morph.object);
+            SnapActions.detachParts([morph.object]);
         }
         this.world().add(morph);
         morph.slideBackTo(hand.grabOrigin);
@@ -9133,10 +9137,6 @@ ReplayControls.prototype.play = function() {
     var myself = this;
 
     if (this.actionIndex < this.actions.length-1) {
-        var currentAction = this.actions[this.actionIndex],
-            nextAction = this.actions[this.actionIndex+1],
-            delay = currentAction ? nextAction.time - currentAction.time : 0;
-
         this.isPlaying = true;
         this.lastPlayUpdate = Date.now();
 
@@ -9460,7 +9460,6 @@ ReplayControls.prototype.update = function() {
         sliderTime = this.getTimeFromPosition(this.slider.value),
         diff,
         dir,
-        index,
         action;
 
     if (!this.enabled) {
@@ -9475,8 +9474,7 @@ ReplayControls.prototype.update = function() {
         // should use that value -> not one prior
 
         if (dir === 1) {
-            index = this.actionIndex + dir;
-            originalEvent = this.actions[index];
+            originalEvent = this.actions[this.actionIndex + 1];
             action = copy(originalEvent);
             if (!originalEvent || originalEvent.time >= sliderTime) {
                 return setTimeout(this.update.bind(this), 100);
@@ -9503,9 +9501,9 @@ ReplayControls.prototype.update = function() {
         // Apply the given event
         this.isApplyingAction = true;
         action.isReplay = true;
+        this.actionIndex += dir;
+        this.actionTime = originalEvent.time;
         this.applyEvent(action, function() {
-            myself.actionIndex += dir;
-            myself.actionTime = originalEvent.time;
             myself.isApplyingAction = false;
 
             if (myself.isShowingCaptions) {
@@ -9520,6 +9518,25 @@ ReplayControls.prototype.update = function() {
 };
 
 ReplayControls.prototype.applyEvent = function(event, next) {
+    var ide = this.parentThatIsA(IDE_Morph),
+        chunks,
+        ownerId,
+        tabName,
+        owner;
+
+    // Show the applied event
+    if (event.owner) {
+        chunks = event.owner.split('/');
+        ownerId = chunks[0];
+        tabName = chunks[1];
+        owner = SnapActions.getOwnerFromId(ownerId);
+        if (owner) {
+            // Select the given sprite/stage and the tab
+            ide.selectSprite(owner);
+            ide.spriteBar.tabBar.tabTo(tabName);
+        }
+    }
+
     return SnapActions.applyEvent(event)
         .accept(next)
         .reject(function() {

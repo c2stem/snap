@@ -72,6 +72,8 @@ ActionManager.prototype.initializeEventMethods = function() {
         'duplicateSprite',
         'importSprites',
         'setRotationStyle',
+        'attachParts',
+        'detachParts',
 
         // Sounds
         'addSound',
@@ -609,7 +611,7 @@ ActionManager.prototype._removeBlock = function(block, userDestroy) {
             block.id,
             userDestroy
         ];
-        
+
     if (target && !(ActionManager.isWeakTarget(target) && position)) {
         args.push(this._targetOf[block.id], serialized);
     } else if (position) {
@@ -1074,7 +1076,7 @@ ActionManager.prototype._updateCostume = function(original, newCostume) {
     ];
 };
 
-ActionManager.prototype._addSprite = function(sprite, costume) {
+ActionManager.prototype._addSprite = function(sprite) {
     var serialized,
         stage = this.ide().stage;
 
@@ -1084,6 +1086,27 @@ ActionManager.prototype._addSprite = function(sprite, costume) {
     serialized = '<sprites>' + this.serialize(sprite) + '</sprites>';
 
     return [serialized, this.id, sprite.id];
+};
+
+ActionManager.prototype._attachParts = function(sprite, parts) {
+    var partIds = parts.map(function(part) {return part.id;});
+
+    return [
+        sprite.id,
+        partIds
+    ];
+};
+
+ActionManager.prototype._detachParts = function(parts) {
+    var partIds = parts.map(function(part) {return part.id;}),
+        currentAnchorIds = parts.map(function(part) {
+            return part.anchor ? part.anchor.id : null;
+        });
+
+    return [
+        partIds,
+        currentAnchorIds
+    ];
 };
 
 ActionManager.prototype._openProject = function(str) {
@@ -1166,7 +1189,7 @@ ActionManager.prototype._onSetBlockPosition = function(id, x, y, callback) {
         connectedIds,
         target,
         block = this.getBlockFromId(id),
-        scripts = block.parentThatIsA(ScriptsMorph),
+        scripts,
         afterMove = function() {
             myself.disconnectBlock(block, scripts);
 
@@ -1207,6 +1230,7 @@ ActionManager.prototype._onSetBlockPosition = function(id, x, y, callback) {
         scripts = editor.body.contents;
     }
 
+    scripts = block.parentThatIsA(ScriptsMorph);
     position = this.getAdjustedPosition(position, scripts);
 
     if (this.canAnimate(this.getBlockOwner(block))) {
@@ -1345,7 +1369,7 @@ ActionManager.prototype._onAddBlock = function(block, ownerId, x, y, callback) {
 
         if (this.canAnimate(owner)) {
             var palette = ide.palette;
-            
+
             firstBlock.setPosition(palette.position()
                 .add(new Point(palette.left() - firstBlock.width(), palette.height()/4)));
 
@@ -1944,6 +1968,7 @@ ActionManager.prototype.onSetField = function(fieldId, value) {
     console.assert(block instanceof InputSlotMorph,
         'Unexpected block type: ' + block.constructor);
 
+    this.ensureNotDragging(block);
     this.fieldValues[fieldId] = value;
     block.setContents(value);
 
@@ -1955,6 +1980,7 @@ ActionManager.prototype.onSetColorField = function(fieldId, desc) {
     var block = this.getBlockFromId(fieldId),
         color;
 
+    this.ensureNotDragging(block);
     desc = desc || {};
     color = new Color(desc.r, desc.g, desc.b, desc.a);
     block.setColor(color);
@@ -2259,6 +2285,31 @@ ActionManager.prototype.onAddSprite = function(serialized, creatorId) {
     this.completeAction(null, sprite);
 };
 
+ActionManager.prototype.onAttachParts = function(spriteId, partIds) {
+    var myself = this,
+        sprite = this.getOwnerFromId(spriteId),
+        part;
+
+    partIds.forEach(function(id) {
+        part = myself.getOwnerFromId(id);
+        sprite.attachPart(part);
+    });
+
+    this.completeAction();
+};
+
+ActionManager.prototype.onDetachParts = function(partIds) {
+    var myself = this,
+        part;
+
+    partIds.forEach(function(id) {
+        part = myself.getOwnerFromId(id);
+        part.detachFromAnchor();
+    });
+
+    this.completeAction();
+};
+
 ActionManager.prototype.onRemoveSprite = function(spriteId) {
     var sprite = this._owners[spriteId];
     this.ide().removeSprite(sprite);
@@ -2423,7 +2474,7 @@ ActionManager.prototype.onRemoveSound = function(id) {
     var owner = this._soundToOwner[id],
         ide = this.ide(),
         idx = owner.sounds.asArray().indexOf(this._sounds[id]) + 1;
-        
+
     owner.sounds.remove(idx);
 
     if (ide.spriteEditor instanceof JukeboxMorph) {
@@ -2746,7 +2797,7 @@ ActionManager.prototype.__updateActiveEditor = function(itemId) {
         return;
     }
 
-    // Get ownerId 
+    // Get ownerId
     ownerId = this._blockToOwnerId[itemId];
     if (ownerId) {
         editor = this._getCustomBlockEditor(ownerId);

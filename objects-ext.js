@@ -17,6 +17,7 @@ SpriteMorph.prototype.categories =
     'pen',
     'variables',
     'network',
+    'physics',
     'custom',
     'lists',
     'other'

@@ -1709,7 +1709,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         inheritedVars = this.inheritedVariableNames();
 
     function block(selector) {
-        if (StageMorph.prototype.hiddenPrimitives[selector] 
+        if (StageMorph.prototype.hiddenPrimitives[selector]
             || myself.locallyHiddenPrimitives[selector]) {
             return null;
         }

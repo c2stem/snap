@@ -422,7 +422,7 @@ SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
         model.stage.attributes.lines === 'flat';
     project.stage.isThreadSafe =
         model.stage.attributes.threadsafe === 'true';
-    project.stage.isSaveToCloud = 
+    project.stage.isSaveToCloud =
         model.stage.attributes.savetocloud === 'true';
     StageMorph.prototype.enableCodeMapping =
         model.stage.attributes.codify === 'true';
@@ -1523,7 +1523,7 @@ StageMorph.prototype.toXML = function (serializer) {
             'codify="@" ' +
             'inheritance="@" ' +
             'sublistIDs="@" ' +
-            'scheduled="@" ' + 
+            'scheduled="@" ' +
             'hiddenCategories="@" ' +
             'hiddenSpriteBar="@" ' +
             'hiddenSpriteTabs="@" ' +

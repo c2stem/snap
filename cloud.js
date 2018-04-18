@@ -503,7 +503,7 @@ Cloud.prototype.callService = function (
         myself = this,
         stickyUrl,
         postDict;
-    
+
     if (!this.session) {
         errorCall.call(null, 'You are not connected', 'Cloud');
         return;

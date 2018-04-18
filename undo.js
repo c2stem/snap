@@ -13,6 +13,20 @@ UndoManager.prototype.reset = function() {
 UndoManager.UNDO = 1;
 UndoManager.REDO = 2;
 
+UndoManager.prototype.contains = function(event) {
+    for (var i = this.allEvents.length; i--;) {
+        // Check id, user, type, and time fields
+        if (event.id === this.allEvents[i].id &&
+            event.user === this.allEvents[i].user &&
+            event.type === this.allEvents[i].type &&
+            event.time === this.allEvents[i].time) {
+
+            return true;
+        }
+    }
+    return false;
+};
+
 UndoManager.prototype.record = function(event) {
     var ownerId = event.owner,
         undoCount,
@@ -110,11 +124,13 @@ UndoManager.prototype.getInverseEvent = function(event) {
     var type = event.type,
         result;
     
+    event = JSON.parse(JSON.stringify(event));  // deep copy
+
+    if (event.isUserAction) return event;
     if (!UndoManager.Invert[type]) {
         throw Error('Cannot undo "' + type + '" event!');
     }
 
-    event = JSON.parse(JSON.stringify(event));  // deep copy
     result = UndoManager.Invert[type].call(this, event.args);
 
     if (result instanceof Array) {  // shorthand inverter result
@@ -126,7 +142,7 @@ UndoManager.prototype.getInverseEvent = function(event) {
         result = {
             type: result,
             args: event.args
-        }
+        };
     }
 
     return result;

@@ -3949,6 +3949,7 @@ SpriteMorph.prototype.isCorrectingOutsideDrag = function () {
 SpriteMorph.prototype.justDropped = function () {
     var stage = this.parentThatIsA(StageMorph);
     if (stage) {
+        SnapActions.setSpritePosition(this);
         stage.enableCustomHatBlocks = true;
     }
     this.restoreLayers();
@@ -8904,7 +8905,11 @@ ReplayControls.prototype.init = function() {
     // Buttons on the right
     this.settingsButton = new SymbolMorph('gears', 30, this.buttonColor);
     this.settingsButton.mouseClickLeft = function() {
-        myself.settingsMenu();
+        var world = this.world(),
+            menu = myself.settingsMenu(),
+            position = world.hand.position().subtract(menu.extent());
+
+        menu.popup(world, position);
     };
 
     this.captionsButton = new SymbolMorph('speechBubble', 30, this.buttonColor);
@@ -9038,13 +9043,8 @@ ReplayControls.prototype.settingsMenu = function() {
         })
     );
 
-    // pop up with the mouse at the lower right corner
-    var world = this.world(),
-        position;
-
     menu.drawNew();
-    position = world.hand.position().subtract(menu.extent());
-    menu.popup(world, position);
+    return menu;
 };
 
 ReplayControls.prototype.toggleCaptions = function() {
@@ -9131,6 +9131,10 @@ ReplayControls.prototype.displayCaption = function(action, originalEvent) {
     }, 4000);
 
     return menu;
+};
+
+ReplayControls.prototype.getCaptionFor = function(action) {
+    return action.type;
 };
 
 ReplayControls.prototype.play = function() {
@@ -9518,6 +9522,7 @@ ReplayControls.prototype.update = function() {
 };
 
 ReplayControls.prototype.applyEvent = function(event, next) {
+    if (event.isUserAction) return next();
     var ide = this.parentThatIsA(IDE_Morph),
         chunks,
         ownerId,

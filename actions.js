@@ -60,6 +60,36 @@ ActionManager.prototype.addActions = function() {
     });
 };
 
+ActionManager.prototype.addUserActions = function() {
+    var actions = Array.prototype.slice.call(arguments),
+        myself = this;
+
+    actions.forEach(function(method) {
+        myself[method] = function() {
+            var args = Array.prototype.slice.apply(arguments),
+                fn = '_' + method,
+                msg;
+
+            if (this[fn]) {
+                args = this[fn].apply(this, args) || args;
+            }
+
+            msg = {
+                isUserAction: true,
+                type: method,
+                args: args
+            };
+
+            // Create the event object, ID it, and share it!
+            return this.applyEvent(msg);
+        };
+    });
+};
+
+ActionManager.prototype.isUserAction = function(event) {
+    return event.isUserAction;
+};
+
 ActionManager.prototype.initializeEventMethods = function() {
     this.addActions(
         'setStageSize',
@@ -123,7 +153,15 @@ ActionManager.prototype.initializeEventMethods = function() {
         'setColorField',
         'setField',
 
-        'openProject'  // for replaying
+        'openProject'
+    );
+
+    this.addUserActions(
+        'pressStart',
+        'stopAllScripts',
+        'startScript',
+        'setSpritePosition',
+        'togglePause'
     );
 };
 
@@ -347,6 +385,7 @@ Action.prototype.reject = function(fn) {
 
 ActionManager.prototype.applyEvent = function(event) {
     event.user = this.id;
+    event.username = SnapCloud.username;
     event.id = this.lastSeen + 1;
     event.time = event.time || Date.now();
 
@@ -356,7 +395,11 @@ ActionManager.prototype.applyEvent = function(event) {
     }
 
     // if in replay mode, check that the event is a replay event
-    this.submitIfAllowed(event);
+    if (this.isUserAction(event)) {
+        this.submitAction(event);
+    } else {
+        this.submitIfAllowed(event);
+    }
 
     return new Action(this, event);
 };
@@ -401,6 +444,9 @@ ActionManager.prototype._isBatchEvent = function(msg) {
 
 ActionManager.prototype.onReceiveAction = function(msg) {
     if (this.isPreviousAction(msg)) return;
+    if (this.isUserAction(msg) && !SnapUndo.contains(msg)) {
+        return SnapUndo.record(msg);
+    }
 
     if (this.isNextAction(msg) && !this.isApplyingAction) {
         this._applyEvent(msg);
@@ -776,6 +822,22 @@ ActionManager.prototype._updateBlockLabel = function(definition, label, fragment
         label.fragment.defaultValue,
         label.fragment.options,
         label.fragment.isReadOnly
+    ];
+};
+
+ActionManager.prototype._startScript = function(topBlock, isActive) {
+    var isStart = !isActive;
+    return [
+        topBlock.id,
+        isStart
+    ];
+};
+
+ActionManager.prototype._setSpritePosition = function(sprite) {
+    return [
+        sprite.id,
+        sprite.xPosition(),
+        sprite.yPosition()
     ];
 };
 
@@ -2541,7 +2603,7 @@ ActionManager.prototype.onOpenProject = function(str) {
     });
 
     this.lastSeen = event.id;  // don't reset lastSeen
-    this.completeAction();
+    this.completeAction(null, project);
 
     if (!this.ide().isReplayMode) {
         // Load the replay and action manager state from project
@@ -2919,7 +2981,7 @@ ActionManager.prototype.afterActionApplied = function(/*msg*/) {
 };
 
 ActionManager.prototype.onMessage = function(msg) {
-    var accepted = true;
+    var socket = this.ide().sockets;
 
     if (msg.type === 'rank') {
         this.rank = msg.value;
@@ -2944,7 +3006,7 @@ ActionManager.prototype.onMessage = function(msg) {
     } else if (msg.type === 'session-id') {
         this.sessionId = msg.value;
         location.hash = 'collaborate=' + this.sessionId;
-    } else if (this.isLeader) {
+    } else if (this.isLeader && !socket.inActionRequest) {
         // Verify that the lastSeen value is the same as the current
         if (this.isNextAction(msg)) {
             this.acceptEvent(msg);

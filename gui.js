@@ -519,6 +519,74 @@ IDE_Morph.prototype.openIn = function (world) {
             // Get the session id and join it!
             SnapActions.enableCollaboration();
             SnapActions.joinSession(sessionId, this.cloudError());
+        } else if (location.hash.substr(0, 9) === '#example:' || dict.action === 'example') {
+            var example = dict ? dict.ProjectName : location.hash.substr(9),
+                msg;
+
+            this.shield = new Morph();
+            this.shield.alpha = 0;
+            this.shield.setExtent(this.parent.extent());
+            this.parent.add(this.shield);
+
+            var projectData = myself.getURL(myself.resourceURL('Examples', example));
+
+            myself.nextSteps([
+                function () {
+                    msg = myself.showMessage('Opening ' + example + ' example...');
+                },
+                function () {nop(); }, // yield (bug in Chrome)
+                function () {
+                    var action = myself.droppedText(projectData);
+                    if (action) {
+                        action.accept(function () {
+                            myself.hasChangedMedia = true;
+                            myself.shield.destroy();
+                            myself.shield = null;
+                            msg.destroy();
+                            applyFlags(dict);
+                        });
+                    }
+                }
+            ]);
+        } else if (location.hash.substr(0, 9) === '#private:' || dict.action === 'private') {
+            var name = dict ? dict.ProjectName : location.hash.substr(9),
+                isLoggedIn = SnapCloud.username !== null;
+
+            if (!isLoggedIn) {
+                myself.showMessage('You are not logged in. Cannot open ' + name);
+                return;
+            }
+
+            myself.nextSteps([
+                function () {
+                    msg = myself.showMessage('Opening ' + name + ' example...');
+                },
+                function () {nop(); }, // yield (bug in Chrome)
+                function () {
+                    SnapCloud.reconnect(
+                        function () {
+                            SnapCloud.callService(
+                                'getProject',
+                                function (response) {
+                                    msg.destroy();
+                                    var action = myself.rawLoadCloudProject(response[0]);
+                                    if (action) {
+                                        action.accept(function() {
+                                            applyFlags(dict);
+                                        });
+                                    } else {
+                                        applyFlags(dict);
+                                    }
+                                },
+                                myself.cloudError(),
+                                [SnapCloud.username, dict.ProjectName, SnapCloud.socketId()]
+                            );
+                        },
+                        myself.cloudError()
+                    );
+                }
+            ]);
+
         } else {
             SnapActions.openProject();
         }
@@ -2153,6 +2221,7 @@ IDE_Morph.prototype.refreshPalette = function (shouldIgnorePosition) {
 };
 
 IDE_Morph.prototype.pressStart = function () {
+    SnapActions.pressStart(this.world().currentKey === 16);
     if (this.world().currentKey === 16) { // shiftClicked
         this.toggleFastTracking();
     } else {
@@ -2226,6 +2295,7 @@ IDE_Morph.prototype.runScripts = function () {
 };
 
 IDE_Morph.prototype.togglePauseResume = function () {
+    SnapActions.togglePause(this.stage.threads.isPaused());
     if (this.stage.threads.isPaused()) {
         this.stage.threads.resumeAll(this.stage);
     } else {
@@ -2240,6 +2310,7 @@ IDE_Morph.prototype.isPaused = function () {
 };
 
 IDE_Morph.prototype.stopAllScripts = function () {
+    SnapActions.stopAllScripts();
     if (this.stage.enableCustomHatBlocks) {
         this.stage.threads.pauseCustomHatBlocks =
             !this.stage.threads.pauseCustomHatBlocks;
@@ -4066,7 +4137,8 @@ IDE_Morph.prototype.exportGlobalBlocks = function () {
     if (this.stage.globalBlocks.length > 0) {
         new BlockExportDialogMorph(
             this.serializer,
-            this.stage.globalBlocks
+            this.stage.globalBlocks,
+            this.stage
         ).popUp(this.world());
     } else {
         this.inform(
@@ -6049,7 +6121,7 @@ ProjectDialogMorph.prototype.buildContents = function () {
     }
 
     this.addSourceButton('cloud', localize('Cloud'), 'cloud');
-    if (this.task === 'open' && SnapCloud.supportsService('getSharedProjectList')) {
+    if (this.task === 'open') {
         this.addSourceButton('cloud-shared', localize('Shared with me'), 'cloud');
         baseSize.y += 50;
     }
@@ -6063,7 +6135,7 @@ ProjectDialogMorph.prototype.buildContents = function () {
     this.body.add(this.srcBar);
 
     if (this.task === 'save') {
-        this.nameField = new InputFieldMorph(this.ide.projectName);
+        this.nameField = new InputFieldMorph(this.ide.room.name);
         this.body.add(this.nameField);
     }
 
@@ -6093,12 +6165,21 @@ ProjectDialogMorph.prototype.buildContents = function () {
     };
     this.preview.drawCachedTexture = function () {
         var context = this.image.getContext('2d');
-        context.drawImage(this.cachedTexture, this.edge, this.edge);
+        var scale = Math.min(
+                (this.width() / this.cachedTexture.width),
+                (this.height() / this.cachedTexture.height)
+            ),
+            width = scale * this.cachedTexture.width,
+            height = scale * this.cachedTexture.height;
+
+        context.drawImage(this.cachedTexture, this.edge, this.edge,
+            width, height);
+
         this.changed();
     };
     this.preview.drawRectBorder = InputFieldMorph.prototype.drawRectBorder;
     this.preview.setExtent(
-        this.ide.serializer.thumbnailSize.add(this.preview.edge * 2)
+        this.ide.serializer.thumbnailSize.divideBy(4).add(this.preview.edge * 2)
     );
 
     this.body.add(this.preview);
@@ -6412,6 +6493,8 @@ ProjectDialogMorph.prototype.setSource = function (source) {
 
                 if (src) {
                     xml = myself.ide.serializer.parse(src);
+                    // Select a role to display
+                    xml = xml.children[0].children[0];
 
                     myself.notesText.text = xml.childNamed('notes').contents
                         || '';
@@ -6437,6 +6520,7 @@ ProjectDialogMorph.prototype.setSource = function (source) {
             );
 
             xml = myself.ide.serializer.parse(src);
+            xml = xml.children[0].children[0];  // get project info of first role
             myself.notesText.text = xml.childNamed('notes').contents
                 || '';
             myself.notesText.drawNew();
@@ -6724,54 +6808,62 @@ ProjectDialogMorph.prototype.saveProject = function () {
         myself = this;
 
     this.ide.projectNotes = notes || this.ide.projectNotes;
-    if (name) {
-        if (this.source === 'cloud') {
-            if (detect(
-                    this.projectList,
-                    function (item) {return item.ProjectName === name; }
-                )) {
-                this.ide.confirm(
-                    localize(
-                        'Are you sure you want to replace'
-                    ) + '\n"' + name + '"?',
-                    'Replace Project',
-                    function () {
-                        myself.ide.setProjectName(name);
-                        myself.saveCloudProject();
-                    }
-                );
-            } else {
-                this.ide.setProjectName(name);
-                myself.saveCloudProject();
-            }
-        } else { // 'local'
-            if (detect(
-                    this.projectList,
-                    function (item) {return item.name === name; }
-                )) {
-                this.ide.confirm(
-                    localize(
-                        'Are you sure you want to replace'
-                    ) + '\n"' + name + '"?',
-                    'Replace Project',
-                    function () {
-                        myself.ide.setProjectName(name);
-                        myself.ide.source = 'local';
-                        myself.ide.saveProject(name);
-                        myself.destroy();
-                    }
-                );
-            } else {
-                this.ide.setProjectName(name);
-                myself.ide.source = 'local';
-                this.ide.saveProject(name);
-                this.destroy();
-            }
+    if (/[\.@]+/.test(name)) {
+        this.ide.inform(
+            'Invalid Project Name',
+            'Could not save project because\n' +
+            'the provided name contains illegal characters.',
+            this.world()
+        );
+        return;
+    }
+
+    if (this.source === 'cloud') {
+        if (detect(
+                this.projectList,
+                function (item) {return item.ProjectName === name; }
+            )) {
+            this.ide.confirm(
+                localize(
+                    'Are you sure you want to replace'
+                ) + '\n"' + name + '"?',
+                'Replace Project',
+                function () {
+                    myself.ide.setProjectName(name);
+                    myself.saveCloudProject(name);
+                }
+            );
+        } else {
+            this.ide.setProjectName(name);
+            myself.saveCloudProject(name);
+        }
+    } else { // 'local'
+        if (detect(
+                this.projectList,
+                function (item) {return item.name === name; }
+            )) {
+            this.ide.confirm(
+                localize(
+                    'Are you sure you want to replace'
+                ) + '\n"' + name + '"?',
+                'Replace Project',
+                function () {
+                    myself.ide.room.name = name;
+                    myself.ide.source = 'local';
+                    myself.ide.saveProject(name);
+                    myself.destroy();
+                }
+            );
+        } else {
+            this.ide.room.name = name;
+            myself.ide.source = 'local';
+            this.ide.saveProject(name);
+            this.destroy();
         }
     }
 };
 
-ProjectDialogMorph.prototype.saveCloudProject = function () {
+ProjectDialogMorph.prototype.saveCloudProject = function (name) {
     var myself = this;
     this.ide.showMessage('Saving project\nto the cloud...');
     SnapCloud.saveProject(
@@ -6780,7 +6872,9 @@ ProjectDialogMorph.prototype.saveCloudProject = function () {
             myself.ide.source = 'cloud';
             myself.ide.showMessage('Saved to the cloud.', 2);
         },
-        this.ide.cloudError()
+        this.ide.cloudError(),
+        true,
+        name
     );
     this.destroy();
 };

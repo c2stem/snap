@@ -170,12 +170,14 @@ XML_Serializer.prototype.undoEventsXML = function (events, isReplay) {
             );
         } else {
             xml = this.format(
-                '<event id="@" type="@" replayType="@" time="@" user="@">%</event>',
+                '<event id="@" type="@" replayType="@" time="@" user="@" username="@" isUserAction="@">%</event>',
                 event.id,
                 event.type,
                 event.replayType || 0,
                 event.time,
                 event.user,
+                event.username || '',
+                event.isUserAction || false,
                 args
             );
         }
@@ -394,7 +396,7 @@ SnapSerializer.uber = XML_Serializer.prototype;
 
 SnapSerializer.prototype.app = 'Snap! 4.0, http://snap.berkeley.edu';
 
-SnapSerializer.prototype.thumbnailSize = new Point(160, 120);
+SnapSerializer.prototype.thumbnailSize = new Point(640, 480);
 SnapSerializer.prototype.isSavingHistory = true;
 
 SnapSerializer.prototype.watcherLabels = {
@@ -602,6 +604,13 @@ SnapSerializer.prototype.rawLoadProjectModel = function (xmlNode) {
         });
     }
 
+    // Add message types
+    model.messageTypes = model.stage.childNamed('messageTypes');
+    if (model.messageTypes) {
+        var messageTypes = model.messageTypes.children;
+        messageTypes.forEach(this.loadMessageType.bind(this, project.stage));
+    }
+
     model.globalBlocks = model.project.childNamed('blocks');
     if (model.globalBlocks) {
         this.loadCustomBlocks(project.stage, model.globalBlocks, true);
@@ -793,6 +802,8 @@ SnapSerializer.prototype.parseEvent = function (owner, xml) {
         replayType: +xml.attributes.replayType,
         time: +xml.attributes.time,
         user: xml.attributes.user,
+        username: xml.attributes.username || undefined,
+        isUserAction: xml.attributes.isUserAction === 'true',
         args: args
     };
 };
@@ -1279,7 +1290,7 @@ SnapSerializer.prototype.loadBlock = function (model, isReporter) {
         receiver = isGlobal ? this.project.stage
             : this.project.sprites[model.attributes.scope];
         rm = model.childNamed('receiver');
-        if (rm && rm.children[0]) {
+        if (rm && rm.children[0] && rm.children[0].tag !== 'project') {
             receiver = this.loadValue(
                 model.childNamed('receiver').children[0]
             );
@@ -1330,6 +1341,41 @@ SnapSerializer.prototype.loadBlock = function (model, isReporter) {
     block.isDraggable = true;
     block.id = model.attributes.collabId;
     inputs = block.inputs();
+
+    // Try to batch children for the inputs if appropriate. This is
+    // used with StructInputSlotMorphs
+    if (inputs.length < model.children.length) {
+        var struct = detect(inputs, function(input) {
+                return input instanceof StructInputSlotMorph;
+            }),
+            structIndex = inputs.indexOf(struct);
+
+        // Find the StructInputSlotMorph and batch the given value and the extras
+        // together
+        if (structIndex !== -1) {
+            // Set the contents for the entire batch
+            var self = this,
+                batch,
+                batchLength = model.children.length - inputs.length,
+                structVals;
+
+            inputs.splice(structIndex, 1);
+            batch = model.children.splice(structIndex, structIndex + batchLength + 1);
+            structVals = batch.map(function(value) {
+                if (value.tag === 'block' || value.tag === 'custom-block') {
+                    return self.loadBlock(value);
+                }
+                if (value.tag === 'script') {
+                    return self.loadScript(value);
+                }
+                if (value.tag === 'color') {
+                    return self.loadColor(value);
+                }
+                return self.loadValue(value) || '';
+            });
+        }
+    }
+
     model.children.forEach(function (child, i) {
         if (child.tag === 'variables') {
             this.loadVariables(block.variables, child);
@@ -1343,6 +1389,17 @@ SnapSerializer.prototype.loadBlock = function (model, isReporter) {
         }
     }, this);
     block.cachedInputs = null;
+
+    if (struct && structVals) {
+        if (struct instanceof MessageInputSlotMorph) {
+            var msgType = this.project.stage.messageTypes.getMsgType(structVals[0]);
+
+            struct.setContents(structVals[0], structVals.slice(1), msgType);
+        } else {
+            struct.setContents(structVals[0], structVals.slice(1));
+        }
+    }
+
     return block;
 };
 
@@ -1395,7 +1452,14 @@ SnapSerializer.prototype.loadInput = function (model, input, block) {
             // checking whether "input" is nil should not
             // be necessary, but apparently is after retina support
             // was added.
-            input.setContents(this.loadValue(model));
+            if (input instanceof MessageInputSlotMorph) {
+                var typeName = this.loadValue(model),
+                    messageType = this.project.stage.messageTypes.getMsgType(typeName);
+
+                input.setContents(typeName, null, messageType);
+            } else {
+                input.setContents(this.loadValue(model));
+            }
         }
     }
 };
@@ -1798,6 +1862,7 @@ StageMorph.prototype.toXML = function (serializer) {
             '<sounds>%</sounds>' +
             '<variables>%</variables>' +
             '<blocks>%</blocks>' +
+            '<messageTypes>%</messageTypes>' +
             '<scripts>%</scripts><sprites>%</sprites>' +
             '</stage>' +
             '<hidden>$</hidden>' +
@@ -1838,6 +1903,7 @@ StageMorph.prototype.toXML = function (serializer) {
         serializer.store(this.sounds, this.name + '_snd'),
         serializer.store(this.variables),
         serializer.store(this.customBlocks),
+        serializer.store(this.messageTypes),
         serializer.store(this.scripts),
         serializer.store(this.children),
         Object.keys(StageMorph.prototype.hiddenPrimitives).reduce(
@@ -2138,7 +2204,7 @@ CustomCommandBlockMorph.prototype.toBlockXML = function (serializer) {
                     '</variables>'
                         : '',
         this.comment ? this.comment.toXML(serializer) : '',
-        scope && !this.definition.receiver[serializer.idProperty] ?
+        (serializer.isSavingPortable || scope) && !this.definition.receiver[serializer.idProperty] ?
                 '<receiver>' +
                     (serializer.isSavingCustomBlockOwners ?
                     serializer.store(this.definition.receiver) :
@@ -2339,6 +2405,7 @@ Context.prototype.toXML = function (serializer) {
     if (this.isContinuation) { // continuations are transient in Snap!
         return '';
     }
+
     return serializer.format(
         '<context ~><inputs>%</inputs><variables>%</variables>' +
             '%<receiver>%</receiver>%</context>',

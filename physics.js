@@ -1899,31 +1899,40 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
       elems.add(line);
     }
 
-    function physicsConcepts(string) {
+    function addConceptButton(concept) {
       var entry = new AlignmentMorph("row", 4);
       entry.alignment = "left";
 
-      var text =
-        new TextMorph(localize(string) + ":", 12, null, true, null, "left", 100);
+      var text = new TextMorph(
+        localize(concept) + ":", 12, null, true, null, "left", 100);
       text.setColor(textColor);
       entry.add(text);
 
-      var status = 0,
-        buttons = [];
+      var buttons = [];
 
       function createButton(index, name) {
         buttons[index] = new ToggleMorph(
           "radiobutton",
           null,
           function () {
-            var old_status = status;
-            status = index;
-            buttons[old_status].refresh();
-            buttons[status].refresh();
+            var prev = aSprite.enabledConcepts[concept] || 0;
+            if (index !== 0) {
+              aSprite.enabledConcepts[concept] = index;
+            } else {
+              delete aSprite.enabledConcepts[concept];
+            }
+            buttons[prev].refresh();
+            buttons[index].refresh();
+
+            var ide = aSprite.parentThatIsA(IDE_Morph);
+            if (ide) {
+              ide.flushBlocksCache("physics");
+              ide.refreshPalette();
+            }
           },
           name,
           function () {
-            return status === index;
+            return (aSprite.enabledConcepts[concept] || 0) === index;
           });
         buttons[index].label.setColor(textColor);
         entry.add(buttons[index]);
@@ -1938,17 +1947,17 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     }
 
     addLine(350);
-    elems.add(physicsConcepts("x position"));
-    elems.add(physicsConcepts("y position"));
-    elems.add(physicsConcepts("heading"));
-    elems.add(physicsConcepts("x velocity"));
-    elems.add(physicsConcepts("y velocity"));
-    elems.add(physicsConcepts("angular velocity"));
-    elems.add(physicsConcepts("x acceleration"));
-    elems.add(physicsConcepts("y acceleration"));
-    elems.add(physicsConcepts("mass"));
-    elems.add(physicsConcepts("x net force"));
-    elems.add(physicsConcepts("y net force"));
+    elems.add(addConceptButton("x position"));
+    elems.add(addConceptButton("y position"));
+    elems.add(addConceptButton("heading"));
+    elems.add(addConceptButton("x velocity"));
+    elems.add(addConceptButton("y velocity"));
+    elems.add(addConceptButton("angular velocity"));
+    elems.add(addConceptButton("x acceleration"));
+    elems.add(addConceptButton("y acceleration"));
+    elems.add(addConceptButton("mass"));
+    elems.add(addConceptButton("x net force"));
+    elems.add(addConceptButton("y net force"));
   }
 
   elems.fixLayout();

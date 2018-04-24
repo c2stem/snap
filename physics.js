@@ -1775,8 +1775,6 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     ));
     elems.add(toggleField("enable ground", aSprite, "hasPhysicsFloor", "togglePhysicsFloor"));
   } else if (aSprite instanceof SpriteMorph) {
-    elems.add(inputField("mass:", aSprite, "mass", "setMass", 0, 1e6, "kg"));
-
     var radioDisabled = toggleField(
         "physics disabled", aSprite,
         function () {
@@ -1855,6 +1853,64 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         }
       }));
     }
+
+    function addLine(width) {
+      var line = new Morph();
+      line.color = new Color(120, 120, 120);
+      line.setHeight(1);
+      line.setWidth(width);
+      elems.add(line);
+    }
+
+    function physicsConcepts(string) {
+      var entry = new AlignmentMorph("row", 4);
+      entry.alignment = "left";
+
+      var text =
+        new TextMorph(localize(string) + ":", 12, null, true, null, "left", 100);
+      text.setColor(textColor);
+      entry.add(text);
+
+      var status = 0,
+        buttons = [];
+
+      function createButton(index, name) {
+        buttons[index] = new ToggleMorph(
+          "radiobutton",
+          null,
+          function () {
+            var old_status = status;
+            status = index;
+            buttons[old_status].refresh();
+            buttons[status].refresh();
+          },
+          name,
+          function () {
+            return status === index;
+          });
+        buttons[index].label.setColor(textColor);
+        entry.add(buttons[index]);
+      }
+
+      createButton(0, "not needed");
+      createButton(1, "get property");
+      createButton(2, "set property");
+
+      entry.fixLayout();
+      return entry;
+    }
+
+    addLine(350);
+    elems.add(physicsConcepts("x position"));
+    elems.add(physicsConcepts("y position"));
+    elems.add(physicsConcepts("heading"));
+    elems.add(physicsConcepts("x velocity"));
+    elems.add(physicsConcepts("y velocity"));
+    elems.add(physicsConcepts("angular velocity"));
+    elems.add(physicsConcepts("x acceleration"));
+    elems.add(physicsConcepts("y acceleration"));
+    elems.add(physicsConcepts("mass"));
+    elems.add(physicsConcepts("net force"));
   }
 
   elems.fixLayout();

@@ -1842,6 +1842,10 @@ SpriteMorph.prototype.blockTemplates = function (category) {
 
     } else if (cat === 'physics' ) {
 
+        blocks.push(block('doSimulationStep'));
+        blocks.push(block('startSimulation'));
+        blocks.push(block('stopSimulation'));
+        blocks.push(block('runSimulationSteps'));
         blocks.push(watcherToggle('simulationTime'));
         blocks.push(block('simulationTime'));
         blocks.push(watcherToggle('deltaTime'));
@@ -2017,11 +2021,6 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('receiveInteraction'));
         blocks.push(block('receiveCondition'));
         blocks.push(block('receiveMessage'));
-        blocks.push('-');
-        blocks.push(block('doSimulationStep'));
-        blocks.push(block('startSimulation'));
-        blocks.push(block('stopSimulation'));
-        blocks.push(block('runSimulationSteps'));
         blocks.push('-');
         blocks.push(block('doBroadcast'));
         blocks.push(block('doBroadcastAndWait'));

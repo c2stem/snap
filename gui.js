@@ -1000,7 +1000,7 @@ IDE_Morph.prototype.createControlBar = function () {
     };
 
     this.controlBar.projectButton = addControlButton(
-        'projectMenu', 
+        'projectMenu',
         new SymbolMorph('file', 14),
         'open, save, & annotate project'
         //'\u270E'
@@ -1549,7 +1549,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
             }
             else {
                 menu.addItem("hide fields", 'hideSpriteBarFields');
-            }  
+            }
             if (myself.hiddenSpriteTabs.length != 0) {
                 menu.addItem("show hidden tabs", 'showSpriteTabs');
             }
@@ -1586,7 +1586,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
         }
         else {
             menu.addItem("hide fields", 'hideSpriteBarFields');
-        }  
+        }
         if (myself.hiddenSpriteTabs.length != 0) {
             menu.addItem("show hidden tabs", 'showSpriteTabs');
         }

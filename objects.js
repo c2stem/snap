@@ -1384,6 +1384,7 @@ SpriteMorph.prototype.init = function (globals) {
     this.wasWarped = false; // not to be serialized, used for fast-tracking
 
     this.locallyHiddenPrimitives = {};
+    this.enabledConcepts = {};
 
     this.graphicsValues = {
         'color': 0,
@@ -1708,14 +1709,32 @@ SpriteMorph.prototype.variableBlock = function (varName) {
 
 // SpriteMorph block templates
 
+SpriteMorph.prototype.isBlockDisabled = function (block) {
+    if (!block.concepts) {
+        return false;
+    }
+
+    var i, a, level = 2;
+    for (i = 0; i < block.concepts.length; i++) {
+        a = this.enabledConcepts[block.concepts[i]] || 0;
+        level = Math.min(level, a);
+    }
+    return (block.type === 'command' && level < 2) ||
+        (block.type === 'reporter' && level < 1);
+}
+
 SpriteMorph.prototype.blockTemplates = function (category) {
     var blocks = [], myself = this, varNames, button,
         cat = category || 'motion', txt,
         inheritedVars = this.inheritedVariableNames();
 
     function block(selector) {
-        if (StageMorph.prototype.hiddenPrimitives[selector] 
+        if (StageMorph.prototype.hiddenPrimitives[selector]
             || myself.locallyHiddenPrimitives[selector]) {
+            return null;
+        }
+        var block = myself.blocks[selector];
+        if (myself.isBlockDisabled(block)) {
             return null;
         }
         var newBlock = SpriteMorph.prototype.blockForSelector(selector, true);
@@ -1736,6 +1755,10 @@ SpriteMorph.prototype.blockTemplates = function (category) {
     function watcherToggle(selector) {
         if (StageMorph.prototype.hiddenPrimitives[selector]
             || myself.locallyHiddenPrimitives[selector]) {
+            return null;
+        }
+        var block = myself.blocks[selector];
+        if (myself.isBlockDisabled(block)) {
             return null;
         }
         var info = SpriteMorph.prototype.blocks[selector];

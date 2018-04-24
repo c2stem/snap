@@ -165,174 +165,197 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       type: "command",
       category: "physics",
       spec: "set mass to %n kg",
-      defaults: [100]
+      defaults: [100],
+      concepts: ["mass"]
     },
     mass: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "mass in kg"
+      spec: "mass in kg",
+      concepts: ["mass"]
     },
     setVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set velocity to x: %n y: %n m/s",
-      defaults: [0, 0]
+      defaults: [0, 0],
+      concepts: ["x velocity", "y velocity"]
     },
     setXVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set x velocity to %n m/s",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["x velocity"]
     },
     setYVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set y velocity to %n m/s",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["y velocity"]
     },
     xVelocity: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "x velocity in m/s"
+      spec: "x velocity in m/s",
+      concepts: ["x velocity"]
     },
     yVelocity: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "y velocity in m/s"
+      spec: "y velocity in m/s",
+      concepts: ["y velocity"]
     },
     changeVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change velocity by x: %n y: %n m/s",
-      defaults: [0, 0]
+      defaults: [0, 0],
+      concepts: ["x velocity", "y velocity"]
     },
     changeXVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change x velocity by %n m/s",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["x velocity"]
     },
     changeYVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change y velocity by %n m/s",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["y velocity"]
     },
     setAcceleration: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set acceleration to x: %n y: %n m/s\u00b2",
-      defaults: [0, 0]
+      defaults: [0, 0],
+      concepts: ["x acceleration", "y acceleration"]
     },
     setXAcceleration: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set x acceleration to %n m/s\u00b2",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["x acceleration"]
     },
     setYAcceleration: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set y acceleration to %n m/s\u00b2",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["y acceleration"]
     },
     xAcceleration: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "x acceleration in m/s\u00b2"
+      spec: "x acceleration in m/s\u00b2",
+      concepts: ["x acceleration"]
     },
     yAcceleration: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "y acceleration in m/s\u00b2"
+      spec: "y acceleration in m/s\u00b2",
+      concepts: ["y acceleration"]
     },
     setNetForce: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set net force to x: %n y: %n N",
-      defaults: [0, 0]
+      defaults: [0, 0],
+      concepts: ["x net force", "y net force"]
     },
     setXNetForce: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set x net force to %n N",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["x net force"]
     },
     setYNetForce: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set y net force to %n N",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["y net force"]
     },
     xNetForce: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "x net force in N"
+      spec: "x net force in N",
+      concepts: ["x net force"]
     },
     yNetForce: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "y net force in N"
+      spec: "y net force in N",
+      concepts: ["y net force"]
     },
     changeNetForce: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change net force by x: %n y: %n N",
-      defaults: [0, 0]
+      defaults: [0, 0],
+      concepts: ["x net force", "y net force"]
     },
     changeXNetForce: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change x net force by %n N",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["x net force"]
     },
     changeYNetForce: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change y net force by %n N",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["y net force"]
     },
     simulationTime: {
       type: "reporter",
-      category: "physics",
+      category: "control",
       spec: "time in s"
     },
     deltaTime: {
       type: "reporter",
-      category: "physics",
+      category: "control",
       spec: "\u2206t in s"
     },
     setDeltaTime: {
       type: "command",
-      category: "physics",
+      category: "control",
       spec: "set \u2206t to %n in s",
       defaults: [0]
     },
     doSimulationStep: {
       type: "hat",
-      category: "physics",
+      category: "control",
       spec: "simulation step"
     },
     xGravity: {
@@ -355,108 +378,122 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       type: "command",
       category: "physics",
       spec: "set position to x: %n y: %n m",
-      defaults: [0, 0]
+      defaults: [0, 0],
+      concepts: ["x position", "y position"]
     },
     setPhysicsXPosition: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set x position to %n m",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["x position"]
     },
     setPhysicsYPosition: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set y position to %n m",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["y position"]
     },
     physicsXPosition: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "x position in m"
+      spec: "x position in m",
+      concepts: ["x position"]
     },
     physicsYPosition: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "y position in m"
+      spec: "y position in m",
+      concepts: ["y position"]
     },
     changePhysicsXPosition: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change x position by %n m",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["x position"]
     },
     changePhysicsYPosition: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change y position by %n m",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["y position"]
     },
     changePhysicsPosition: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change position by x: %n y: %n m",
-      defaults: [0, 0]
+      defaults: [0, 0],
+      concepts: ["x position", "y position"]
     },
     setPhysicsAngle: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set heading to %n deg",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["heading"]
     },
     changePhysicsAngle: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change heading by %n deg",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["heading"]
     },
     physicsAngle: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "heading in deg"
+      spec: "heading in deg",
+      concepts: ["heading"]
     },
     setAngularVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "set angular velocity to %n deg/s",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["angular velocity"]
     },
     changeAngularVelocity: {
       only: SpriteMorph,
       type: "command",
       category: "physics",
       spec: "change angular velocity by %n deg/s",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["angular velocity"]
     },
     angularVelocity: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
-      spec: "angular velocity in deg/s"
+      spec: "angular velocity in deg/s",
+      concepts: ["angular velocity"]
     },
     startSimulation: {
       type: "command",
-      category: "physics",
+      category: "control",
       spec: "start simulation"
     },
     stopSimulation: {
       type: "command",
-      category: "physics",
+      category: "control",
       spec: "stop simulation"
     },
     runSimulationSteps: {
       type: "command",
-      category: "physics",
+      category: "control",
       spec: "run simulation step"
     },
     getPhysicsAttrOf: {
@@ -1775,8 +1812,6 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     ));
     elems.add(toggleField("enable ground", aSprite, "hasPhysicsFloor", "togglePhysicsFloor"));
   } else if (aSprite instanceof SpriteMorph) {
-    elems.add(inputField("mass:", aSprite, "mass", "setMass", 0, 1e6, "kg"));
-
     var radioDisabled = toggleField(
         "physics disabled", aSprite,
         function () {
@@ -1855,6 +1890,74 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         }
       }));
     }
+
+    function addLine(width) {
+      var line = new Morph();
+      line.color = new Color(120, 120, 120);
+      line.setHeight(1);
+      line.setWidth(width);
+      elems.add(line);
+    }
+
+    function addConceptButton(concept) {
+      var entry = new AlignmentMorph("row", 4);
+      entry.alignment = "left";
+
+      var text = new TextMorph(
+        localize(concept) + ":", 12, null, true, null, "left", 100);
+      text.setColor(textColor);
+      entry.add(text);
+
+      var buttons = [];
+
+      function createButton(index, name) {
+        buttons[index] = new ToggleMorph(
+          "radiobutton",
+          null,
+          function () {
+            var prev = aSprite.enabledConcepts[concept] || 0;
+            if (index !== 0) {
+              aSprite.enabledConcepts[concept] = index;
+            } else {
+              delete aSprite.enabledConcepts[concept];
+            }
+            buttons[prev].refresh();
+            buttons[index].refresh();
+
+            var ide = aSprite.parentThatIsA(IDE_Morph);
+            if (ide) {
+              ide.flushBlocksCache("physics");
+              ide.refreshPalette();
+            }
+          },
+          name,
+          function () {
+            return (aSprite.enabledConcepts[concept] || 0) === index;
+          });
+        buttons[index].label.setColor(textColor);
+        entry.add(buttons[index]);
+      }
+
+      createButton(0, "not needed");
+      createButton(1, "get property");
+      createButton(2, "set property");
+
+      entry.fixLayout();
+      return entry;
+    }
+
+    addLine(350);
+    elems.add(addConceptButton("x position"));
+    elems.add(addConceptButton("y position"));
+    elems.add(addConceptButton("heading"));
+    elems.add(addConceptButton("x velocity"));
+    elems.add(addConceptButton("y velocity"));
+    elems.add(addConceptButton("angular velocity"));
+    elems.add(addConceptButton("x acceleration"));
+    elems.add(addConceptButton("y acceleration"));
+    elems.add(addConceptButton("mass"));
+    elems.add(addConceptButton("x net force"));
+    elems.add(addConceptButton("y net force"));
   }
 
   elems.fixLayout();

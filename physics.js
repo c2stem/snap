@@ -2336,3 +2336,19 @@ TableMorph.prototype.step = function () {
     this.update(); // disable automatic refresh
   }
 };
+
+// ------- ScriptsMorph -------
+
+ScriptsMorph.prototype.hasHiddenCode = function () {
+  return this.children.some(function (block) {
+    return (block instanceof HatBlockMorph) && !block.isVisible;
+  });
+}
+
+ScriptsMorph.prototype.showHiddenCode = function () {
+  this.children.forEach(function (block) {
+    if ((block instanceof HatBlockMorph) && !block.isVisible) {
+      block.show();
+    }
+  });
+}

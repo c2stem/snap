@@ -2623,8 +2623,7 @@ BlockMorph.prototype.userMenu = function () {
             "hide code",
             function() {
                 myself.topBlock().hide();
-            },
-            "hides this code block"
+            }
         );
     }
     if (proc) {
@@ -6117,6 +6116,9 @@ ScriptsMorph.prototype.userMenu = function () {
         'open a new window\nwith a picture of all scripts'
     );
     if (ide) {
+        if (this.showHiddenCode && this.hasHiddenCode()) {
+            menu.addItem('show hidden code', 'showHiddenCode');
+        }
         menu.addLine();
         menu.addItem(
             'make a block...',
@@ -6164,6 +6166,9 @@ ScriptsMorph.prototype.cleanUp = function () {
     positions = this.children.map(function (child) {
         if (child instanceof CommentMorph && child.block) {
             return; // skip anchored comments
+        }
+        if (!child.isVisible) {
+            return; // skip hidden code
         }
 
         point = origin.add(new Point(myself.cleanUpMargin, y));

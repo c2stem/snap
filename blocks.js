@@ -2329,7 +2329,7 @@ BlockMorph.prototype.userMenu = function () {
                     'check to prevent contents\nfrom being saved'
                 );
             } else if (this.selector !== 'evaluateCustomBlock') {
-                menu.addItem("hide", 'hidePrimitive');
+                menu.addItem("hide block", 'hidePrimitive');
             }
             if (StageMorph.prototype.enableCodeMapping) {
                 menu.addLine();

@@ -1821,18 +1821,14 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('startSimulation'));
         blocks.push(block('stopSimulation'));
         blocks.push(block('runSimulationSteps'));
+        blocks.push('-');
         blocks.push(watcherToggle('simulationTime'));
         blocks.push(block('simulationTime'));
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
         blocks.push(block('setDeltaTime'));
-        blocks.push('-');
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
-        blocks.push('-');
-        blocks.push(block('setMass'));
-        blocks.push(watcherToggle('mass'));
-        blocks.push(block('mass'));
         blocks.push('-');
         blocks.push(block('setPhysicsPosition'));
         blocks.push(block('setPhysicsXPosition'));
@@ -1845,6 +1841,11 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(watcherToggle('physicsYPosition'));
         blocks.push(block('physicsYPosition'));
         blocks.push('-');
+        blocks.push(block('setPhysicsAngle'))
+        blocks.push(block('changePhysicsAngle'))
+        blocks.push(watcherToggle('physicsAngle'));
+        blocks.push(block('physicsAngle'))
+        blocks.push('-');
         blocks.push(block('setVelocity'));
         blocks.push(block('setXVelocity'));
         blocks.push(block('setYVelocity'));
@@ -1856,6 +1857,11 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(watcherToggle('yVelocity'));
         blocks.push(block('yVelocity'));
         blocks.push('-');
+        blocks.push(block('setAngularVelocity'));
+        blocks.push(block('changeAngularVelocity'));
+        blocks.push(watcherToggle('angularVelocity'));
+        blocks.push(block('angularVelocity'));
+        blocks.push('-');
         blocks.push(block('setAcceleration'));
         blocks.push(block('setXAcceleration'));
         blocks.push(block('setYAcceleration'));
@@ -1863,16 +1869,6 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('xAcceleration'));
         blocks.push(watcherToggle('yAcceleration'));
         blocks.push(block('yAcceleration'));
-        blocks.push('-');
-        blocks.push(block('setPhysicsAngle'))
-        blocks.push(block('changePhysicsAngle'))
-        blocks.push(watcherToggle('physicsAngle'));
-        blocks.push(block('physicsAngle'))
-        blocks.push('-');
-        blocks.push(block('setAngularVelocity'));
-        blocks.push(block('changeAngularVelocity'));
-        blocks.push(watcherToggle('angularVelocity'));
-        blocks.push(block('angularVelocity'));
         blocks.push('-');
         blocks.push(block('setNetForce'));
         blocks.push(block('setXNetForce'));
@@ -1884,6 +1880,10 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('xNetForce'));
         blocks.push(watcherToggle('yNetForce'));
         blocks.push(block('yNetForce'));
+        blocks.push('-');
+        blocks.push(block('setMass'));
+        blocks.push(watcherToggle('mass'));
+        blocks.push(block('mass'));
         blocks.push('-');
         blocks.push(block('getPhysicsAttrOf'));
         // blocks.push(block('setPhysicsAttrOf'));
@@ -5948,12 +5948,12 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('startSimulation'));
         blocks.push(block('stopSimulation'));
         blocks.push(block('runSimulationSteps'));
+        blocks.push('-');
         blocks.push(watcherToggle('simulationTime'));
         blocks.push(block('simulationTime'));
         blocks.push(watcherToggle('deltaTime'));
         blocks.push(block('deltaTime'));
         blocks.push(block('setDeltaTime'));
-        blocks.push('-');
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
         blocks.push('-');

@@ -2508,8 +2508,7 @@ BlockMorph.prototype.userMenu = function () {
                     );
                 }
             } else if (this.selector !== 'evaluateCustomBlock') {
-                menu.addItem("hide for all", 'hidePrimitive');
-                menu.addItem("hide for me", "locallyHidePrimitive");
+                menu.addItem("hide block", 'hidePrimitive');
             }
             if (StageMorph.prototype.enableCodeMapping) {
                 menu.addLine();
@@ -2619,6 +2618,15 @@ BlockMorph.prototype.userMenu = function () {
         },
         'open a new window\nwith a picture of this script'
     );
+    if (this.topBlock() instanceof HatBlockMorph) {
+        menu.addItem(
+            "hide code",
+            function() {
+                myself.topBlock().hide();
+            },
+            "hides this code block"
+        );
+    }
     if (proc) {
         if (vNames.length) {
             menu.addLine();
@@ -2691,18 +2699,6 @@ BlockMorph.prototype.developersMenu = function () {
         );
     });
     return menu;
-};
-
-BlockMorph.prototype.locallyHidePrimitive = function () {
-    var ide = this.parentThatIsA(IDE_Morph);
-    if (ide) {
-        var obj = ide.currentSprite instanceof SpriteMorph ?
-            ide.currentSprite : ide.stage;
-
-        obj.locallyHiddenPrimitives[this.selector] = true;
-        ide.flushBlocksCache(this.category);
-        ide.refreshPalette();
-    }
 };
 
 BlockMorph.prototype.hidePrimitive = function () {

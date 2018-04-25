@@ -339,26 +339,26 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     },
     simulationTime: {
       type: "reporter",
-      category: "control",
+      category: "physics",
       spec: "time in s",
       concepts: ["simulation time"]
     },
     deltaTime: {
       type: "reporter",
-      category: "control",
+      category: "physics",
       spec: "\u2206t in s",
       concepts: ["delta time"]
     },
     setDeltaTime: {
       type: "command",
-      category: "control",
+      category: "physics",
       spec: "set \u2206t to %n in s",
       defaults: [0],
       concepts: ["delta time"]
     },
     doSimulationStep: {
       type: "hat",
-      category: "control",
+      category: "physics",
       spec: "simulation step"
     },
     xGravity: {
@@ -489,17 +489,17 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     },
     startSimulation: {
       type: "command",
-      category: "control",
+      category: "physics",
       spec: "start simulation"
     },
     stopSimulation: {
       type: "command",
-      category: "control",
+      category: "physics",
       spec: "stop simulation"
     },
     runSimulationSteps: {
       type: "command",
-      category: "control",
+      category: "physics",
       spec: "run simulation step"
     },
     getPhysicsAttrOf: {

@@ -2438,6 +2438,15 @@ BlockMorph.prototype.userMenu = function () {
         },
         'open a new window\nwith a picture of this script'
     );
+    if (this.topBlock() instanceof HatBlockMorph) {
+        menu.addItem(
+            "hide code",
+            function() {
+                myself.topBlock().hide();
+            },
+            "hides this code block"
+        );
+    }
     if (proc) {
         if (vNames.length) {
             menu.addLine();

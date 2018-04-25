@@ -1121,7 +1121,7 @@ IDE_Morph.prototype.createCategories = function () {
             }
 
             var menu = new MenuMorph(myself);
-            menu.addItem("hide", function() {
+            menu.addItem("hide category", function() {
                 this.hideCategory(category);
             });
             return menu;

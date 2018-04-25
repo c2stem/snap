@@ -361,17 +361,11 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "simulation step"
     },
-    xGravity: {
-      type: "reporter",
-      category: "physics",
-      spec: "x gravity in m/s\u00b2",
-      concepts: ["x gravity"]
-    },
     yGravity: {
       type: "reporter",
       category: "physics",
-      spec: "y gravity in m/s\u00b2",
-      concepts: ["y gravity"]
+      spec: "gravity in m/s\u00b2",
+      concepts: ["gravity"]
     },
     friction: {
       type: "reporter",
@@ -607,11 +601,6 @@ SpriteMorph.prototype.setDeltaTime = function (dt) {
 SpriteMorph.prototype.simulationTime = function () {
   var stage = this.getStage();
   return (stage && stage.simulationTime()) || 0;
-};
-
-SpriteMorph.prototype.xGravity = function () {
-  var stage = this.getStage();
-  return (stage && stage.xGravity()) || 0;
 };
 
 SpriteMorph.prototype.yGravity = function () {
@@ -1147,6 +1136,36 @@ SpriteMorph.prototype.physicsLoadFromXML = function (model) {
   }
 };
 
+SpriteMorph.prototype.getConceptLevel = function (concept) {
+  var level = this.conceptLevels[concept];
+  if (typeof level === 'undefined') {
+    level = 2;
+  }
+  return Math.min(Math.max(+level, 0), 3);
+}
+
+SpriteMorph.prototype.setConceptLevel = function (concept, level) {
+  if (+level === 2) {
+    delete this.conceptLevels[concept];
+  } else {
+    this.conceptLevels[concept] = +level;
+  }
+}
+
+SpriteMorph.prototype.isBlockDisabled = function (selector) {
+  var info = SpriteMorph.prototype.blocks[selector];
+  if (!info.concepts) {
+    return false;
+  }
+
+  var i, a, level = 2;
+  for (i = 0; i < info.concepts.length; i++) {
+    level = Math.min(level, this.getConceptLevel(info.concepts[i]));
+  }
+  return (info.type === 'command' && level < 2) ||
+    (info.type === 'reporter' && level < 1);
+}
+
 // ------- HandMorph -------
 
 HandMorph.prototype.phyProcessMouseMove = HandMorph.prototype.processMouseMove;
@@ -1503,10 +1522,6 @@ StageMorph.prototype.simulationTime = function () {
   return this.physicsSimulationTime;
 };
 
-StageMorph.prototype.xGravity = function () {
-  return this.physicsWorld.gravity[0];
-};
-
 StageMorph.prototype.yGravity = function () {
   return this.physicsWorld.gravity[1];
 };
@@ -1527,7 +1542,6 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
 
   return serializer.format(
     "<physics" +
-    " xgravity=\"@\"" +
     " ygravity=\"@\"" +
     " friction=\"@\"" +
     " restitution=\"@\"" +
@@ -1537,7 +1551,6 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
     " yorigin=\"@\"" +
     " axisangle=\"@\"" +
     "></physics>",
-    world.gravity[0],
     world.gravity[1],
     material.friction,
     material.restitution,
@@ -1561,7 +1574,7 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
     }
   };
 
-  loadFloat(world.gravity, 0, "xgravity", 0);
+  world.gravity[0] = 0;
   loadFloat(world.gravity, 1, "ygravity", -9.81);
   loadFloat(material, "friction", "friction", 0.3);
   loadFloat(material, "restitution", "restitution", 0);
@@ -1795,9 +1808,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     var world = aSprite.physicsWorld;
 
     elems.add(inputField(
-      "gravity x:", world.gravity, "0", "0", -100, 100, "m/s\u00b2"));
-    elems.add(inputField(
-      "gravity y:", world.gravity, "1", "1", -100, 100, "m/s\u00b2"));
+      "gravity:", world.gravity, "1", "1", -100, 100, "m/s\u00b2"));
     elems.add(inputField(
       "friction:", world.defaultContactMaterial, "friction", "friction",
       0, 100));
@@ -1898,14 +1909,27 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     }
 
     function addLine(width) {
-      var line = new Morph();
-      line.color = new Color(120, 120, 120);
-      line.setHeight(1);
-      line.setWidth(width);
-      elems.add(line);
+      var elem = new Morph();
+      elem.color = new Color(120, 120, 120);
+      elem.setHeight(1);
+      elem.setWidth(width);
+      elems.add(elem);
     }
 
-    function conceptButtons(concept, readonly) {
+    function addText(text) {
+      var elem = new TextMorph(localize(text), 12, null, true);
+      elem.setColor(textColor);
+      elems.add(elem);
+    }
+
+    function addSpacer(height) {
+      var elem = new Morph();
+      elem.setHeight(height);
+      elem.setWidth(0);
+      elems.add(elem);
+    }
+
+    function addConceptButtons(concept, max_level) {
       var entry = new AlignmentMorph("row", 4);
       entry.alignment = "left";
 
@@ -1916,19 +1940,15 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
 
       var buttons = [];
 
-      function createButton(index, name) {
-        buttons[index] = new ToggleMorph(
+      function createButton(level, name) {
+        buttons[level] = new ToggleMorph(
           "radiobutton",
           null,
           function () {
-            var prev = aSprite.enabledConcepts[concept] || 0;
-            if (index !== 0) {
-              aSprite.enabledConcepts[concept] = index;
-            } else {
-              delete aSprite.enabledConcepts[concept];
-            }
+            var prev = Math.min(aSprite.getConceptLevel(concept), max_level);
+            aSprite.setConceptLevel(concept, level);
             buttons[prev].refresh();
-            buttons[index].refresh();
+            buttons[level].refresh();
 
             var ide = aSprite.parentThatIsA(IDE_Morph);
             if (ide) {
@@ -1938,43 +1958,47 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
           },
           name,
           function () {
-            return (aSprite.enabledConcepts[concept] || 0) === index;
+            return Math.min(aSprite.getConceptLevel(concept), max_level) ===
+              level;
           });
-        buttons[index].label.setColor(textColor);
-        entry.add(buttons[index]);
+        buttons[level].label.setColor(textColor);
+        entry.add(buttons[level]);
       }
 
       createButton(0, "not needed");
       createButton(1, "get property");
-      if (!readonly) {
+      if (max_level >= 2) {
         createButton(2, "set property");
+      }
+      if (max_level >= 3) {
+        createButton(3, "behavior");
       }
 
       entry.fixLayout();
-      return entry;
+      elems.add(entry);
     }
 
-    addLine(350);
-    var text = new TextMorph(localize("Conceptual model:"), 12, null, true);
-    text.setColor(textColor);
-    elems.add(text);
+    addLine(200);
 
-    elems.add(conceptButtons("simulation time", true));
-    elems.add(conceptButtons("delta time"));
-    elems.add(conceptButtons("x position"));
-    elems.add(conceptButtons("y position"));
-    elems.add(conceptButtons("heading"));
-    elems.add(conceptButtons("x velocity"));
-    elems.add(conceptButtons("y velocity"));
-    elems.add(conceptButtons("angular velocity"));
-    elems.add(conceptButtons("x acceleration"));
-    elems.add(conceptButtons("y acceleration"));
-    elems.add(conceptButtons("mass"));
-    elems.add(conceptButtons("x net force"));
-    elems.add(conceptButtons("y net force"));
-    elems.add(conceptButtons("x gravity", true));
-    elems.add(conceptButtons("y gravity", true));
-    elems.add(conceptButtons("friction", true));
+    addText("Global concepts:");
+    addConceptButtons("simulation time", 1);
+    addConceptButtons("delta time", 2);
+    addConceptButtons("gravity", 1);
+    addConceptButtons("friction", 1);
+
+    addSpacer(6);
+    addText("Object concepts:")
+    addConceptButtons("x position", 3);
+    addConceptButtons("y position", 3);
+    addConceptButtons("heading", 3);
+    addConceptButtons("x velocity", 3);
+    addConceptButtons("y velocity", 3);
+    addConceptButtons("angular velocity", 3);
+    addConceptButtons("x acceleration", 3);
+    addConceptButtons("y acceleration", 3);
+    addConceptButtons("mass", 3);
+    addConceptButtons("x net force", 3);
+    addConceptButtons("y net force", 3);
   }
 
   elems.fixLayout();
@@ -2336,3 +2360,19 @@ TableMorph.prototype.step = function () {
     this.update(); // disable automatic refresh
   }
 };
+
+// ------- ScriptsMorph -------
+
+ScriptsMorph.prototype.hasHiddenCode = function () {
+  return this.children.some(function (block) {
+    return (block instanceof HatBlockMorph) && !block.isVisible;
+  });
+}
+
+ScriptsMorph.prototype.showHiddenCode = function () {
+  this.children.forEach(function (block) {
+    if ((block instanceof HatBlockMorph) && !block.isVisible) {
+      block.show();
+    }
+  });
+}

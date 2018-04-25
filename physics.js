@@ -361,17 +361,11 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "simulation step"
     },
-    xGravity: {
-      type: "reporter",
-      category: "physics",
-      spec: "x gravity in m/s\u00b2",
-      concepts: ["x gravity"]
-    },
     yGravity: {
       type: "reporter",
       category: "physics",
-      spec: "y gravity in m/s\u00b2",
-      concepts: ["y gravity"]
+      spec: "gravity in m/s\u00b2",
+      concepts: ["gravity"]
     },
     friction: {
       type: "reporter",
@@ -607,11 +601,6 @@ SpriteMorph.prototype.setDeltaTime = function (dt) {
 SpriteMorph.prototype.simulationTime = function () {
   var stage = this.getStage();
   return (stage && stage.simulationTime()) || 0;
-};
-
-SpriteMorph.prototype.xGravity = function () {
-  var stage = this.getStage();
-  return (stage && stage.xGravity()) || 0;
 };
 
 SpriteMorph.prototype.yGravity = function () {
@@ -1503,10 +1492,6 @@ StageMorph.prototype.simulationTime = function () {
   return this.physicsSimulationTime;
 };
 
-StageMorph.prototype.xGravity = function () {
-  return this.physicsWorld.gravity[0];
-};
-
 StageMorph.prototype.yGravity = function () {
   return this.physicsWorld.gravity[1];
 };
@@ -1527,7 +1512,6 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
 
   return serializer.format(
     "<physics" +
-    " xgravity=\"@\"" +
     " ygravity=\"@\"" +
     " friction=\"@\"" +
     " restitution=\"@\"" +
@@ -1537,7 +1521,6 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
     " yorigin=\"@\"" +
     " axisangle=\"@\"" +
     "></physics>",
-    world.gravity[0],
     world.gravity[1],
     material.friction,
     material.restitution,
@@ -1561,7 +1544,7 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
     }
   };
 
-  loadFloat(world.gravity, 0, "xgravity", 0);
+  world.gravity[0] = 0;
   loadFloat(world.gravity, 1, "ygravity", -9.81);
   loadFloat(material, "friction", "friction", 0.3);
   loadFloat(material, "restitution", "restitution", 0);
@@ -1795,9 +1778,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     var world = aSprite.physicsWorld;
 
     elems.add(inputField(
-      "gravity x:", world.gravity, "0", "0", -100, 100, "m/s\u00b2"));
-    elems.add(inputField(
-      "gravity y:", world.gravity, "1", "1", -100, 100, "m/s\u00b2"));
+      "gravity:", world.gravity, "1", "1", -100, 100, "m/s\u00b2"));
     elems.add(inputField(
       "friction:", world.defaultContactMaterial, "friction", "friction",
       0, 100));
@@ -1972,8 +1953,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     elems.add(conceptButtons("mass"));
     elems.add(conceptButtons("x net force"));
     elems.add(conceptButtons("y net force"));
-    elems.add(conceptButtons("x gravity", true));
-    elems.add(conceptButtons("y gravity", true));
+    elems.add(conceptButtons("gravity", true));
     elems.add(conceptButtons("friction", true));
   }
 

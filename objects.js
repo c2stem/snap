@@ -1319,8 +1319,6 @@ SpriteMorph.prototype.blockAlternatives = {
     doHideVar: ['doShowVar'],
 
     // physics
-    xGravity: ['yGravity'],
-    yGravity: ['xGravity'],
     physicsXPosition: ['physicsYPosition'],
     physicsYPosition: ['physicsXPosition'],
     setPhysicsXPosition: ['setPhysicsYPosition', 'changePhysicsXPosition', 'changePhysicsYPosition'],
@@ -1849,7 +1847,6 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('deltaTime'));
         blocks.push(block('setDeltaTime'));
         blocks.push('-');
-        blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
         blocks.push('-');
@@ -5977,7 +5974,6 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('deltaTime'));
         blocks.push(block('setDeltaTime'));
         blocks.push('-');
-        blocks.push(block('xGravity'));
         blocks.push(block('yGravity'));
         blocks.push(block('friction'));
         blocks.push('-');

@@ -2329,8 +2329,7 @@ BlockMorph.prototype.userMenu = function () {
                     'check to prevent contents\nfrom being saved'
                 );
             } else if (this.selector !== 'evaluateCustomBlock') {
-                menu.addItem("hide for all", 'hidePrimitive');
-                menu.addItem("hide for me", "locallyHidePrimitive");
+                menu.addItem("hide", 'hidePrimitive');
             }
             if (StageMorph.prototype.enableCodeMapping) {
                 menu.addLine();
@@ -2499,18 +2498,6 @@ BlockMorph.prototype.developersMenu = function () {
         );
     });
     return menu;
-};
-
-BlockMorph.prototype.locallyHidePrimitive = function () {
-    var ide = this.parentThatIsA(IDE_Morph);
-    if (ide) {
-        var obj = ide.currentSprite instanceof SpriteMorph ?
-            ide.currentSprite : ide.stage;
-
-        obj.locallyHiddenPrimitives[this.selector] = true;
-        ide.flushBlocksCache(this.category);
-        ide.refreshPalette();
-    }
 };
 
 BlockMorph.prototype.hidePrimitive = function () {

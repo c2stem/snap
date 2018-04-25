@@ -1136,6 +1136,21 @@ SpriteMorph.prototype.physicsLoadFromXML = function (model) {
   }
 };
 
+SpriteMorph.prototype.isBlockDisabled = function (selector) {
+  var info = SpriteMorph.prototype.blocks[selector];
+  if (!info.concepts) {
+      return false;
+  }
+
+  var i, a, level = 2;
+  for (i = 0; i < info.concepts.length; i++) {
+      a = this.enabledConcepts[info.concepts[i]] || 0;
+      level = Math.min(level, a);
+  }
+  return (info.type === 'command' && level < 2) ||
+      (info.type === 'reporter' && level < 1);
+}
+
 // ------- HandMorph -------
 
 HandMorph.prototype.phyProcessMouseMove = HandMorph.prototype.processMouseMove;
@@ -1879,14 +1894,27 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     }
 
     function addLine(width) {
-      var line = new Morph();
-      line.color = new Color(120, 120, 120);
-      line.setHeight(1);
-      line.setWidth(width);
-      elems.add(line);
+      var elem = new Morph();
+      elem.color = new Color(120, 120, 120);
+      elem.setHeight(1);
+      elem.setWidth(width);
+      elems.add(elem);
     }
 
-    function conceptButtons(concept, readonly) {
+    function addText(text) {
+      var elem = new TextMorph(localize(text), 12, null, true);
+      elem.setColor(textColor);
+      elems.add(elem);
+    }
+
+    function addSpacer(height) {
+      var elem = new Morph();
+      elem.setHeight(height);
+      elem.setWidth(0);
+      elems.add(elem);
+    }
+
+    function addConceptButtons(concept, max_index) {
       var entry = new AlignmentMorph("row", 4);
       entry.alignment = "left";
 
@@ -1927,34 +1955,38 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
 
       createButton(0, "not needed");
       createButton(1, "get property");
-      if (!readonly) {
+      if (max_index >= 2) {
         createButton(2, "set property");
+      }
+      if (max_index >= 3) {
+        createButton(3, "behavior");
       }
 
       entry.fixLayout();
-      return entry;
+      elems.add(entry);
     }
 
-    addLine(350);
-    var text = new TextMorph(localize("Conceptual model:"), 12, null, true);
-    text.setColor(textColor);
-    elems.add(text);
+    addLine(200);
 
-    elems.add(conceptButtons("simulation time", true));
-    elems.add(conceptButtons("delta time"));
-    elems.add(conceptButtons("x position"));
-    elems.add(conceptButtons("y position"));
-    elems.add(conceptButtons("heading"));
-    elems.add(conceptButtons("x velocity"));
-    elems.add(conceptButtons("y velocity"));
-    elems.add(conceptButtons("angular velocity"));
-    elems.add(conceptButtons("x acceleration"));
-    elems.add(conceptButtons("y acceleration"));
-    elems.add(conceptButtons("mass"));
-    elems.add(conceptButtons("x net force"));
-    elems.add(conceptButtons("y net force"));
-    elems.add(conceptButtons("gravity", true));
-    elems.add(conceptButtons("friction", true));
+    addText("Global concepts:");
+    addConceptButtons("simulation time", 1);
+    addConceptButtons("delta time", 2);
+    addConceptButtons("gravity", 1);
+    addConceptButtons("friction", 1);
+
+    addSpacer(6);
+    addText("Object concepts:")
+    addConceptButtons("x position", 3);
+    addConceptButtons("y position", 3);
+    addConceptButtons("heading", 3);
+    addConceptButtons("x velocity", 3);
+    addConceptButtons("y velocity", 3);
+    addConceptButtons("angular velocity", 3);
+    addConceptButtons("x acceleration", 3);
+    addConceptButtons("y acceleration", 3);
+    addConceptButtons("mass", 3);
+    addConceptButtons("x net force", 3);
+    addConceptButtons("y net force", 3);
   }
 
   elems.fixLayout();

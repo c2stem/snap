@@ -1136,19 +1136,34 @@ SpriteMorph.prototype.physicsLoadFromXML = function (model) {
   }
 };
 
+SpriteMorph.prototype.getConceptLevel = function (concept) {
+  var level = this.conceptLevels[concept];
+  if (typeof level === 'undefined') {
+    level = 2;
+  }
+  return Math.min(Math.max(+level, 0), 3);
+}
+
+SpriteMorph.prototype.setConceptLevel = function (concept, level) {
+  if (+level === 2) {
+    delete this.conceptLevels[concept];
+  } else {
+    this.conceptLevels[concept] = +level;
+  }
+}
+
 SpriteMorph.prototype.isBlockDisabled = function (selector) {
   var info = SpriteMorph.prototype.blocks[selector];
   if (!info.concepts) {
-      return false;
+    return false;
   }
 
   var i, a, level = 2;
   for (i = 0; i < info.concepts.length; i++) {
-      a = this.enabledConcepts[info.concepts[i]] || 0;
-      level = Math.min(level, a);
+    level = Math.min(level, this.getConceptLevel(info.concepts[i]));
   }
   return (info.type === 'command' && level < 2) ||
-      (info.type === 'reporter' && level < 1);
+    (info.type === 'reporter' && level < 1);
 }
 
 // ------- HandMorph -------
@@ -1914,7 +1929,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
       elems.add(elem);
     }
 
-    function addConceptButtons(concept, max_index) {
+    function addConceptButtons(concept, max_level) {
       var entry = new AlignmentMorph("row", 4);
       entry.alignment = "left";
 
@@ -1925,19 +1940,15 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
 
       var buttons = [];
 
-      function createButton(index, name) {
-        buttons[index] = new ToggleMorph(
+      function createButton(level, name) {
+        buttons[level] = new ToggleMorph(
           "radiobutton",
           null,
           function () {
-            var prev = aSprite.enabledConcepts[concept] || 0;
-            if (index !== 0) {
-              aSprite.enabledConcepts[concept] = index;
-            } else {
-              delete aSprite.enabledConcepts[concept];
-            }
+            var prev = Math.min(aSprite.getConceptLevel(concept), max_level);
+            aSprite.setConceptLevel(concept, level);
             buttons[prev].refresh();
-            buttons[index].refresh();
+            buttons[level].refresh();
 
             var ide = aSprite.parentThatIsA(IDE_Morph);
             if (ide) {
@@ -1947,18 +1958,19 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
           },
           name,
           function () {
-            return (aSprite.enabledConcepts[concept] || 0) === index;
+            return Math.min(aSprite.getConceptLevel(concept), max_level) ===
+              level;
           });
-        buttons[index].label.setColor(textColor);
-        entry.add(buttons[index]);
+        buttons[level].label.setColor(textColor);
+        entry.add(buttons[level]);
       }
 
       createButton(0, "not needed");
       createButton(1, "get property");
-      if (max_index >= 2) {
+      if (max_level >= 2) {
         createButton(2, "set property");
       }
-      if (max_index >= 3) {
+      if (max_level >= 3) {
         createButton(3, "behavior");
       }
 

@@ -1376,7 +1376,7 @@ SpriteMorph.prototype.init = function (globals) {
     this.idx = 0; // not to be serialized (!) - used for de-serialization
     this.wasWarped = false; // not to be serialized, used for fast-tracking
 
-    this.enabledConcepts = {};
+    this.conceptLevels = {};
 
     this.graphicsValues = {
         'color': 0,

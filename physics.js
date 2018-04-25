@@ -340,18 +340,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     simulationTime: {
       type: "reporter",
       category: "control",
-      spec: "time in s"
+      spec: "time in s",
+      concepts: ["simulation time"]
     },
     deltaTime: {
       type: "reporter",
       category: "control",
-      spec: "\u2206t in s"
+      spec: "\u2206t in s",
+      concepts: ["delta time"]
     },
     setDeltaTime: {
       type: "command",
       category: "control",
       spec: "set \u2206t to %n in s",
-      defaults: [0]
+      defaults: [0],
+      concepts: ["delta time"]
     },
     doSimulationStep: {
       type: "hat",
@@ -361,17 +364,20 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     xGravity: {
       type: "reporter",
       category: "physics",
-      spec: "x gravity in m/s\u00b2"
+      spec: "x gravity in m/s\u00b2",
+      concepts: ["x gravity"]
     },
     yGravity: {
       type: "reporter",
       category: "physics",
-      spec: "y gravity in m/s\u00b2"
+      spec: "y gravity in m/s\u00b2",
+      concepts: ["y gravity"]
     },
     friction: {
       type: "reporter",
       category: "physics",
-      spec: "friction"
+      spec: "friction",
+      concepts: ["friction"]
     },
     setPhysicsPosition: {
       only: SpriteMorph,
@@ -1899,7 +1905,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
       elems.add(line);
     }
 
-    function addConceptButton(concept) {
+    function conceptButtons(concept, readonly) {
       var entry = new AlignmentMorph("row", 4);
       entry.alignment = "left";
 
@@ -1940,24 +1946,35 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
 
       createButton(0, "not needed");
       createButton(1, "get property");
-      createButton(2, "set property");
+      if (!readonly) {
+        createButton(2, "set property");
+      }
 
       entry.fixLayout();
       return entry;
     }
 
     addLine(350);
-    elems.add(addConceptButton("x position"));
-    elems.add(addConceptButton("y position"));
-    elems.add(addConceptButton("heading"));
-    elems.add(addConceptButton("x velocity"));
-    elems.add(addConceptButton("y velocity"));
-    elems.add(addConceptButton("angular velocity"));
-    elems.add(addConceptButton("x acceleration"));
-    elems.add(addConceptButton("y acceleration"));
-    elems.add(addConceptButton("mass"));
-    elems.add(addConceptButton("x net force"));
-    elems.add(addConceptButton("y net force"));
+    var text = new TextMorph(localize("Conceptual model:"), 12, null, true);
+    text.setColor(textColor);
+    elems.add(text);
+
+    elems.add(conceptButtons("simulation time", true));
+    elems.add(conceptButtons("delta time"));
+    elems.add(conceptButtons("x position"));
+    elems.add(conceptButtons("y position"));
+    elems.add(conceptButtons("heading"));
+    elems.add(conceptButtons("x velocity"));
+    elems.add(conceptButtons("y velocity"));
+    elems.add(conceptButtons("angular velocity"));
+    elems.add(conceptButtons("x acceleration"));
+    elems.add(conceptButtons("y acceleration"));
+    elems.add(conceptButtons("mass"));
+    elems.add(conceptButtons("x net force"));
+    elems.add(conceptButtons("y net force"));
+    elems.add(conceptButtons("x gravity", true));
+    elems.add(conceptButtons("y gravity", true));
+    elems.add(conceptButtons("friction", true));
   }
 
   elems.fixLayout();

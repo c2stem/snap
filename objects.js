@@ -1382,6 +1382,7 @@ SpriteMorph.prototype.init = function (globals) {
     this.wasWarped = false; // not to be serialized, used for fast-tracking
 
     this.conceptLevels = {};
+    // this.createDefaultBehaviors();
 
     this.graphicsValues = {
         'color': 0,

@@ -1155,7 +1155,6 @@ SpriteMorph.prototype.physicsLoadFromXML = function (model) {
   }
 
   if (attrs.concepts_disabled) {
-    console.log(attrs.concepts_disabled);
     attrs.concepts_disabled.split(' ').forEach(function (concept) {
       myself.conceptLevels[concept] = 0;
     })
@@ -2414,4 +2413,16 @@ ScriptsMorph.prototype.showHiddenCode = function () {
       block.show();
     }
   });
+}
+
+// ------- HatBlockMorph -------
+
+HatBlockMorph.prototype.physicsSaveToXML = function (serializer) {
+  return this.isVisible ? '' : '<physics hidden="true"></physics>';
+};
+
+HatBlockMorph.prototype.physicsLoadFromXML = function (model) {
+  if (model.attributes.hidden === "true") {
+    this.hide();
+  }
 }

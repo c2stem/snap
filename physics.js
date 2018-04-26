@@ -1132,13 +1132,13 @@ SpriteMorph.prototype.physicsSaveToXML = function (serializer) {
     " mode=\"@\"" +
     " concepts_disabled=\"@\"" +
     " concepts_readonly=\"@\"" +
-    " concepts_behavior=\"@\"" +
+    " concepts_getandset=\"@\"" +
     "></physics>",
     this.physicsMass,
     this.physicsMode || "morphic",
     getConceptList(0),
-    getConceptList(1), // 2 is the default value
-    getConceptList(3)
+    getConceptList(1), 
+    getConceptList(2) // 3 is the default value
   );
 };
 
@@ -1166,9 +1166,9 @@ SpriteMorph.prototype.physicsLoadFromXML = function (model) {
     })
   }
 
-  if (attrs.concepts_behavior) {
-    attrs.concepts_behavior.split(' ').forEach(function (concept) {
-      myself.conceptLevels[concept] = 3;
+  if (attrs.concepts_getandset) {
+    attrs.concepts_getandset.split(' ').forEach(function (concept) {
+      myself.conceptLevels[concept] = 2;
     })
   }
 };
@@ -1176,13 +1176,13 @@ SpriteMorph.prototype.physicsLoadFromXML = function (model) {
 SpriteMorph.prototype.getConceptLevel = function (concept) {
   var level = this.conceptLevels[concept];
   if (typeof level === 'undefined') {
-    level = 2;
+    level = 3;
   }
   return Math.min(Math.max(+level, 0), 3);
 }
 
 SpriteMorph.prototype.setConceptLevel = function (concept, level) {
-  if (+level === 2) {
+  if (+level === 3) {
     delete this.conceptLevels[concept];
   } else {
     this.conceptLevels[concept] = +level;
@@ -1195,13 +1195,31 @@ SpriteMorph.prototype.isBlockDisabled = function (selector) {
     return false;
   }
 
-  var i, a, level = 2;
+  var i, a, level = 3;
   for (i = 0; i < info.concepts.length; i++) {
     level = Math.min(level, this.getConceptLevel(info.concepts[i]));
   }
-  return (info.type === 'command' && level < 2) ||
-    (info.type === 'reporter' && level < 1);
+
+  if (info.type === 'command') {
+    if (info.spec.startsWith('change')) {
+      return level < 3;
+    } else {
+      return level < 2;
+    }
+  } else if (info.type === 'reporter') {
+    return level < 1;
+  } else {
+    return true;
+  }
 }
+
+/*
+SpriteMorph.prototype.createDefaultBehaviors = function () {
+  var blockdef = new CustomBlockDefinition('update x position', null);
+  blockdef.category = 'physics';
+  this.customBlocks.push(blockdef);
+}
+*/
 
 // ------- HandMorph -------
 
@@ -1979,6 +1997,11 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
       var buttons = [];
 
       function createButton(level, name) {
+        var spacer = new Morph();
+        spacer.setHeight(0);
+        spacer.setWidth(4);
+        entry.add(spacer);
+
         buttons[level] = new ToggleMorph(
           "radiobutton",
           null,
@@ -2009,7 +2032,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         createButton(2, "set property");
       }
       if (max_level >= 3) {
-        createButton(3, "behavior");
+        createButton(3, "change");
       }
 
       entry.fixLayout();

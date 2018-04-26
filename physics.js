@@ -181,7 +181,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set velocity to x: %n y: %n m/s",
       defaults: [0, 0],
-      concepts: ["x velocity", "y velocity"]
+      concepts: ["x_velocity", "y_velocity"]
     },
     setXVelocity: {
       only: SpriteMorph,
@@ -189,7 +189,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set x velocity to %n m/s",
       defaults: [0],
-      concepts: ["x velocity"]
+      concepts: ["x_velocity"]
     },
     setYVelocity: {
       only: SpriteMorph,
@@ -197,21 +197,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set y velocity to %n m/s",
       defaults: [0],
-      concepts: ["y velocity"]
+      concepts: ["y_velocity"]
     },
     xVelocity: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
       spec: "x velocity in m/s",
-      concepts: ["x velocity"]
+      concepts: ["x_velocity"]
     },
     yVelocity: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
       spec: "y velocity in m/s",
-      concepts: ["y velocity"]
+      concepts: ["y_velocity"]
     },
     changeVelocity: {
       only: SpriteMorph,
@@ -219,7 +219,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change velocity by x: %n y: %n m/s",
       defaults: [0, 0],
-      concepts: ["x velocity", "y velocity"]
+      concepts: ["x_velocity", "y_velocity"]
     },
     changeXVelocity: {
       only: SpriteMorph,
@@ -227,7 +227,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change x velocity by %n m/s",
       defaults: [0],
-      concepts: ["x velocity"]
+      concepts: ["x_velocity"]
     },
     changeYVelocity: {
       only: SpriteMorph,
@@ -235,7 +235,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change y velocity by %n m/s",
       defaults: [0],
-      concepts: ["y velocity"]
+      concepts: ["y_velocity"]
     },
     setAcceleration: {
       only: SpriteMorph,
@@ -243,7 +243,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set acceleration to x: %n y: %n m/s\u00b2",
       defaults: [0, 0],
-      concepts: ["x acceleration", "y acceleration"]
+      concepts: ["x_acceleration", "y_acceleration"]
     },
     setXAcceleration: {
       only: SpriteMorph,
@@ -251,7 +251,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set x acceleration to %n m/s\u00b2",
       defaults: [0],
-      concepts: ["x acceleration"]
+      concepts: ["x_acceleration"]
     },
     setYAcceleration: {
       only: SpriteMorph,
@@ -259,21 +259,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set y acceleration to %n m/s\u00b2",
       defaults: [0],
-      concepts: ["y acceleration"]
+      concepts: ["y_acceleration"]
     },
     xAcceleration: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
       spec: "x acceleration in m/s\u00b2",
-      concepts: ["x acceleration"]
+      concepts: ["x_acceleration"]
     },
     yAcceleration: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
       spec: "y acceleration in m/s\u00b2",
-      concepts: ["y acceleration"]
+      concepts: ["y_acceleration"]
     },
     setNetForce: {
       only: SpriteMorph,
@@ -281,7 +281,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set net force to x: %n y: %n N",
       defaults: [0, 0],
-      concepts: ["x net force", "y net force"]
+      concepts: ["x_net_force", "y_net_force"]
     },
     setXNetForce: {
       only: SpriteMorph,
@@ -289,7 +289,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set x net force to %n N",
       defaults: [0],
-      concepts: ["x net force"]
+      concepts: ["x_net_force"]
     },
     setYNetForce: {
       only: SpriteMorph,
@@ -297,21 +297,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set y net force to %n N",
       defaults: [0],
-      concepts: ["y net force"]
+      concepts: ["y_net_force"]
     },
     xNetForce: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
       spec: "x net force in N",
-      concepts: ["x net force"]
+      concepts: ["x_net_force"]
     },
     yNetForce: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
       spec: "y net force in N",
-      concepts: ["y net force"]
+      concepts: ["y_net_force"]
     },
     changeNetForce: {
       only: SpriteMorph,
@@ -319,7 +319,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change net force by x: %n y: %n N",
       defaults: [0, 0],
-      concepts: ["x net force", "y net force"]
+      concepts: ["x_net_force", "y_net_force"]
     },
     changeXNetForce: {
       only: SpriteMorph,
@@ -327,7 +327,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change x net force by %n N",
       defaults: [0],
-      concepts: ["x net force"]
+      concepts: ["x_net_force"]
     },
     changeYNetForce: {
       only: SpriteMorph,
@@ -335,31 +335,31 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change y net force by %n N",
       defaults: [0],
-      concepts: ["y net force"]
+      concepts: ["y_net_force"]
     },
     simulationTime: {
       type: "reporter",
       category: "physics",
       spec: "time in s",
-      concepts: ["simulation time"]
+      concepts: ["simulation_time"]
     },
     deltaTime: {
       type: "reporter",
       category: "physics",
       spec: "\u2206t in s",
-      concepts: ["delta time"]
+      concepts: ["delta_time"]
     },
     setDeltaTime: {
       type: "command",
       category: "physics",
       spec: "set \u2206t to %n in s",
       defaults: [0],
-      concepts: ["delta time"]
+      concepts: ["delta_time"]
     },
     doSimulationStep: {
       type: "hat",
       category: "physics",
-      spec: "simulation step"
+      spec: "simulation_step"
     },
     yGravity: {
       type: "reporter",
@@ -379,7 +379,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set position to x: %n y: %n m",
       defaults: [0, 0],
-      concepts: ["x position", "y position"]
+      concepts: ["x_position", "y_position"]
     },
     setPhysicsXPosition: {
       only: SpriteMorph,
@@ -387,7 +387,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set x position to %n m",
       defaults: [0],
-      concepts: ["x position"]
+      concepts: ["x_position"]
     },
     setPhysicsYPosition: {
       only: SpriteMorph,
@@ -395,21 +395,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set y position to %n m",
       defaults: [0],
-      concepts: ["y position"]
+      concepts: ["y_position"]
     },
     physicsXPosition: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
       spec: "x position in m",
-      concepts: ["x position"]
+      concepts: ["x_position"]
     },
     physicsYPosition: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
       spec: "y position in m",
-      concepts: ["y position"]
+      concepts: ["y_position"]
     },
     changePhysicsXPosition: {
       only: SpriteMorph,
@@ -417,7 +417,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change x position by %n m",
       defaults: [0],
-      concepts: ["x position"]
+      concepts: ["x_position"]
     },
     changePhysicsYPosition: {
       only: SpriteMorph,
@@ -425,7 +425,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change y position by %n m",
       defaults: [0],
-      concepts: ["y position"]
+      concepts: ["y_position"]
     },
     changePhysicsPosition: {
       only: SpriteMorph,
@@ -433,7 +433,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change position by x: %n y: %n m",
       defaults: [0, 0],
-      concepts: ["x position", "y position"]
+      concepts: ["x_position", "y_position"]
     },
     setPhysicsAngle: {
       only: SpriteMorph,
@@ -464,7 +464,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "set angular velocity to %n deg/s",
       defaults: [0],
-      concepts: ["angular velocity"]
+      concepts: ["angular_velocity"]
     },
     changeAngularVelocity: {
       only: SpriteMorph,
@@ -472,14 +472,14 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
       category: "physics",
       spec: "change angular velocity by %n deg/s",
       defaults: [0],
-      concepts: ["angular velocity"]
+      concepts: ["angular_velocity"]
     },
     angularVelocity: {
       only: SpriteMorph,
       type: "reporter",
       category: "physics",
       spec: "angular velocity in deg/s",
-      concepts: ["angular velocity"]
+      concepts: ["angular_velocity"]
     },
     startSimulation: {
       type: "command",
@@ -1114,18 +1114,37 @@ SpriteMorph.prototype.allHatBlocksForSimulation = function () {
 };
 
 SpriteMorph.prototype.physicsSaveToXML = function (serializer) {
+  var myself = this;
+
+  function getConceptList(level) {
+    var result, name;
+    for (name in myself.conceptLevels) {
+      if (myself.conceptLevels[name] === level) {
+        result = result ? result + ' ' + name : name
+      }
+    }
+    return result;
+  }
+
   return serializer.format(
     "<physics" +
     " mass=\"@\"" +
     " mode=\"@\"" +
+    " concepts_disabled=\"@\"" +
+    " concepts_readonly=\"@\"" +
+    " concepts_getandset=\"@\"" +
     "></physics>",
     this.physicsMass,
-    this.physicsMode || "morphic"
+    this.physicsMode || "morphic",
+    getConceptList(0),
+    getConceptList(1), 
+    getConceptList(2) // 3 is the default value
   );
 };
 
 SpriteMorph.prototype.physicsLoadFromXML = function (model) {
-  var attrs = model.attributes;
+  var myself = this,
+    attrs = model.attributes;
 
   if (attrs.mass) {
     this.setMass(parseFloat(attrs.mass));
@@ -1134,18 +1153,36 @@ SpriteMorph.prototype.physicsLoadFromXML = function (model) {
   if (attrs.mode) {
     this.physicsMode = attrs.mode !== "morphic" ? attrs.mode : "";
   }
+
+  if (attrs.concepts_disabled) {
+    attrs.concepts_disabled.split(' ').forEach(function (concept) {
+      myself.conceptLevels[concept] = 0;
+    })
+  }
+
+  if (attrs.concepts_readonly) {
+    attrs.concepts_readonly.split(' ').forEach(function (concept) {
+      myself.conceptLevels[concept] = 1;
+    })
+  }
+
+  if (attrs.concepts_getandset) {
+    attrs.concepts_getandset.split(' ').forEach(function (concept) {
+      myself.conceptLevels[concept] = 2;
+    })
+  }
 };
 
 SpriteMorph.prototype.getConceptLevel = function (concept) {
   var level = this.conceptLevels[concept];
   if (typeof level === 'undefined') {
-    level = 2;
+    level = 3;
   }
   return Math.min(Math.max(+level, 0), 3);
 }
 
 SpriteMorph.prototype.setConceptLevel = function (concept, level) {
-  if (+level === 2) {
+  if (+level === 3) {
     delete this.conceptLevels[concept];
   } else {
     this.conceptLevels[concept] = +level;
@@ -1158,13 +1195,31 @@ SpriteMorph.prototype.isBlockDisabled = function (selector) {
     return false;
   }
 
-  var i, a, level = 2;
+  var i, a, level = 3;
   for (i = 0; i < info.concepts.length; i++) {
     level = Math.min(level, this.getConceptLevel(info.concepts[i]));
   }
-  return (info.type === 'command' && level < 2) ||
-    (info.type === 'reporter' && level < 1);
+
+  if (info.type === 'command') {
+    if (info.spec.startsWith('change')) {
+      return level < 3;
+    } else {
+      return level < 2;
+    }
+  } else if (info.type === 'reporter') {
+    return level < 1;
+  } else {
+    return true;
+  }
 }
+
+/*
+SpriteMorph.prototype.createDefaultBehaviors = function () {
+  var blockdef = new CustomBlockDefinition('update x position', null);
+  blockdef.category = 'physics';
+  this.customBlocks.push(blockdef);
+}
+*/
 
 // ------- HandMorph -------
 
@@ -1934,13 +1989,19 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
       entry.alignment = "left";
 
       var text = new TextMorph(
-        localize(concept) + ":", 12, null, true, null, "left", 100);
+        localize(concept.replace(new RegExp('_', 'g'), ' ')) + ":",
+        12, null, true, null, "left", 100);
       text.setColor(textColor);
       entry.add(text);
 
       var buttons = [];
 
       function createButton(level, name) {
+        var spacer = new Morph();
+        spacer.setHeight(0);
+        spacer.setWidth(4);
+        entry.add(spacer);
+
         buttons[level] = new ToggleMorph(
           "radiobutton",
           null,
@@ -1971,7 +2032,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         createButton(2, "set property");
       }
       if (max_level >= 3) {
-        createButton(3, "behavior");
+        createButton(3, "change");
       }
 
       entry.fixLayout();
@@ -1981,24 +2042,24 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     addLine(200);
 
     addText("Global concepts:");
-    addConceptButtons("simulation time", 1);
-    addConceptButtons("delta time", 2);
+    addConceptButtons("simulation_time", 1);
+    addConceptButtons("delta_time", 2);
     addConceptButtons("gravity", 1);
     addConceptButtons("friction", 1);
 
     addSpacer(6);
     addText("Object concepts:")
-    addConceptButtons("x position", 3);
-    addConceptButtons("y position", 3);
+    addConceptButtons("x_position", 3);
+    addConceptButtons("y_position", 3);
     addConceptButtons("heading", 3);
-    addConceptButtons("x velocity", 3);
-    addConceptButtons("y velocity", 3);
-    addConceptButtons("angular velocity", 3);
-    addConceptButtons("x acceleration", 3);
-    addConceptButtons("y acceleration", 3);
+    addConceptButtons("x_velocity", 3);
+    addConceptButtons("y_velocity", 3);
+    addConceptButtons("angular_velocity", 3);
+    addConceptButtons("x_acceleration", 3);
+    addConceptButtons("y_acceleration", 3);
     addConceptButtons("mass", 3);
-    addConceptButtons("x net force", 3);
-    addConceptButtons("y net force", 3);
+    addConceptButtons("x_net_force", 3);
+    addConceptButtons("y_net_force", 3);
   }
 
   elems.fixLayout();
@@ -2375,4 +2436,16 @@ ScriptsMorph.prototype.showHiddenCode = function () {
       block.show();
     }
   });
+}
+
+// ------- HatBlockMorph -------
+
+HatBlockMorph.prototype.physicsSaveToXML = function (serializer) {
+  return this.isVisible ? '' : '<physics hidden="true"></physics>';
+};
+
+HatBlockMorph.prototype.physicsLoadFromXML = function (model) {
+  if (model.attributes.hidden === "true") {
+    this.hide();
+  }
 }

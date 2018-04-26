@@ -1216,6 +1216,12 @@ SnapSerializer.prototype.loadScript = function (model) {
     var topBlock, block, nextBlock,
         myself = this;
     model.children.forEach(function (child) {
+        if (child.tag === 'physics') {
+            if (topBlock && topBlock.physicsLoadFromXML) {
+                topBlock.physicsLoadFromXML(child);
+            }
+            return;
+        }
         nextBlock = myself.loadBlock(child);
         if (!nextBlock) {
             return;
@@ -2075,6 +2081,12 @@ BlockMorph.prototype.toXML = BlockMorph.prototype.toScriptXML = function (
         xml += block.toBlockXML(serializer);
         block = block.nextBlock();
     } while (block);
+
+    // when we load we need the block already present
+    if (this.physicsSaveToXML) {
+        xml += this.physicsSaveToXML(serializer);
+    }
+
     xml += '</script>';
     return xml;
 };

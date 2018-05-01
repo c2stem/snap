@@ -8,7 +8,7 @@ modules.physics = "2017-August-18";
 
 function PhysicsMorph(physicsBody) {
   this.init(physicsBody);
-};
+}
 
 PhysicsMorph.prototype = new Morph();
 PhysicsMorph.prototype.constructor = PhysicsMorph;
@@ -48,9 +48,9 @@ PhysicsMorph.prototype.drawNew = function () {
     if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
         x = xOffset + bodyCos * shape.position[0] -
-        bodySin * shape.position[1],
+          bodySin * shape.position[1],
         y = yOffset - bodySin * shape.position[0] -
-        bodyCos * shape.position[1],
+          bodyCos * shape.position[1],
         s = Math.sin(bodyAngle + shape.angle),
         c = Math.cos(bodyAngle + shape.angle);
 
@@ -570,7 +570,7 @@ SpriteMorph.prototype.getStage = function () {
     }
   }
   return stage;
-}
+};
 
 SpriteMorph.prototype.startSimulation = function () {
   var stage = this.getStage();
@@ -1120,7 +1120,7 @@ SpriteMorph.prototype.physicsSaveToXML = function (serializer) {
     var result, name;
     for (name in myself.conceptLevels) {
       if (myself.conceptLevels[name] === level) {
-        result = result ? result + ' ' + name : name
+        result = result ? result + ' ' + name : name;
       }
     }
     return result;
@@ -1137,7 +1137,7 @@ SpriteMorph.prototype.physicsSaveToXML = function (serializer) {
     this.physicsMass,
     this.physicsMode || "morphic",
     getConceptList(0),
-    getConceptList(1), 
+    getConceptList(1),
     getConceptList(2) // 3 is the default value
   );
 };
@@ -1157,19 +1157,19 @@ SpriteMorph.prototype.physicsLoadFromXML = function (model) {
   if (attrs.concepts_disabled) {
     attrs.concepts_disabled.split(' ').forEach(function (concept) {
       myself.conceptLevels[concept] = 0;
-    })
+    });
   }
 
   if (attrs.concepts_readonly) {
     attrs.concepts_readonly.split(' ').forEach(function (concept) {
       myself.conceptLevels[concept] = 1;
-    })
+    });
   }
 
   if (attrs.concepts_getandset) {
     attrs.concepts_getandset.split(' ').forEach(function (concept) {
       myself.conceptLevels[concept] = 2;
-    })
+    });
   }
 };
 
@@ -1179,7 +1179,7 @@ SpriteMorph.prototype.getConceptLevel = function (concept) {
     level = 3;
   }
   return Math.min(Math.max(+level, 0), 3);
-}
+};
 
 SpriteMorph.prototype.setConceptLevel = function (concept, level) {
   if (+level === 3) {
@@ -1187,7 +1187,7 @@ SpriteMorph.prototype.setConceptLevel = function (concept, level) {
   } else {
     this.conceptLevels[concept] = +level;
   }
-}
+};
 
 SpriteMorph.prototype.isBlockDisabled = function (selector) {
   var info = SpriteMorph.prototype.blocks[selector];
@@ -1211,7 +1211,7 @@ SpriteMorph.prototype.isBlockDisabled = function (selector) {
   } else {
     return true;
   }
-}
+};
 
 /*
 SpriteMorph.prototype.createDefaultBehaviors = function () {
@@ -1437,7 +1437,7 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
 
       this.silentSetWidth(this.image.width);
       this.silentSetHeight(this.image.height);
-    }
+    };
 
     this.coordinateMorph.drawNew();
     this.add(this.coordinateMorph);
@@ -1790,7 +1790,7 @@ PhysicsTabMorph.uber = ScrollFrameMorph.prototype;
 
 function PhysicsTabMorph(aSprite, sliderColor) {
   this.init(aSprite, sliderColor);
-};
+}
 
 PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
   PhysicsTabMorph.uber.init.call(this, null, null, sliderColor);
@@ -1885,19 +1885,19 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     elems.add(toggleField("enable ground", aSprite, "hasPhysicsFloor", "togglePhysicsFloor"));
   } else if (aSprite instanceof SpriteMorph) {
     var radioDisabled = toggleField(
-        "physics disabled", aSprite,
-        function () {
-          return !this.physicsMode;
-        },
-        function () {
-          if (this.physicsMode) {
-            this.physicsMode = "";
-            radioStatic.toggle.refresh();
-            radioDynamic.toggle.refresh();
-            aSprite.updatePhysicsBody();
-          }
-        },
-        true),
+      "physics disabled", aSprite,
+      function () {
+        return !this.physicsMode;
+      },
+      function () {
+        if (this.physicsMode) {
+          this.physicsMode = "";
+          radioStatic.toggle.refresh();
+          radioDynamic.toggle.refresh();
+          aSprite.updatePhysicsBody();
+        }
+      },
+      true),
       radioStatic = toggleField(
         "static object", aSprite,
         function () {
@@ -2048,7 +2048,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     addConceptButtons("friction", 1);
 
     addSpacer(6);
-    addText("Object concepts:")
+    addText("Object concepts:");
     addConceptButtons("x_position", 3);
     addConceptButtons("y_position", 3);
     addConceptButtons("heading", 3);
@@ -2178,7 +2178,7 @@ InputSlotMorph.prototype.physicsAttrMenu = function () {
 
 function GraphMorph(table) {
   this.init(table);
-};
+}
 
 GraphMorph.prototype = new Morph();
 GraphMorph.prototype.constructor = GraphMorph;
@@ -2208,18 +2208,18 @@ GraphMorph.prototype.drawNew = function () {
   }
   var ctx = this.image.getContext('2d');
 
-  var labels = [];
-  for (var r = 1; r < this.table.rows(); r++) {
+  var r, c, labels = [];
+  for (r = 1; r < this.table.rows(); r++) {
     var v = +this.table.get(1, r);
     labels.push(v.toFixed(3));
   }
 
   var datasets = [];
-  for (var c = 2; c <= this.table.cols(); c++) {
+  for (c = 2; c <= this.table.cols(); c++) {
     var data = [],
       color = this.colors[c - 2 % this.colors.length];
 
-    for (var r = 1; r < this.table.rows(); r++) {
+    for (r = 1; r < this.table.rows(); r++) {
       data.push(this.table.get(c, r));
     }
 
@@ -2297,7 +2297,7 @@ GraphDialogMorph.uber = DialogBoxMorph.prototype;
 
 function GraphDialogMorph(table, mode) {
   this.init(table, mode);
-};
+}
 
 GraphDialogMorph.prototype.init = function (table, mode) {
   // additional properties:
@@ -2428,7 +2428,7 @@ ScriptsMorph.prototype.hasHiddenCode = function () {
   return this.children.some(function (block) {
     return (block instanceof HatBlockMorph) && !block.isVisible;
   });
-}
+};
 
 ScriptsMorph.prototype.showHiddenCode = function () {
   this.children.forEach(function (block) {
@@ -2436,7 +2436,7 @@ ScriptsMorph.prototype.showHiddenCode = function () {
       block.show();
     }
   });
-}
+};
 
 // ------- HatBlockMorph -------
 
@@ -2448,4 +2448,4 @@ HatBlockMorph.prototype.physicsLoadFromXML = function (model) {
   if (model.attributes.hidden === "true") {
     this.hide();
   }
-}
+};

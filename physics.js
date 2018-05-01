@@ -8,7 +8,7 @@ modules.physics = "2017-August-18";
 
 function PhysicsMorph(physicsBody) {
   this.init(physicsBody);
-};
+}
 
 PhysicsMorph.prototype = new Morph();
 PhysicsMorph.prototype.constructor = PhysicsMorph;
@@ -48,9 +48,9 @@ PhysicsMorph.prototype.drawNew = function () {
     if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
         x = xOffset + bodyCos * shape.position[0] -
-        bodySin * shape.position[1],
+          bodySin * shape.position[1],
         y = yOffset - bodySin * shape.position[0] -
-        bodyCos * shape.position[1],
+          bodyCos * shape.position[1],
         s = Math.sin(bodyAngle + shape.angle),
         c = Math.cos(bodyAngle + shape.angle);
 
@@ -570,7 +570,7 @@ SpriteMorph.prototype.getStage = function () {
     }
   }
   return stage;
-}
+};
 
 SpriteMorph.prototype.startSimulation = function () {
   var stage = this.getStage();
@@ -1120,7 +1120,7 @@ SpriteMorph.prototype.physicsSaveToXML = function (serializer) {
     var result, name;
     for (name in myself.conceptLevels) {
       if (myself.conceptLevels[name] === level) {
-        result = result ? result + ' ' + name : name
+        result = result ? result + ' ' + name : name;
       }
     }
     return result;
@@ -1137,7 +1137,7 @@ SpriteMorph.prototype.physicsSaveToXML = function (serializer) {
     this.physicsMass,
     this.physicsMode || "morphic",
     getConceptList(0),
-    getConceptList(1), 
+    getConceptList(1),
     getConceptList(2) // 3 is the default value
   );
 };
@@ -1157,19 +1157,19 @@ SpriteMorph.prototype.physicsLoadFromXML = function (model) {
   if (attrs.concepts_disabled) {
     attrs.concepts_disabled.split(' ').forEach(function (concept) {
       myself.conceptLevels[concept] = 0;
-    })
+    });
   }
 
   if (attrs.concepts_readonly) {
     attrs.concepts_readonly.split(' ').forEach(function (concept) {
       myself.conceptLevels[concept] = 1;
-    })
+    });
   }
 
   if (attrs.concepts_getandset) {
     attrs.concepts_getandset.split(' ').forEach(function (concept) {
       myself.conceptLevels[concept] = 2;
-    })
+    });
   }
 };
 
@@ -1179,7 +1179,7 @@ SpriteMorph.prototype.getConceptLevel = function (concept) {
     level = 3;
   }
   return Math.min(Math.max(+level, 0), 3);
-}
+};
 
 SpriteMorph.prototype.setConceptLevel = function (concept, level) {
   if (+level === 3) {
@@ -1187,7 +1187,7 @@ SpriteMorph.prototype.setConceptLevel = function (concept, level) {
   } else {
     this.conceptLevels[concept] = +level;
   }
-}
+};
 
 SpriteMorph.prototype.isBlockDisabled = function (selector) {
   var info = SpriteMorph.prototype.blocks[selector];
@@ -1211,7 +1211,7 @@ SpriteMorph.prototype.isBlockDisabled = function (selector) {
   } else {
     return true;
   }
-}
+};
 
 /*
 SpriteMorph.prototype.createDefaultBehaviors = function () {
@@ -1437,7 +1437,7 @@ StageMorph.prototype.toggleCoordinateAxes = function () {
 
       this.silentSetWidth(this.image.width);
       this.silentSetHeight(this.image.height);
-    }
+    };
 
     this.coordinateMorph.drawNew();
     this.add(this.coordinateMorph);
@@ -1790,6 +1790,146 @@ PhysicsTabMorph.uber = ScrollFrameMorph.prototype;
 
 function PhysicsTabMorph(aSprite, sliderColor) {
   this.init(aSprite, sliderColor);
+}
+
+PhysicsTabMorph.prototype.addInputField = function (string, object,
+  getter, setter, lowerLimit, upperLimit, unit) {
+  var entry = new AlignmentMorph("row", 4);
+  entry.alignment = "left";
+  var text =
+    new TextMorph(localize(string) + ':', 10, null, true, null, "right", 100);
+  text.setColor(this.textColor);
+  entry.add(text);
+
+  if (typeof lowerLimit !== "number") {
+    lowerLimit = Number.MIN_VALUE;
+  }
+  if (typeof upperLimit !== "number") {
+    upperLimit = Number.MAX_VALUE;
+  }
+
+  var value = typeof object[getter] !== "function" ? +object[getter] :
+    +object[getter]();
+  var field = new InputFieldMorph(value.toFixed(2), true, null, !setter);
+  field.fixLayout();
+  field.accept = function () {
+    var value = +field.getValue();
+    value = Math.min(Math.max(value, lowerLimit), upperLimit);
+    if (typeof object[setter] === "function") {
+      object[setter](value);
+    } else {
+      object[setter] = value;
+    }
+    field.setContents(value.toFixed(2));
+  };
+  entry.add(field);
+
+  if (unit) {
+    text = new TextMorph(localize(unit), 10, null, true);
+    text.setColor(this.textColor);
+    entry.add(text);
+  }
+
+  entry.fixLayout();
+  this.elems.add(entry);
+  return entry;
+};
+
+PhysicsTabMorph.prototype.addToggleField = function (string, object, getter, setter, radio) {
+  var entry = new AlignmentMorph("row", 4);
+  entry.alignment = "left";
+
+  var field = new ToggleMorph(
+    radio ? "radiobutton" : "checkbox", object, setter, string, getter);
+  field.label.setColor(this.textColor);
+  entry.add(field);
+
+  entry.fixLayout();
+  entry.toggle = field;
+  this.elems.add(entry);
+  return entry;
+};
+
+PhysicsTabMorph.prototype.addLine = function (width) {
+  var entry = new Morph();
+  entry.color = new Color(120, 120, 120);
+  entry.setHeight(1);
+  entry.setWidth(width);
+  this.elems.add(entry);
+  return entry;
+};
+
+PhysicsTabMorph.prototype.addText = function (text) {
+  var entry = new TextMorph(localize(text), 12, null, true);
+  entry.setColor(this.textColor);
+  this.elems.add(entry);
+  return entry;
+};
+
+PhysicsTabMorph.prototype.addSpacer = function (height) {
+  var entry = new Morph();
+  entry.setHeight(height);
+  entry.setWidth(0);
+  this.elems.add(entry);
+  return entry;
+};
+
+PhysicsTabMorph.prototype.addConceptButtons = function (sprite, concept, max_level) {
+  var myself = this;
+
+  var entry = new AlignmentMorph("row", 4);
+  entry.alignment = "left";
+
+  var text = new TextMorph(
+    localize(concept.replace(new RegExp('_', 'g'), ' ')) + ":",
+    12, null, true, null, "left", 100);
+  text.setColor(this.textColor);
+  entry.add(text);
+
+  var buttons = [];
+
+  function createButton(level, name) {
+    var spacer = new Morph();
+    spacer.setHeight(0);
+    spacer.setWidth(4);
+    entry.add(spacer);
+
+    buttons[level] = new ToggleMorph(
+      "radiobutton",
+      null,
+      function () {
+        var prev = Math.min(sprite.getConceptLevel(concept), max_level);
+        sprite.setConceptLevel(concept, level);
+        buttons[prev].refresh();
+        buttons[level].refresh();
+
+        var ide = sprite.parentThatIsA(IDE_Morph);
+        if (ide) {
+          ide.flushBlocksCache("physics");
+          ide.refreshPalette();
+        }
+      },
+      name,
+      function () {
+        return Math.min(sprite.getConceptLevel(concept), max_level) ===
+          level;
+      });
+    buttons[level].label.setColor(myself.textColor);
+    entry.add(buttons[level]);
+  }
+
+  createButton(0, "not needed");
+  createButton(1, "get property");
+  if (max_level >= 2) {
+    createButton(2, "set property");
+  }
+  if (max_level >= 3) {
+    createButton(3, "change");
+  }
+
+  entry.fixLayout();
+  this.elems.add(entry);
+  return entry;
 };
 
 PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
@@ -1797,108 +1937,47 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
   this.acceptDrops = false;
   this.padding = 10;
   this.contents.acceptsDrops = false;
-  var textColor = new Color(255, 255, 255);
+  this.textColor = new Color(255, 255, 255);
 
-  function inputField(
-    string, object, getter, setter, lowerLimit, upperLimit, unit) {
-    var entry = new AlignmentMorph("row", 4);
-    entry.alignment = "left";
-    var text =
-      new TextMorph(localize(string), 10, null, true, null, "right", 100);
-    text.setColor(textColor);
-    entry.add(text);
-
-    if (typeof lowerLimit !== "number") {
-      lowerLimit = Number.MIN_VALUE;
-    }
-    if (typeof upperLimit !== "number") {
-      upperLimit = Number.MAX_VALUE;
-    }
-
-    var value = typeof object[getter] !== "function" ? +object[getter] :
-      +object[getter]();
-    var field = new InputFieldMorph(value.toFixed(2), true, null, !setter);
-    field.fixLayout();
-    field.accept = function () {
-      var value = +field.getValue();
-      value = Math.min(Math.max(value, lowerLimit), upperLimit);
-      if (typeof object[setter] === "function") {
-        object[setter](value);
-      } else {
-        object[setter] = value;
-      }
-      field.setContents(value.toFixed(2));
-    };
-    entry.add(field);
-
-    if (unit) {
-      text = new TextMorph(localize(unit), 10, null, true);
-      text.setColor(textColor);
-      entry.add(text);
-    }
-
-    entry.fixLayout();
-    return entry;
-  }
-
-  function toggleField(string, object, getter, setter, radio) {
-    var entry = new AlignmentMorph("row", 4);
-    entry.alignment = "left";
-
-    var field = new ToggleMorph(
-      radio ? "radiobutton" : "checkbox", object, setter, string, getter);
-    field.label.setColor(textColor);
-    entry.add(field);
-
-    entry.fixLayout();
-    entry.toggle = field;
-    return entry;
-  }
-
-  var elems = new AlignmentMorph("column", 6);
-  elems.alignment = "left";
-  elems.setColor(this.color);
+  this.elems = new AlignmentMorph("column", 6);
+  this.elems.alignment = "left";
+  this.elems.setColor(this.color);
 
   if (aSprite instanceof StageMorph) {
     var world = aSprite.physicsWorld;
 
-    elems.add(inputField(
-      "gravity:", world.gravity, "1", "1", -100, 100, "m/s\u00b2"));
-    elems.add(inputField(
-      "friction:", world.defaultContactMaterial, "friction", "friction",
-      0, 100));
-    elems.add(inputField(
-      "restitution:", world.defaultContactMaterial, "restitution",
-      "restitution", 0, 1));
-    elems.add(inputField(
-      "scale:", aSprite, "physicsScale", "setPhysicsScale", 0.01, 100,
-      "pixel/m"));
-    elems.add(inputField(
-      "origin x:", aSprite, "physicsXOrigin", "setPhysicsXOrigin", -1000, 1000, "pixel"
-    ));
-    elems.add(inputField(
-      "origin y:", aSprite, "physicsYOrigin", "setPhysicsYOrigin", -1000, 1000, "pixel"
-    ));
-    elems.add(inputField(
-      "axis angle:", aSprite, "physicsAxisAngle", "setPhysicsAxisAngle", -360, 360, "deg"
-    ));
-    elems.add(toggleField("enable ground", aSprite, "hasPhysicsFloor", "togglePhysicsFloor"));
+    this.addInputField("gravity",
+      world.gravity, "1", "1", -100, 100, "m/s\u00b2");
+    this.addInputField("friction",
+      world.defaultContactMaterial, "friction", "friction", 0, 100);
+    this.addInputField("restitution",
+      world.defaultContactMaterial, "restitution", "restitution", 0, 1);
+    this.addInputField("scale",
+      aSprite, "physicsScale", "setPhysicsScale", 0.01, 100, "pixel/m");
+    this.addInputField("origin x",
+      aSprite, "physicsXOrigin", "setPhysicsXOrigin", -1000, 1000, "pixel");
+    this.addInputField("origin y",
+      aSprite, "physicsYOrigin", "setPhysicsYOrigin", -1000, 1000, "pixel");
+    this.addInputField("axis angle",
+      aSprite, "physicsAxisAngle", "setPhysicsAxisAngle", -360, 360, "deg");
+    this.addToggleField("enable ground",
+      aSprite, "hasPhysicsFloor", "togglePhysicsFloor");
   } else if (aSprite instanceof SpriteMorph) {
-    var radioDisabled = toggleField(
-        "physics disabled", aSprite,
-        function () {
-          return !this.physicsMode;
-        },
-        function () {
-          if (this.physicsMode) {
-            this.physicsMode = "";
-            radioStatic.toggle.refresh();
-            radioDynamic.toggle.refresh();
-            aSprite.updatePhysicsBody();
-          }
-        },
-        true),
-      radioStatic = toggleField(
+    var radioDisabled = this.addToggleField(
+      "physics disabled", aSprite,
+      function () {
+        return !this.physicsMode;
+      },
+      function () {
+        if (this.physicsMode) {
+          this.physicsMode = "";
+          radioStatic.toggle.refresh();
+          radioDynamic.toggle.refresh();
+          aSprite.updatePhysicsBody();
+        }
+      },
+      true),
+      radioStatic = this.addToggleField(
         "static object", aSprite,
         function () {
           return this.physicsMode === "static";
@@ -1912,7 +1991,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
           }
         },
         true),
-      radioDynamic = toggleField(
+      radioDynamic = this.addToggleField(
         "dynamic object", aSprite,
         function () {
           return this.physicsMode === "dynamic";
@@ -1927,12 +2006,8 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         },
         true);
 
-    elems.add(radioDisabled);
-    elems.add(radioStatic);
-    elems.add(radioDynamic);
-
     if (false) {
-      elems.add(toggleField("fixed x position", aSprite, function () {
+      this.addToggleField("fixed x position", aSprite, function () {
         return this.physicsBody && this.physicsBody.fixedX;
       }, function () {
         if (this.physicsBody) {
@@ -1941,9 +2016,9 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
             this.physicsBody.velocity[0] = 0;
           }
         }
-      }));
+      });
 
-      elems.add(toggleField("fixed y position", aSprite, function () {
+      this.addToggleField("fixed y position", aSprite, function () {
         return this.physicsBody && this.physicsBody.fixedY;
       }, function () {
         if (this.physicsBody) {
@@ -1952,119 +2027,42 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
             this.physicsBody.velocity[1] = 0;
           }
         }
-      }));
+      });
 
-      elems.add(toggleField("fixed heading", aSprite, function () {
+      this.addToggleField("fixed heading", aSprite, function () {
         return this.physicsBody && this.physicsBody.fixedRotation;
       }, function () {
         if (this.physicsBody) {
           this.physicsBody.fixedRotation = !this.physicsBody.fixedRotation;
         }
-      }));
+      });
     }
 
-    function addLine(width) {
-      var elem = new Morph();
-      elem.color = new Color(120, 120, 120);
-      elem.setHeight(1);
-      elem.setWidth(width);
-      elems.add(elem);
-    }
+    this.addLine(200);
+    this.addText("Global concepts:");
+    this.addConceptButtons(aSprite, "simulation_time", 1);
+    this.addConceptButtons(aSprite, "delta_time", 2);
+    this.addConceptButtons(aSprite, "gravity", 1);
+    this.addConceptButtons(aSprite, "friction", 1);
 
-    function addText(text) {
-      var elem = new TextMorph(localize(text), 12, null, true);
-      elem.setColor(textColor);
-      elems.add(elem);
-    }
-
-    function addSpacer(height) {
-      var elem = new Morph();
-      elem.setHeight(height);
-      elem.setWidth(0);
-      elems.add(elem);
-    }
-
-    function addConceptButtons(concept, max_level) {
-      var entry = new AlignmentMorph("row", 4);
-      entry.alignment = "left";
-
-      var text = new TextMorph(
-        localize(concept.replace(new RegExp('_', 'g'), ' ')) + ":",
-        12, null, true, null, "left", 100);
-      text.setColor(textColor);
-      entry.add(text);
-
-      var buttons = [];
-
-      function createButton(level, name) {
-        var spacer = new Morph();
-        spacer.setHeight(0);
-        spacer.setWidth(4);
-        entry.add(spacer);
-
-        buttons[level] = new ToggleMorph(
-          "radiobutton",
-          null,
-          function () {
-            var prev = Math.min(aSprite.getConceptLevel(concept), max_level);
-            aSprite.setConceptLevel(concept, level);
-            buttons[prev].refresh();
-            buttons[level].refresh();
-
-            var ide = aSprite.parentThatIsA(IDE_Morph);
-            if (ide) {
-              ide.flushBlocksCache("physics");
-              ide.refreshPalette();
-            }
-          },
-          name,
-          function () {
-            return Math.min(aSprite.getConceptLevel(concept), max_level) ===
-              level;
-          });
-        buttons[level].label.setColor(textColor);
-        entry.add(buttons[level]);
-      }
-
-      createButton(0, "not needed");
-      createButton(1, "get property");
-      if (max_level >= 2) {
-        createButton(2, "set property");
-      }
-      if (max_level >= 3) {
-        createButton(3, "change");
-      }
-
-      entry.fixLayout();
-      elems.add(entry);
-    }
-
-    addLine(200);
-
-    addText("Global concepts:");
-    addConceptButtons("simulation_time", 1);
-    addConceptButtons("delta_time", 2);
-    addConceptButtons("gravity", 1);
-    addConceptButtons("friction", 1);
-
-    addSpacer(6);
-    addText("Object concepts:")
-    addConceptButtons("x_position", 3);
-    addConceptButtons("y_position", 3);
-    addConceptButtons("heading", 3);
-    addConceptButtons("x_velocity", 3);
-    addConceptButtons("y_velocity", 3);
-    addConceptButtons("angular_velocity", 3);
-    addConceptButtons("x_acceleration", 3);
-    addConceptButtons("y_acceleration", 3);
-    addConceptButtons("mass", 3);
-    addConceptButtons("x_net_force", 3);
-    addConceptButtons("y_net_force", 3);
+    this.addSpacer(6);
+    this.addText("Object concepts:");
+    this.addConceptButtons(aSprite, "x_position", 3);
+    this.addConceptButtons(aSprite, "y_position", 3);
+    this.addConceptButtons(aSprite, "heading", 3);
+    this.addConceptButtons(aSprite, "x_velocity", 3);
+    this.addConceptButtons(aSprite, "y_velocity", 3);
+    this.addConceptButtons(aSprite, "angular_velocity", 3);
+    this.addConceptButtons(aSprite, "x_acceleration", 3);
+    this.addConceptButtons(aSprite, "y_acceleration", 3);
+    this.addConceptButtons(aSprite, "mass", 3);
+    this.addConceptButtons(aSprite, "x_net_force", 3);
+    this.addConceptButtons(aSprite, "y_net_force", 3);
   }
 
-  elems.fixLayout();
-  elems.setPosition(new Point(5, 5));
-  this.add(elems);
+  this.elems.fixLayout();
+  this.elems.setPosition(new Point(5, 5));
+  this.add(this.elems);
 };
 
 PhysicsTabMorph.prototype.wantsDropOf = function (morph) {
@@ -2178,7 +2176,7 @@ InputSlotMorph.prototype.physicsAttrMenu = function () {
 
 function GraphMorph(table) {
   this.init(table);
-};
+}
 
 GraphMorph.prototype = new Morph();
 GraphMorph.prototype.constructor = GraphMorph;
@@ -2208,18 +2206,18 @@ GraphMorph.prototype.drawNew = function () {
   }
   var ctx = this.image.getContext('2d');
 
-  var labels = [];
-  for (var r = 1; r < this.table.rows(); r++) {
+  var r, c, labels = [];
+  for (r = 1; r < this.table.rows(); r++) {
     var v = +this.table.get(1, r);
     labels.push(v.toFixed(3));
   }
 
   var datasets = [];
-  for (var c = 2; c <= this.table.cols(); c++) {
+  for (c = 2; c <= this.table.cols(); c++) {
     var data = [],
       color = this.colors[c - 2 % this.colors.length];
 
-    for (var r = 1; r < this.table.rows(); r++) {
+    for (r = 1; r < this.table.rows(); r++) {
       data.push(this.table.get(c, r));
     }
 
@@ -2297,7 +2295,7 @@ GraphDialogMorph.uber = DialogBoxMorph.prototype;
 
 function GraphDialogMorph(table, mode) {
   this.init(table, mode);
-};
+}
 
 GraphDialogMorph.prototype.init = function (table, mode) {
   // additional properties:
@@ -2428,7 +2426,7 @@ ScriptsMorph.prototype.hasHiddenCode = function () {
   return this.children.some(function (block) {
     return (block instanceof HatBlockMorph) && !block.isVisible;
   });
-}
+};
 
 ScriptsMorph.prototype.showHiddenCode = function () {
   this.children.forEach(function (block) {
@@ -2436,7 +2434,7 @@ ScriptsMorph.prototype.showHiddenCode = function () {
       block.show();
     }
   });
-}
+};
 
 // ------- HatBlockMorph -------
 
@@ -2448,4 +2446,4 @@ HatBlockMorph.prototype.physicsLoadFromXML = function (model) {
   if (model.attributes.hidden === "true") {
     this.hide();
   }
-}
+};

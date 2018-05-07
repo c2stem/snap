@@ -1194,6 +1194,18 @@ SpriteMorph.prototype.setConceptLevel = function (concept, level) {
   } else {
     this.conceptLevels[concept] = +level;
   }
+
+  var ide = this.parentThatIsA(IDE_Morph);
+  if (ide) {
+    ide.flushBlocksCache("physics");
+    ide.refreshPalette();
+
+    if (ide.currentTab === 'physics' &&
+      ide.currentSprite === this && ide.spriteEditor.concepts &&
+      ide.spriteEditor.concepts[concept]) {
+      ide.spriteEditor.concepts[concept].refresh();
+    }
+  }
 };
 
 SpriteMorph.prototype.isBlockDisabled = function (selector) {
@@ -2001,16 +2013,7 @@ PhysicsTabMorph.prototype.addConceptButtons = function (sprite, concept, max_lev
       "radiobutton",
       null,
       function () {
-        var prev = Math.min(sprite.getConceptLevel(concept), max_level);
         sprite.setConceptLevel(concept, level);
-        buttons[prev].refresh();
-        buttons[level].refresh();
-
-        var ide = sprite.parentThatIsA(IDE_Morph);
-        if (ide) {
-          ide.flushBlocksCache("physics");
-          ide.refreshPalette();
-        }
       },
       name,
       function () {
@@ -2029,6 +2032,12 @@ PhysicsTabMorph.prototype.addConceptButtons = function (sprite, concept, max_lev
   if (max_level >= 3) {
     createButton(3, "change");
   }
+
+  entry.refresh = function () {
+    buttons.forEach(function (b) {
+      b.refresh();
+    });
+  };
 
   entry.fixLayout();
   this.elems.add(entry);
@@ -2073,24 +2082,25 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
 
     this.addLine(200);
     this.addText("Global concepts:");
-    this.addConceptButtons(aSprite, "simulation_time", 1);
-    this.addConceptButtons(aSprite, "delta_time", 2);
-    this.addConceptButtons(aSprite, "gravity", 1);
-    this.addConceptButtons(aSprite, "friction", 1);
+    this.concepts = {};
+    this.concepts.simulation_time = this.addConceptButtons(aSprite, "simulation_time", 1);
+    this.concepts.delta_time = this.addConceptButtons(aSprite, "delta_time", 2);
+    this.concepts.gravity = this.addConceptButtons(aSprite, "gravity", 1);
+    this.concepts.friction = this.addConceptButtons(aSprite, "friction", 1);
 
     this.addSpacer(6);
     this.addText("Object concepts:");
-    this.addConceptButtons(aSprite, "x_position", 3);
-    this.addConceptButtons(aSprite, "y_position", 3);
-    this.addConceptButtons(aSprite, "heading", 3);
-    this.addConceptButtons(aSprite, "x_velocity", 3);
-    this.addConceptButtons(aSprite, "y_velocity", 3);
-    this.addConceptButtons(aSprite, "angular_velocity", 3);
-    this.addConceptButtons(aSprite, "x_acceleration", 3);
-    this.addConceptButtons(aSprite, "y_acceleration", 3);
-    this.addConceptButtons(aSprite, "mass", 3);
-    this.addConceptButtons(aSprite, "x_net_force", 3);
-    this.addConceptButtons(aSprite, "y_net_force", 3);
+    this.concepts.x_position = this.addConceptButtons(aSprite, "x_position", 3);
+    this.concepts.y_position = this.addConceptButtons(aSprite, "y_position", 3);
+    this.concepts.heading = this.addConceptButtons(aSprite, "heading", 3);
+    this.concepts.x_velocity = this.addConceptButtons(aSprite, "x_velocity", 3);
+    this.concepts.y_velocity = this.addConceptButtons(aSprite, "y_velocity", 3);
+    this.concepts.angular_velocity = this.addConceptButtons(aSprite, "angular_velocity", 3);
+    this.concepts.x_acceleration = this.addConceptButtons(aSprite, "x_acceleration", 3);
+    this.concepts.y_acceleration = this.addConceptButtons(aSprite, "y_acceleration", 3);
+    this.concepts.mass = this.addConceptButtons(aSprite, "mass", 3);
+    this.concepts.x_net_force = this.addConceptButtons(aSprite, "x_net_force", 3);
+    this.concepts.y_net_force = this.addConceptButtons(aSprite, "y_net_force", 3);
   }
 
   this.elems.fixLayout();

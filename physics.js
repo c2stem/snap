@@ -993,6 +993,20 @@ SpriteMorph.prototype.updateMorphicPosition = function () {
   this.phyMorphicUpdating = false;
 };
 
+SpriteMorph.prototype.setPhysicsMode = function (mode) {
+  if (mode !== this.physicsMode) {
+    this.physicsMode = mode;
+    this.updatePhysicsBody();
+  }
+
+  var ide = this.parentThatIsA(IDE_Morph);
+  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+    ide.spriteEditor.physicsModeDisabled.refresh();
+    ide.spriteEditor.physicsModeStatic.refresh();
+    ide.spriteEditor.physicsModeDynamic.refresh();
+  }
+};
+
 SpriteMorph.prototype.phyWearCostume = SpriteMorph.prototype.wearCostume;
 SpriteMorph.prototype.wearCostume = function (costume) {
   var loading = costume && typeof costume.loaded === "function",
@@ -1311,6 +1325,11 @@ StageMorph.prototype.setPhysicsFloor = function (enable) {
     body.addShape(new p2.Plane(), [-o.x - ext.x / 2, -o.x], Math.PI * 1.5);
     this.physicsWorld.addBody(body);
     this.physicsFloor = body;
+  }
+
+  var ide = this.parentThatIsA(IDE_Morph);
+  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+    ide.spriteEditor.hasPhysicsFloor.refresh();
   }
 };
 
@@ -1746,9 +1765,7 @@ StageMorph.prototype.recordGraphData = function () {
 };
 
 StageMorph.prototype.physicsDebug = function () {
-  this.setPhysicsYGravity(10.0);
-  this.setPhysicsFriction(20.0);
-  this.setPhysicsRestitution(0.3);
+  console.log(this.physicsWorld);
 };
 
 // ------- ProcessMorph -------
@@ -1897,17 +1914,41 @@ PhysicsTabMorph.prototype.addInputField = function (string, object,
   return entry;
 };
 
-PhysicsTabMorph.prototype.addToggleField = function (string, object, getter, setter, radio) {
+PhysicsTabMorph.prototype.addCheckField = function (string, object, getter, setter) {
   var entry = new AlignmentMorph("row", 4);
   entry.alignment = "left";
 
-  var field = new ToggleMorph(
-    radio ? "radiobutton" : "checkbox", object, setter, string, getter);
+  var field = new ToggleMorph("checkbox", object, setter, localize(string), getter);
   field.label.setColor(this.textColor);
   entry.add(field);
 
+  entry.refresh = function () {
+    field.refresh();
+  };
+
   entry.fixLayout();
-  entry.toggle = field;
+  this.elems.add(entry);
+  return entry;
+};
+
+PhysicsTabMorph.prototype.addRadioField = function (string, object, getter, setter, value) {
+  var entry = new AlignmentMorph("row", 4);
+  entry.alignment = "left";
+
+  var field = new ToggleMorph("radiobutton", object, function () {
+    object[setter](value);
+  }, localize(string), function () {
+    return value === (typeof object[getter] === "function" ?
+      object[getter]() : object[getter]);
+  });
+  field.label.setColor(this.textColor);
+  entry.add(field);
+
+  entry.refresh = function () {
+    field.refresh();
+  };
+
+  entry.fixLayout();
   this.elems.add(entry);
   return entry;
 };
@@ -2020,54 +2061,18 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
       aSprite, "physicsYOrigin", "setPhysicsYOrigin", -1000, 1000, "pixel");
     this.physicsAxisAngle = this.addInputField("axis angle",
       aSprite, "physicsAxisAngle", "setPhysicsAxisAngle", -360, 360, "deg");
-    this.addToggleField("enable ground",
+    this.hasPhysicsFloor = this.addCheckField("enable ground",
       aSprite, "hasPhysicsFloor", "togglePhysicsFloor");
   } else if (aSprite instanceof SpriteMorph) {
-    var radioDisabled = this.addToggleField(
-        "physics disabled", aSprite,
-        function () {
-          return !this.physicsMode;
-        },
-        function () {
-          if (this.physicsMode) {
-            this.physicsMode = "";
-            radioStatic.toggle.refresh();
-            radioDynamic.toggle.refresh();
-            aSprite.updatePhysicsBody();
-          }
-        },
-        true),
-      radioStatic = this.addToggleField(
-        "static object", aSprite,
-        function () {
-          return this.physicsMode === "static";
-        },
-        function () {
-          if (this.physicsMode !== "static") {
-            this.physicsMode = "static";
-            radioDisabled.toggle.refresh();
-            radioDynamic.toggle.refresh();
-            aSprite.updatePhysicsBody();
-          }
-        },
-        true),
-      radioDynamic = this.addToggleField(
-        "dynamic object", aSprite,
-        function () {
-          return this.physicsMode === "dynamic";
-        },
-        function () {
-          if (this.physicsMode !== "dynamic") {
-            this.physicsMode = "dynamic";
-            radioDisabled.toggle.refresh();
-            radioStatic.toggle.refresh();
-            aSprite.updatePhysicsBody();
-          }
-        },
-        true);
+    this.physicsModeDisabled = this.addRadioField(
+      "physics disabled", aSprite, "physicsMode", "setPhysicsMode", "");
+    this.physicsModeStatic = this.addRadioField(
+      "static object", aSprite, "physicsMode", "setPhysicsMode", "static");
+    this.physicsModeDynamic = this.addRadioField(
+      "dynamic object", aSprite, "physicsMode", "setPhysicsMode", "dynamic");
 
     if (false) {
-      this.addToggleField("fixed x position", aSprite, function () {
+      this.addCheckField("fixed x position", aSprite, function () {
         return this.physicsBody && this.physicsBody.fixedX;
       }, function () {
         if (this.physicsBody) {
@@ -2078,7 +2083,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         }
       });
 
-      this.addToggleField("fixed y position", aSprite, function () {
+      this.addCheckField("fixed y position", aSprite, function () {
         return this.physicsBody && this.physicsBody.fixedY;
       }, function () {
         if (this.physicsBody) {
@@ -2089,7 +2094,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
         }
       });
 
-      this.addToggleField("fixed heading", aSprite, function () {
+      this.addCheckField("fixed heading", aSprite, function () {
         return this.physicsBody && this.physicsBody.fixedRotation;
       }, function () {
         if (this.physicsBody) {

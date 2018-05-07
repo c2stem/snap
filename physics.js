@@ -2071,38 +2071,6 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     this.physicsModeDynamic = this.addRadioField(
       "dynamic object", aSprite, "physicsMode", "setPhysicsMode", "dynamic");
 
-    if (false) {
-      this.addCheckField("fixed x position", aSprite, function () {
-        return this.physicsBody && this.physicsBody.fixedX;
-      }, function () {
-        if (this.physicsBody) {
-          this.physicsBody.fixedX = !this.physicsBody.fixedX;
-          if (this.physicsBody.fixedX) {
-            this.physicsBody.velocity[0] = 0;
-          }
-        }
-      });
-
-      this.addCheckField("fixed y position", aSprite, function () {
-        return this.physicsBody && this.physicsBody.fixedY;
-      }, function () {
-        if (this.physicsBody) {
-          this.physicsBody.fixedY = !this.physicsBody.fixedY;
-          if (this.physicsBody.fixedY) {
-            this.physicsBody.velocity[1] = 0;
-          }
-        }
-      });
-
-      this.addCheckField("fixed heading", aSprite, function () {
-        return this.physicsBody && this.physicsBody.fixedRotation;
-      }, function () {
-        if (this.physicsBody) {
-          this.physicsBody.fixedRotation = !this.physicsBody.fixedRotation;
-        }
-      });
-    }
-
     this.addLine(200);
     this.addText("Global concepts:");
     this.addConceptButtons(aSprite, "simulation_time", 1);

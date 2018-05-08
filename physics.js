@@ -2013,7 +2013,7 @@ PhysicsTabMorph.prototype.addConceptButtons = function (sprite, concept, max_lev
       "radiobutton",
       null,
       function () {
-        sprite.setConceptLevel(concept, level);
+        SnapActions.setConceptLevel(sprite, concept, level);
       },
       name,
       function () {
@@ -2487,4 +2487,28 @@ HatBlockMorph.prototype.physicsLoadFromXML = function (model) {
   if (model.attributes.hidden === "true") {
     this.hide();
   }
+};
+
+// ------- ActionManager -------
+
+SnapActions.addActions(
+  'setConceptLevel'
+);
+
+ActionManager.prototype._setConceptLevel = function (sprite, concept, level) {
+  return [sprite.id, concept, level, sprite.getConceptLevel(concept)];
+};
+
+ActionManager.prototype.onSetConceptLevel = function (spriteId, concept, level) {
+  var sprite = this._owners[spriteId];
+  sprite.setConceptLevel(concept, level);
+  this.completeAction();
+};
+
+ActionManager.OwnerFor.setConceptLevel = function () {
+  return null;
+};
+
+UndoManager.Invert.setConceptLevel = function (args) {
+  return [args[0], args[1], args[3]];
 };

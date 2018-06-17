@@ -1833,7 +1833,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(watcherToggle('direction'));
         blocks.push(block('direction'));
 
-    } else if (cat === 'physics' ) {
+    } else if (cat === 'simulation' ) {
 
         blocks.push(block('doSimulationStep'));
         blocks.push(block('startSimulation'));
@@ -6301,7 +6301,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         txt.setColor(this.paletteTextColor);
         blocks.push(txt);
 
-    } else if (cat === 'physics' ) {
+    } else if (cat === 'simulation' ) {
 
         blocks.push(block('doSimulationStep'));
         blocks.push(block('startSimulation'));

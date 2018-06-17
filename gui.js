@@ -1494,7 +1494,7 @@ IDE_Morph.prototype.createSpriteBar = function () {
     addTab('scripts');
     addTab('costumes');
     addTab('sounds');
-    addTab('physics');
+    addTab('simulation');
 
     tabBar.fixLayout();
     tabBar.children.forEach(function (each) {
@@ -4502,6 +4502,7 @@ IDE_Morph.prototype.rawOpenProjectString = function (str) {
                 this
             );
         } catch (err) {
+            console.log(err);
             this.showMessage('Load failed: ' + err);
         }
     } else {

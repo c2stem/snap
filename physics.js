@@ -2,7 +2,7 @@
 
 "use strict";
 
-modules.physics = "2017-August-18";
+modules.physics = "2018-June-16";
 
 // ------- PhysicsMorph -------
 
@@ -135,35 +135,35 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     angularForce: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "apply %clockwise torque of %n",
       defaults: [1000]
     },
     angularForceLeft: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "apply %counterclockwise torque of %n",
       defaults: [1000]
     },
     applyForceForward: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "apply force of %n",
       defaults: [1000]
     },
     applyForce: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "apply force %n in direction %dir",
       defaults: [100]
     },
     setMass: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set mass to %n kg",
       defaults: [100],
       concepts: ["mass"]
@@ -171,14 +171,14 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     mass: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "mass in kg",
       concepts: ["mass"]
     },
     setVelocity: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set velocity to x: %n y: %n m/s",
       defaults: [0, 0],
       concepts: ["x_velocity", "y_velocity"]
@@ -186,7 +186,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setXVelocity: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set x velocity to %n m/s",
       defaults: [0],
       concepts: ["x_velocity"]
@@ -194,7 +194,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setYVelocity: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set y velocity to %n m/s",
       defaults: [0],
       concepts: ["y_velocity"]
@@ -202,21 +202,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     xVelocity: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "x velocity in m/s",
       concepts: ["x_velocity"]
     },
     yVelocity: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "y velocity in m/s",
       concepts: ["y_velocity"]
     },
     changeVelocity: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change velocity by x: %n y: %n m/s",
       defaults: [0, 0],
       concepts: ["x_velocity", "y_velocity"]
@@ -224,7 +224,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     changeXVelocity: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change x velocity by %n m/s",
       defaults: [0],
       concepts: ["x_velocity"]
@@ -232,7 +232,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     changeYVelocity: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change y velocity by %n m/s",
       defaults: [0],
       concepts: ["y_velocity"]
@@ -240,7 +240,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setAcceleration: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set acceleration to x: %n y: %n m/s\u00b2",
       defaults: [0, 0],
       concepts: ["x_acceleration", "y_acceleration"]
@@ -248,7 +248,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setXAcceleration: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set x acceleration to %n m/s\u00b2",
       defaults: [0],
       concepts: ["x_acceleration"]
@@ -256,7 +256,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setYAcceleration: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set y acceleration to %n m/s\u00b2",
       defaults: [0],
       concepts: ["y_acceleration"]
@@ -264,21 +264,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     xAcceleration: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "x acceleration in m/s\u00b2",
       concepts: ["x_acceleration"]
     },
     yAcceleration: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "y acceleration in m/s\u00b2",
       concepts: ["y_acceleration"]
     },
     setNetForce: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set net force to x: %n y: %n N",
       defaults: [0, 0],
       concepts: ["x_net_force", "y_net_force"]
@@ -286,7 +286,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setXNetForce: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set x net force to %n N",
       defaults: [0],
       concepts: ["x_net_force"]
@@ -294,7 +294,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setYNetForce: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set y net force to %n N",
       defaults: [0],
       concepts: ["y_net_force"]
@@ -302,21 +302,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     xNetForce: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "x net force in N",
       concepts: ["x_net_force"]
     },
     yNetForce: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "y net force in N",
       concepts: ["y_net_force"]
     },
     changeNetForce: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change net force by x: %n y: %n N",
       defaults: [0, 0],
       concepts: ["x_net_force", "y_net_force"]
@@ -324,7 +324,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     changeXNetForce: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change x net force by %n N",
       defaults: [0],
       concepts: ["x_net_force"]
@@ -332,51 +332,51 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     changeYNetForce: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change y net force by %n N",
       defaults: [0],
       concepts: ["y_net_force"]
     },
     simulationTime: {
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "time in s",
       concepts: ["simulation_time"]
     },
     deltaTime: {
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "\u2206t in s",
       concepts: ["delta_time"]
     },
     setDeltaTime: {
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set \u2206t to %n in s",
       defaults: [0],
       concepts: ["delta_time"]
     },
     doSimulationStep: {
       type: "hat",
-      category: "physics",
+      category: "simulation",
       spec: "simulation_step"
     },
     yGravity: {
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "gravity in m/s\u00b2",
       concepts: ["gravity"]
     },
     friction: {
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "friction",
       concepts: ["friction"]
     },
     setPhysicsPosition: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set position to x: %n y: %n m",
       defaults: [0, 0],
       concepts: ["x_position", "y_position"]
@@ -384,7 +384,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setPhysicsXPosition: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set x position to %n m",
       defaults: [0],
       concepts: ["x_position"]
@@ -392,7 +392,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setPhysicsYPosition: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set y position to %n m",
       defaults: [0],
       concepts: ["y_position"]
@@ -400,21 +400,21 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     physicsXPosition: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "x position in m",
       concepts: ["x_position"]
     },
     physicsYPosition: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "y position in m",
       concepts: ["y_position"]
     },
     changePhysicsXPosition: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change x position by %n m",
       defaults: [0],
       concepts: ["x_position"]
@@ -422,7 +422,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     changePhysicsYPosition: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change y position by %n m",
       defaults: [0],
       concepts: ["y_position"]
@@ -430,7 +430,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     changePhysicsPosition: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change position by x: %n y: %n m",
       defaults: [0, 0],
       concepts: ["x_position", "y_position"]
@@ -438,7 +438,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     setPhysicsAngle: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set heading to %n deg",
       defaults: [0],
       concepts: ["heading"]
@@ -446,7 +446,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     changePhysicsAngle: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change heading by %n deg",
       defaults: [0],
       concepts: ["heading"]
@@ -454,14 +454,14 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     physicsAngle: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "heading in deg",
       concepts: ["heading"]
     },
     setAngularVelocity: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set angular velocity to %n deg/s",
       defaults: [0],
       concepts: ["angular_velocity"]
@@ -469,7 +469,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     changeAngularVelocity: {
       only: SpriteMorph,
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "change angular velocity by %n deg/s",
       defaults: [0],
       concepts: ["angular_velocity"]
@@ -477,28 +477,28 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     angularVelocity: {
       only: SpriteMorph,
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "angular velocity in deg/s",
       concepts: ["angular_velocity"]
     },
     startSimulation: {
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "start simulation"
     },
     stopSimulation: {
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "stop simulation"
     },
     runSimulationSteps: {
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "run simulation step"
     },
     getPhysicsAttrOf: {
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "%phy of %spr",
       defaults: [
         ["x position"]
@@ -506,7 +506,7 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     },
     setPhysicsAttrOf: {
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "set %phy of %spr to %n",
       defaults: [
         ["x position"], null, [0]
@@ -514,17 +514,17 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
     },
     graphData: {
       type: "reporter",
-      category: "physics",
+      category: "simulation",
       spec: "graph data"
     },
     clearGraphData: {
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "clear graph data"
     },
     recordGraphData: {
       type: "command",
-      category: "physics",
+      category: "simulation",
       spec: "record graph data"
     }
   };
@@ -540,8 +540,8 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
   }
 };
 
-SpriteMorph.prototype.categories.push("physics");
-SpriteMorph.prototype.blockColor.physics = new Color(100, 140, 250);
+SpriteMorph.prototype.categories.push('simulation');
+SpriteMorph.prototype.blockColor.simulation = new Color(100, 140, 250);
 
 SpriteMorph.prototype.initPhysicsBlocks();
 
@@ -557,6 +557,7 @@ SpriteMorph.prototype.init = function (globals) {
   this.physicsMode = "";
   this.physicsBody = null;
   this.physicsMass = 100;
+  this.customConceptValues = {};
 };
 
 SpriteMorph.prototype.getStage = function () {
@@ -1000,7 +1001,7 @@ SpriteMorph.prototype.setPhysicsMode = function (mode) {
   }
 
   var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+  if (ide && ide.currentTab === 'simulation' && ide.currentSprite === this) {
     ide.spriteEditor.physicsModeDisabled.refresh();
     ide.spriteEditor.physicsModeStatic.refresh();
     ide.spriteEditor.physicsModeDynamic.refresh();
@@ -1197,10 +1198,10 @@ SpriteMorph.prototype.setConceptLevel = function (concept, level) {
 
   var ide = this.parentThatIsA(IDE_Morph);
   if (ide) {
-    ide.flushBlocksCache("physics");
+    ide.flushBlocksCache('simulation');
     ide.refreshPalette();
 
-    if (ide.currentTab === 'physics' &&
+    if (ide.currentTab === 'simulation' &&
       ide.currentSprite === this && ide.spriteEditor.concepts &&
       ide.spriteEditor.concepts[concept]) {
       ide.spriteEditor.concepts[concept].refresh();
@@ -1232,13 +1233,157 @@ SpriteMorph.prototype.isBlockDisabled = function (selector) {
   }
 };
 
-/*
-SpriteMorph.prototype.createDefaultBehaviors = function () {
-  var blockdef = new CustomBlockDefinition('update x position', null);
-  blockdef.category = 'physics';
-  this.customBlocks.push(blockdef);
-}
-*/
+SpriteMorph.prototype.findCustomConceptWatcher = function (concept) {
+  var stage = this.parentThatIsA(StageMorph),
+    myself = this;
+  if (stage === null) {
+    return null;
+  }
+  return detect(
+    stage.children,
+    function (morph) {
+      return morph instanceof WatcherMorph &&
+        morph.target === myself &&
+        morph.targetArgument === concept.name;
+    }
+  );
+};
+
+SpriteMorph.prototype.toggleCustomConceptWatcher = function (concept) {
+  var stage = this.parentThatIsA(StageMorph),
+    watcher,
+    others;
+  if (stage === null) {
+    return null;
+  }
+  watcher = this.findCustomConceptWatcher(concept);
+  if (watcher !== null) {
+    if (watcher.isVisible) {
+      watcher.hide();
+    } else {
+      watcher.show();
+      watcher.fixLayout(); // re-hide hidden parts
+      watcher.keepWithin(stage);
+    }
+    return;
+  }
+
+  watcher = new WatcherMorph(
+    concept.name + (concept.unit ? ' in ' + concept.unit : ''),
+    this.blockColor.simulation,
+    this,
+    'getCustomConceptValue'
+  );
+  watcher.targetArgument = concept.name;
+  watcher.update();
+
+  watcher.setPosition(stage.position().add(10));
+  others = stage.watchers(watcher.left());
+  if (others.length > 0) {
+    watcher.setTop(others[others.length - 1].bottom());
+  }
+  stage.add(watcher);
+  watcher.fixLayout();
+  watcher.keepWithin(stage);
+};
+
+SpriteMorph.prototype.showingCustomConceptWatcher = function (concept) {
+  var stage = this.parentThatIsA(StageMorph),
+    watcher;
+  if (stage === null) {
+    return false;
+  }
+  watcher = this.findCustomConceptWatcher(concept);
+  if (watcher) {
+    return watcher.isVisible;
+  }
+  return false;
+};
+
+SpriteMorph.prototype.deleteVariableWatcher = function (concept) {
+  var stage = this.parentThatIsA(StageMorph),
+    watcher;
+  if (stage === null) {
+    return null;
+  }
+  watcher = this.findCustomConceptWatcher(concept);
+  if (watcher !== null) {
+    watcher.destroy();
+  }
+};
+
+SpriteMorph.prototype.customConceptWatcher = function (concept) {
+  var myself = this;
+  return new ToggleMorph(
+    'checkbox',
+    this,
+    function () {
+      myself.toggleCustomConceptWatcher(concept);
+    },
+    null,
+    function () {
+      return myself.showingCustomConceptWatcher(concept);
+    },
+    null
+  );
+};
+
+SpriteMorph.prototype.customConceptGetBlock = function (concept) {
+  var block = new ReporterBlockMorph(false);
+  block.selector = 'doGetConceptValue';
+  block.color = this.blockColor.simulation;
+  block.category = 'simulation';
+  block.setSpec(concept.name + (concept.unit ? ' in ' + concept.unit : ''));
+  block.isDraggable = false;
+  block.isTemplate = true;
+  block.conceptName = concept.name;
+  return block;
+};
+
+SpriteMorph.prototype.customConceptSetBlock = function (concept) {
+  var block = new CommandBlockMorph();
+  block.selector = 'doSetConceptValue';
+  block.color = this.blockColor.simulation;
+  block.category = 'simulation';
+  block.setSpec('set ' + concept.name + ' to %n' +
+    (concept.unit ? ' ' + concept.unit : ''));
+  block.inputs()[0].setContents(0);
+  block.isDraggable = false;
+  block.isTemplate = true;
+  block.conceptName = concept.name;
+  return block;
+};
+
+SpriteMorph.prototype.customConceptChangeBlock = function (concept) {
+  var block = new CommandBlockMorph();
+  block.selector = 'doChangeConceptValue';
+  block.color = this.blockColor.simulation;
+  block.category = 'simulation';
+  block.setSpec('change ' + concept.name + ' by %n' +
+    (concept.unit ? ' ' + concept.unit : ''));
+  block.inputs()[0].setContents(0);
+  block.isDraggable = false;
+  block.isTemplate = true;
+  block.conceptName = concept.name;
+  return block;
+};
+
+SpriteMorph.prototype.getCustomConceptValue = function (name) {
+  if (typeof name === 'string') {
+    return this.customConceptValues[name] || 0;
+  }
+  return 0;
+};
+
+SpriteMorph.prototype.setCustomConceptValue = function (name, value) {
+  if (typeof name === 'string') {
+    this.customConceptValues[name] = +value;
+  }
+};
+
+SpriteMorph.prototype.changeConceptValue = function (name, value) {
+  this.setCustomConceptValue(name, this.getCustomConceptValue(name) + value);
+};
 
 // ------- HandMorph -------
 
@@ -1312,6 +1457,8 @@ StageMorph.prototype.init = function (globals) {
   } else {
     this.graphTable = new Table(0, 0);
   }
+
+  this.customConcepts = [];
 };
 
 StageMorph.prototype.hasPhysicsFloor = function () {
@@ -1340,7 +1487,7 @@ StageMorph.prototype.setPhysicsFloor = function (enable) {
   }
 
   var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+  if (ide && ide.currentTab === 'simulation' && ide.currentSprite === this) {
     ide.spriteEditor.hasPhysicsFloor.refresh();
   }
 };
@@ -1388,7 +1535,7 @@ StageMorph.prototype.setPhysicsScale = function (scale) {
   this.updateScaleMorph();
 
   var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+  if (ide && ide.currentTab === 'simulation' && ide.currentSprite === this) {
     ide.spriteEditor.physicsScale.refresh();
   }
 };
@@ -1415,7 +1562,7 @@ StageMorph.prototype.setPhysicsXOrigin = function (x) {
   }
 
   var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+  if (ide && ide.currentTab === 'simulation' && ide.currentSprite === this) {
     ide.spriteEditor.physicsXOrigin.refresh();
   }
 };
@@ -1430,7 +1577,7 @@ StageMorph.prototype.setPhysicsYOrigin = function (y) {
   }
 
   var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+  if (ide && ide.currentTab === 'simulation' && ide.currentSprite === this) {
     ide.spriteEditor.physicsYOrigin.refresh();
   }
 };
@@ -1445,7 +1592,7 @@ StageMorph.prototype.setPhysicsAxisAngle = function (a) {
   }
 
   var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+  if (ide && ide.currentTab === 'simulation' && ide.currentSprite === this) {
     ide.spriteEditor.physicsAxisAngle.refresh();
   }
 };
@@ -1458,7 +1605,7 @@ StageMorph.prototype.setPhysicsYGravity = function (y) {
   this.physicsWorld.gravity[1] = +y;
 
   var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+  if (ide && ide.currentTab === 'simulation' && ide.currentSprite === this) {
     ide.spriteEditor.physicsYGravity.refresh();
   }
 };
@@ -1471,7 +1618,7 @@ StageMorph.prototype.setPhysicsFriction = function (a) {
   this.physicsWorld.defaultContactMaterial.friction = +a;
 
   var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+  if (ide && ide.currentTab === 'simulation' && ide.currentSprite === this) {
     ide.spriteEditor.physicsFriction.refresh();
   }
 };
@@ -1484,7 +1631,7 @@ StageMorph.prototype.setPhysicsRestitution = function (a) {
   this.physicsWorld.defaultContactMaterial.restitution = +a;
 
   var ide = this.parentThatIsA(IDE_Morph);
-  if (ide && ide.currentTab === 'physics' && ide.currentSprite === this) {
+  if (ide && ide.currentTab === 'simulation' && ide.currentSprite === this) {
     ide.spriteEditor.physicsRestitution.refresh();
   }
 };
@@ -1679,7 +1826,14 @@ StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlo
 
 StageMorph.prototype.physicsSaveToXML = function (serializer) {
   var world = this.physicsWorld,
-    material = world.defaultContactMaterial;
+    material = world.defaultContactMaterial,
+    children = '';
+
+  children = this.customConcepts.reduce(function (part, concept) {
+    var child = serializer.format('<concept name="@" unit="@"></concept>',
+      concept.name, concept.unit);
+    return children + child;
+  }, children);
 
   return serializer.format(
     "<physics" +
@@ -1691,19 +1845,21 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
     " xorigin=\"@\"" +
     " yorigin=\"@\"" +
     " axisangle=\"@\"" +
-    "></physics>",
+    ">%</physics>",
     world.gravity[1],
     material.friction,
     material.restitution,
     this.physicsScale, !!this.physicsFloor,
     this.physicsOrigin.x,
     this.physicsOrigin.y,
-    this.physicsAxisAngle
+    this.physicsAxisAngle,
+    children
   );
 };
 
 StageMorph.prototype.physicsLoadFromXML = function (model) {
-  var attrs = model.attributes,
+  var myself = this,
+    attrs = model.attributes,
     world = this.physicsWorld,
     material = world.defaultContactMaterial;
 
@@ -1727,6 +1883,12 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
   if (attrs.floor) {
     this.setPhysicsFloor(attrs.floor === "true");
   }
+
+  model.children.forEach(function (child) {
+    if (child.tag === 'concept') {
+      myself.addCustomConcept([child.attributes.name, child.attributes.unit]);
+    }
+  });
 };
 
 StageMorph.prototype.refreshGraphViews = function () {
@@ -1778,6 +1940,49 @@ StageMorph.prototype.recordGraphData = function () {
 
 StageMorph.prototype.physicsDebug = function () {
   console.log(this.physicsWorld);
+};
+
+StageMorph.prototype.getCustomConcept = function (name) {
+  for (var i = 0; i < this.customConcepts.length; i++) {
+    if (this.customConcepts[i].name === name) {
+      return this.customConcepts[i];
+    }
+  }
+  return null;
+};
+
+StageMorph.prototype.addCustomConcept = function (pair) {
+  var ide = this.parentThatIsA(IDE_Morph),
+    name = pair[0],
+    unit = pair[1];
+
+  if (this.getCustomConcept(name)) {
+    this.inform('that name is already in use');
+  } else {
+    this.customConcepts.push({
+      name: name,
+      unit: unit
+    });
+
+    if (ide) {
+      ide.flushBlocksCache('simulation');
+      ide.refreshPalette();
+    }
+  }
+};
+
+StageMorph.prototype.deleteCustomConcept = function (name) {
+  var ide = this.parentThatIsA(IDE_Morph);
+  for (var i = 0; i < this.customConcepts.length; i++) {
+    if (this.customConcepts[i].name === name) {
+      this.customConcepts.splice(i, 1);
+      if (ide) {
+        ide.flushBlocksCache('simulation');
+        ide.refreshPalette();
+      }
+      return;
+    }
+  }
 };
 
 // ------- ProcessMorph -------
@@ -1869,6 +2074,35 @@ Process.prototype.setPhysicsAttrOf = function (attribute, name, value) {
           break;
       }
     }
+  }
+};
+
+Process.prototype.doGetConceptValue = function () {
+  var receiver = this.blockReceiver(),
+    name = this.context.expression.conceptName;
+
+  if (receiver.getCustomConceptValue && name) {
+    return receiver.getCustomConceptValue(name);
+  } else {
+    return 0;
+  }
+};
+
+Process.prototype.doSetConceptValue = function (value) {
+  var receiver = this.blockReceiver(),
+    name = this.context.expression.conceptName;
+
+  if (receiver.setCustomConceptValue && name) {
+    receiver.setCustomConceptValue(name, value);
+  }
+};
+
+Process.prototype.doChangeConceptValue = function (value) {
+  var receiver = this.blockReceiver(),
+    name = this.context.expression.conceptName;
+
+  if (receiver.changeConceptValue && name) {
+    receiver.changeConceptValue(name, value);
   }
 };
 
@@ -2139,7 +2373,7 @@ IDE_Morph.prototype.createStage = function () {
 
 IDE_Morph.prototype.phyCreateSpriteEditor = IDE_Morph.prototype.createSpriteEditor;
 IDE_Morph.prototype.createSpriteEditor = function () {
-  if (this.currentTab === "physics") {
+  if (this.currentTab === 'simulation') {
     if (this.spriteEditor) {
       this.spriteEditor.destroy();
     }
@@ -2486,6 +2720,88 @@ HatBlockMorph.prototype.physicsSaveToXML = function (serializer) {
 HatBlockMorph.prototype.physicsLoadFromXML = function (model) {
   if (model.attributes.hidden === "true") {
     this.hide();
+  }
+};
+
+// ------- ConceptDialogMorph -------
+
+ConceptDialogMorph.prototype = new DialogBoxMorph();
+ConceptDialogMorph.prototype.constructor = ConceptDialogMorph;
+ConceptDialogMorph.uber = DialogBoxMorph.prototype;
+
+function ConceptDialogMorph(target, action, environment) {
+  this.init(target, action, environment);
+}
+
+ConceptDialogMorph.prototype.init = function (target, action, environment) {
+  ConceptDialogMorph.uber.init.call(
+    this,
+    target,
+    action,
+    environment
+  );
+
+  this.unit = new InputFieldMorph();
+
+  this.unitRow = new AlignmentMorph('row', 4);
+  this.unitRow.add(new TextMorph(localize('physical unit') + ':', 12));
+  this.unitRow.add(this.unit);
+  this.add(this.unitRow);
+};
+
+ConceptDialogMorph.prototype.getInput = function () {
+  var name = this.normalizeSpaces(this.body.getValue()),
+    unit = this.normalizeSpaces(this.unit.getValue());
+  return [name, unit];
+};
+
+ConceptDialogMorph.prototype.fixLayout = function () {
+  var th = fontHeight(this.titleFontSize) + this.titlePadding * 2;
+
+  if (this.body) {
+    this.body.setPosition(this.position().add(new Point(
+      this.padding,
+      th + this.padding
+    )));
+    this.silentSetWidth(this.body.width() + this.padding * 2);
+    this.silentSetHeight(
+      this.body.height() +
+      this.padding * 2 +
+      th
+    );
+  }
+
+  if (this.label) {
+    this.label.setCenter(this.center());
+    this.label.setTop(this.top() + (th - this.label.height()) / 2);
+  }
+
+  if (this.unitRow) {
+    this.unitRow.fixLayout();
+    this.silentSetHeight(
+      this.height() +
+      this.unitRow.height() +
+      this.padding
+    );
+    this.silentSetWidth(Math.max(
+      this.width(),
+      this.unitRow.width() + this.padding * 2
+    ));
+    this.unitRow.setLeft(this.left() + this.padding);
+    if (this.body) {
+      this.unitRow.setTop(this.body.bottom() + this.padding);
+    }
+  }
+
+  if (this.buttons && (this.buttons.children.length > 0)) {
+    this.buttons.fixLayout();
+    this.silentSetHeight(
+      this.height() +
+      this.buttons.height() +
+      this.padding
+    );
+    this.buttons.setCenter(this.center());
+    this.buttons.setBottom(this.bottom() - this.padding);
   }
 };
 

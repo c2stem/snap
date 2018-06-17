@@ -1892,6 +1892,17 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push(block('clearGraphData'));
         blocks.push(block('recordGraphData'));
 
+        var customConcepts = this.getStage().customConcepts;
+        if (customConcepts.length > 0) {
+            blocks.push('-');
+            customConcepts.forEach(function (concept) {
+                blocks.push(myself.customConceptWatcher(concept));
+                blocks.push(myself.customConceptGetBlock(concept));
+                blocks.push(myself.customConceptSetBlock(concept));
+                blocks.push(myself.customConceptChangeBlock(concept));
+            });
+        }
+
     } else if (cat === 'looks') {
 
         blocks.push(block('doSwitchToCostume'));
@@ -2419,6 +2430,40 @@ SpriteMorph.prototype.freshPalette = function (category) {
                 }
             );
         }
+
+        if (category === 'simulation') {
+            menu.addItem(
+                'make a concept',
+                function () {
+                    new ConceptDialogMorph(
+                        myself.getStage(),
+                        StageMorph.prototype.addCustomConcept,
+                        null
+                    ).prompt(
+                        'Make a concept',
+                        null,
+                        myself.world()
+                    );
+                }
+            );
+            if (stage.customConcepts.length > 0) {
+                menu.addItem(
+                    'delete a concept',
+                    function () {
+                        var menu = new MenuMorph(
+                            StageMorph.prototype.deleteCustomConcept,
+                            'Concept to be deleted',
+                            myself.getStage()
+                        );
+                        stage.customConcepts.forEach(function (concept) {
+                            menu.addItem(concept.name, concept.name);
+                        });
+                        menu.popUpAtHand(myself.world());
+                    }
+                );
+            }
+        }
+
         return menu;
     };
 
@@ -8007,7 +8052,11 @@ WatcherMorph.prototype.update = function () {
                 );
             }
         } else {
-            newValue = this.target[this.getter]();
+            if (this.targetArgument) {
+                newValue = this.target[this.getter](this.targetArgument);
+            } else {
+                newValue = this.target[this.getter]();
+            }
         }
         if (newValue !== '' && !isNil(newValue)) {
             num = +newValue;

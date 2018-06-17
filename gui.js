@@ -3994,6 +3994,7 @@ IDE_Morph.prototype.rawOpenProjectString = function (str) {
                 this
             );
         } catch (err) {
+            console.log(err);
             this.showMessage('Load failed: ' + err);
         }
     } else {

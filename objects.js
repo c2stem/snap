@@ -2440,6 +2440,7 @@ SpriteMorph.prototype.freshPalette = function (category) {
     palette.userMenu = function () {
         var menu = new MenuMorph(),
             ide = this.parentThatIsA(IDE_Morph),
+            shiftClicked = world.currentKey === 16,
             more = {
                 operators:
                     ['reifyScript', 'reifyReporter', 'reifyPredicate'],
@@ -2484,7 +2485,7 @@ SpriteMorph.prototype.freshPalette = function (category) {
             function () {myself.searchBlocks(); },
             '⌘F'
         );
-        if (canHidePrimitives()) {
+        if (shiftClicked && canHidePrimitives()) {
             menu.addItem(
                 'hide primitives',
                 function () {
@@ -2499,10 +2500,12 @@ SpriteMorph.prototype.freshPalette = function (category) {
                     });
                     ide.flushBlocksCache(category);
                     ide.refreshPalette();
-                }
+                },
+                null,
+                new Color(100, 0, 0)
             );
         }
-        if (hasHiddenPrimitives()) {
+        if (shiftClicked && hasHiddenPrimitives()) {
             menu.addItem(
                 'show primitives',
                 function () {
@@ -2518,7 +2521,9 @@ SpriteMorph.prototype.freshPalette = function (category) {
                     });
                     ide.flushBlocksCache(category);
                     ide.refreshPalette();
-                }
+                },
+                null,
+                new Color(100, 0, 0)
             );
         }
 

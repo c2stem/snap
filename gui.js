@@ -658,12 +658,17 @@ IDE_Morph.prototype.createLogo = function () {
     };
 
     this.logo.userMenu = function() {
-        if (myself.hiddenControlButtons.length != 0) {
+        var shiftClicked = world.currentKey === 16;
+        if (!shiftClicked) {
+            return;
+        }
+        if (myself.hiddenControlButtons.length !== 0) {
             var menu = new MenuMorph(myself);
-            menu.addItem("show hidden buttons", 'showControlButtons');
+            menu.addItem("show hidden buttons", 'showControlButtons',
+                null, new Color(100, 0, 0));
             return menu;
         }
-    }
+    };
 
     this.logo.color = new Color();
     this.logo.setExtent(new Point(200, 28)); // dimensions are fixed
@@ -982,14 +987,18 @@ IDE_Morph.prototype.createControlBar = function () {
             button.drawNew();
             // button.hint = hint
             button.userMenu = function() {
+                var shiftClicked = world.currentKey === 16;
+                if (!shiftClicked) {
+                    return;
+                }
                 var menu = new MenuMorph(button);
                 menu.addItem("hide button", function() {
                     myself.hideControlButton(action);
-                });
-                if (myself.hiddenControlButtons.length != 0) {
+                }, null, new Color(100, 0, 0));
+                if (myself.hiddenControlButtons.length !== 0) {
                     menu.addItem("show hidden buttons", function() {
                         myself.showControlButtons();
-                    });
+                    }, null, new Color(100, 0, 0));
                 }
                 return menu;
             };
@@ -1184,16 +1193,17 @@ IDE_Morph.prototype.createCategories = function () {
         );
 
         button.userMenu = function() {
-            if (myself.categories.children.length <= 1) {
+            var shiftClicked = world.currentKey === 16;
+            if (!shiftClicked || myself.categories.children.length <= 1) {
                 return;
             }
 
             var menu = new MenuMorph(myself);
             menu.addItem("hide category", function() {
                 this.hideCategory(category);
-            });
+            }, null, new Color(100, 0, 0));
             return menu;
-        }
+        };
 
         button.corner = 8;
         button.padding = 0;
@@ -1207,14 +1217,16 @@ IDE_Morph.prototype.createCategories = function () {
     }
 
     this.categories.userMenu = function() {
-        if (myself.hiddenCategories.length <= 0) {
+        var shiftClicked = world.currentKey === 16;
+        if (!shiftClicked || myself.hiddenCategories.length <= 0) {
             return;
         }
 
         var menu = new MenuMorph(myself);
-        menu.addItem("show hidden categories", 'showHiddenCategories');
+        menu.addItem("show hidden categories", 'showHiddenCategories',
+            null, new Color(100, 0, 0));
         return menu;
-    }
+    };
 
     function fixCategoriesLayout() {
         var buttonWidth = myself.categories.children[0].width(),
@@ -1538,23 +1550,30 @@ IDE_Morph.prototype.createSpriteBar = function () {
         tab.fixLayout();
 
         tab.userMenu = function() {
+            var shiftClicked = world.currentKey === 16;
+            if (!shiftClicked) {
+                return;
+            }
             var menu = new MenuMorph(myself);
             if (tabString !== 'scripts') {
                 menu.addItem("hide tab", function() {
                     myself.hideSpriteTab(tabString);
-                });
+                }, null, new Color(100, 0, 0));
             }
             if (myself.hiddenSpriteBar) {
-                menu.addItem("show fields", 'showSpriteBarFields');
+                menu.addItem("show fields", 'showSpriteBarFields',
+                    null, new Color(100, 0, 0));
             }
             else {
-                menu.addItem("hide fields", 'hideSpriteBarFields');
+                menu.addItem("hide fields", 'hideSpriteBarFields',
+                    null, new Color(100, 0, 0));
             }
-            if (myself.hiddenSpriteTabs.length != 0) {
-                menu.addItem("show hidden tabs", 'showSpriteTabs');
+            if (myself.hiddenSpriteTabs.length !== 0) {
+                menu.addItem("show hidden tabs", 'showSpriteTabs',
+                    null, new Color(100, 0, 0));
             }
             return menu;
-        }
+        };
 
         tabBar.add(tab);
     }
@@ -1580,18 +1599,25 @@ IDE_Morph.prototype.createSpriteBar = function () {
     };
 
     this.spriteBar.userMenu = function() {
+        var shiftClicked = world.currentKey === 16;
+        if (!shiftClicked) {
+            return;
+        }
         var menu = new MenuMorph(myself);
         if (myself.hiddenSpriteBar) {
-            menu.addItem("show fields", 'showSpriteBarFields');
+            menu.addItem("show fields", 'showSpriteBarFields',
+                null, new Color(100, 0, 0));
         }
         else {
-            menu.addItem("hide fields", 'hideSpriteBarFields');
+            menu.addItem("hide fields", 'hideSpriteBarFields',
+                null, new Color(100, 0, 0));
         }
-        if (myself.hiddenSpriteTabs.length != 0) {
-            menu.addItem("show hidden tabs", 'showSpriteTabs');
+        if (myself.hiddenSpriteTabs.length !== 0) {
+            menu.addItem("show hidden tabs", 'showSpriteTabs',
+                null, new Color(100, 0, 0));
         }
         return menu;
-    }
+    };
 
     if (this.isAppMode) {
         this.spriteBar.hide();
@@ -1739,10 +1765,14 @@ IDE_Morph.prototype.createCorralBar = function () {
         button.setCenter(myself.corralBar.center());
         button.setLeft(addButtonPos);
         button.userMenu = function() {
+            var shiftClicked = world.currentKey === 16;
+            if (!shiftClicked) {
+                return;
+            }
             var menu = new MenuMorph(button);
             menu.addItem("hide button", function() {
                 myself.hideCorralButton(action);
-            });
+            }, null, new Color(100, 0, 0));
             return menu;
         };
         myself.corralBar.add(button);
@@ -1779,22 +1809,31 @@ IDE_Morph.prototype.createCorralBar = function () {
         button.setCenter(myself.corralBar.center());
         button.setLeft(addButtonPos);
         button.userMenu = function() {
+            var shiftClicked = world.currentKey === 16;
+            if (!shiftClicked) {
+                return;
+            }
             var menu = new MenuMorph(button);
             menu.addItem("hide button", function() {
                 myself.hideCorralButton("toggleCoordinateAxes");
-            });
+            }, null, new Color(100, 0, 0));
             return menu;
         };
         myself.corralBar.add(button);
         addButtonPos = button.right() + padding;
     }
 
-    if (myself.hiddenCorralButtons.length != 0) {
+    if (myself.hiddenCorralButtons.length !== 0) {
         this.corralBar.userMenu = function() {
+            var shiftClicked = world.currentKey === 16;
+            if (!shiftClicked) {
+                return;
+            }
             var menu = new MenuMorph(myself);
-            menu.addItem("show hidden buttons", 'showCorralButtons');
+            menu.addItem("show hidden buttons", 'showCorralButtons',
+                null, new Color(100, 0, 0));
             return menu;
-        }
+        };
     }
 };
 

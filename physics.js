@@ -2742,7 +2742,6 @@ HatBlockMorph.prototype.show = function () {
   }
 };
 
-HatBlockMorph.prototype.phyToggleVisibility = HatBlockMorph.prototype.toggleVisibility;
 HatBlockMorph.prototype.toggleVisibility = function () {
   if (this.isVisible) {
     this.hide();

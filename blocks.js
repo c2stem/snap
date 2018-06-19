@@ -2440,8 +2440,8 @@ BlockMorph.prototype.userMenu = function () {
                         'rename all blocks that\naccess this variable'
                     );
                 }
-            } else if (this.selector !== 'evaluateCustomBlock') {
-                menu.addItem("hide block", 'hidePrimitive');
+            } else if (shiftClicked && this.selector !== 'evaluateCustomBlock') {
+                menu.addItem("hide block", 'hidePrimitive', null, new Color(100, 0, 0));
             }
             if (StageMorph.prototype.enableCodeMapping) {
                 menu.addLine();
@@ -2551,11 +2551,11 @@ BlockMorph.prototype.userMenu = function () {
         },
         'open a new window\nwith a picture of this script'
     );
-    if (this.topBlock() instanceof HatBlockMorph) {
+    if (this.topBlock().hideBlock) {
         menu.addItem(
             "hide code",
             function() {
-                myself.topBlock().hide();
+                myself.topBlock().hideBlock();
             }
         );
     }

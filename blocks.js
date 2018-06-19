@@ -2328,8 +2328,8 @@ BlockMorph.prototype.userMenu = function () {
                     'uncheck to save contents\nin the project',
                     'check to prevent contents\nfrom being saved'
                 );
-            } else if (this.selector !== 'evaluateCustomBlock') {
-                menu.addItem("hide block", 'hidePrimitive');
+            } else if (shiftClicked && this.selector !== 'evaluateCustomBlock') {
+                menu.addItem("hide block", 'hidePrimitive', null, new Color(100, 0, 0));
             }
             if (StageMorph.prototype.enableCodeMapping) {
                 menu.addLine();

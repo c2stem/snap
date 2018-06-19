@@ -2457,26 +2457,54 @@ TableMorph.prototype.step = function () {
 
 ScriptsMorph.prototype.hasHiddenCode = function () {
   return this.children.some(function (block) {
-    return (block instanceof HatBlockMorph) && !block.isVisible;
+    return block.isHiddenBlock;
   });
 };
 
 ScriptsMorph.prototype.showHiddenCode = function () {
   this.children.forEach(function (block) {
-    if ((block instanceof HatBlockMorph) && !block.isVisible) {
-      block.show();
+    if (block.unhideBlock && block.isHiddenBlock) {
+      block.unhideBlock();
     }
   });
 };
 
 // ------- HatBlockMorph -------
 
+HatBlockMorph.prototype.hideBlock = function () {
+  this.isHiddenBlock = true;
+  this.hide();
+};
+
+HatBlockMorph.prototype.unhideBlock = function () {
+  this.isHiddenBlock = false;
+  this.phyShow();
+};
+
 HatBlockMorph.prototype.physicsSaveToXML = function (serializer) {
-  return this.isVisible ? '' : '<physics hidden="true"></physics>';
+  return this.isHiddenBlock ? '<physics hidden="true"></physics>' : '';
 };
 
 HatBlockMorph.prototype.physicsLoadFromXML = function (model) {
-  if (model.attributes.hidden === "true") {
+  if (model.attributes.hidden === 'true') {
+    this.hideBlock();
+  }
+};
+
+HatBlockMorph.prototype.phyShow = HatBlockMorph.prototype.show;
+HatBlockMorph.prototype.show = function () {
+  if (this.isHiddenBlock) {
     this.hide();
+  } else {
+    this.phyShow();
+  }
+};
+
+HatBlockMorph.prototype.phyToggleVisibility = HatBlockMorph.prototype.toggleVisibility;
+HatBlockMorph.prototype.toggleVisibility = function () {
+  if (this.isVisible) {
+    this.hide();
+  } else {
+    this.show();
   }
 };

@@ -988,32 +988,34 @@ SnapSerializer.prototype.loadScript = function (model) {
     var topBlock, block, nextBlock,
         myself = this;
     model.children.forEach(function (child) {
-        if (child.tag === 'physics') {
-            if (topBlock && topBlock.physicsLoadFromXML) {
-                topBlock.physicsLoadFromXML(child);
+        if (child.tag !== 'physics') {
+            nextBlock = myself.loadBlock(child);
+            if (!nextBlock) {
+                return;
             }
-            return;
-        }
-        nextBlock = myself.loadBlock(child);
-        if (!nextBlock) {
-            return;
-        }
-        if (block) {
-            if (block.nextBlock && (nextBlock instanceof CommandBlockMorph)) {
-                block.nextBlock(nextBlock);
-            } else { // +++
-                console.log(
-                    'SNAP: expecting a command but getting a reporter:\n' +
-                        '  ' + block.blockSpec + '\n' +
-                        '  ' + nextBlock.blockSpec
-                );
-                return topBlock;
+            if (block) {
+                if (block.nextBlock && (nextBlock instanceof CommandBlockMorph)) {
+                    block.nextBlock(nextBlock);
+                } else { // +++
+                    console.log(
+                        'SNAP: expecting a command but getting a reporter:\n' +
+                            '  ' + block.blockSpec + '\n' +
+                            '  ' + nextBlock.blockSpec
+                    );
+                    return topBlock;
+                }
+            } else {
+                topBlock = nextBlock;
             }
-        } else {
-            topBlock = nextBlock;
+            block = nextBlock;
         }
-        block = nextBlock;
     });
+
+    var physics = model.childNamed('physics');
+    if (physics && topBlock && topBlock.physicsLoadFromXML) {
+        topBlock.physicsLoadFromXML(physics);
+    }
+
     return topBlock;
 };
 

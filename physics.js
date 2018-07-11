@@ -544,7 +544,7 @@ SpriteMorph.prototype.categories.push('simulation');
 SpriteMorph.prototype.blockColor.simulation = new Color(100, 140, 250);
 
 // for compatibility, we should remove this when migration is possible
-SpriteMorph.prorotype.blockColor.physics = new Color(100, 140, 250);
+SpriteMorph.prototype.blockColor.physics = new Color(100, 140, 250);
 
 SpriteMorph.prototype.initPhysicsBlocks();
 

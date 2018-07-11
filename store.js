@@ -823,6 +823,9 @@ SnapSerializer.prototype.loadCustomBlocks = function (
             object
         );
         definition.category = child.attributes.category || 'other';
+        if (definition.category === 'physics') {
+            definition.category = 'simulation';
+        }    
         definition.type = child.attributes.type || 'command';
         definition.isGlobal = (isGlobal === true);
         if (definition.isGlobal) {

@@ -1269,7 +1269,6 @@ SnapSerializer.prototype.loadComment = function (model) {
 };
 
 SnapSerializer.prototype.loadBlock = function (model, isReporter) {
-    console.log(model, isReporter);
     // private
     var block, info, inputs, isGlobal, rm, receiver;
     if (model.tag === 'block') {

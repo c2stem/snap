@@ -48,9 +48,9 @@ PhysicsMorph.prototype.drawNew = function () {
     if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
         x = xOffset + bodyCos * shape.position[0] -
-        bodySin * shape.position[1],
+          bodySin * shape.position[1],
         y = yOffset - bodySin * shape.position[0] -
-        bodyCos * shape.position[1],
+          bodyCos * shape.position[1],
         s = Math.sin(bodyAngle + shape.angle),
         c = Math.cos(bodyAngle + shape.angle);
 
@@ -542,6 +542,9 @@ SpriteMorph.prototype.initPhysicsBlocks = function () {
 
 SpriteMorph.prototype.categories.push('simulation');
 SpriteMorph.prototype.blockColor.simulation = new Color(100, 140, 250);
+
+// for compatibility, we should remove this when migration is possible
+SpriteMorph.prorotype.blockColor.physics = new Color(100, 140, 250);
 
 SpriteMorph.prototype.initPhysicsBlocks();
 

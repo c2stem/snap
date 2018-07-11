@@ -1045,6 +1045,9 @@ SnapSerializer.prototype.loadCustomBlock = function (element, isGlobal) {
         names;
 
     definition.category = element.attributes.category || 'other';
+    if (definition.category === 'physics') {
+        definition.category = 'simulation';
+    }    
     definition.type = element.attributes.type || 'command';
     definition.isGlobal = (isGlobal === true);
     definition.id = element.attributes.collabId;

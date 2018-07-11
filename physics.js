@@ -48,9 +48,9 @@ PhysicsMorph.prototype.drawNew = function () {
     if (shape.type === p2.Shape.BOX || shape.type === p2.Shape.CONVEX) {
       var v = shape.vertices,
         x = xOffset + bodyCos * shape.position[0] -
-        bodySin * shape.position[1],
+          bodySin * shape.position[1],
         y = yOffset - bodySin * shape.position[0] -
-        bodyCos * shape.position[1],
+          bodyCos * shape.position[1],
         s = Math.sin(bodyAngle + shape.angle),
         c = Math.cos(bodyAngle + shape.angle);
 
@@ -557,6 +557,7 @@ SpriteMorph.prototype.init = function (globals) {
   this.physicsMode = "";
   this.physicsBody = null;
   this.physicsMass = 100;
+  this.customConceptValues = {};
 };
 
 SpriteMorph.prototype.getStage = function () {
@@ -1232,6 +1233,158 @@ SpriteMorph.prototype.isBlockDisabled = function (selector) {
   }
 };
 
+SpriteMorph.prototype.findCustomConceptWatcher = function (concept) {
+  var stage = this.parentThatIsA(StageMorph),
+    myself = this;
+  if (stage === null) {
+    return null;
+  }
+  return detect(
+    stage.children,
+    function (morph) {
+      return morph instanceof WatcherMorph &&
+        morph.target === myself &&
+        morph.targetArgument === concept.name;
+    }
+  );
+};
+
+SpriteMorph.prototype.toggleCustomConceptWatcher = function (concept) {
+  var stage = this.parentThatIsA(StageMorph),
+    watcher,
+    others;
+  if (stage === null) {
+    return null;
+  }
+  watcher = this.findCustomConceptWatcher(concept);
+  if (watcher !== null) {
+    if (watcher.isVisible) {
+      watcher.hide();
+    } else {
+      watcher.show();
+      watcher.fixLayout(); // re-hide hidden parts
+      watcher.keepWithin(stage);
+    }
+    return;
+  }
+
+  watcher = new WatcherMorph(
+    concept.name + (concept.unit ? ' in ' + concept.unit : ''),
+    this.blockColor.simulation,
+    this,
+    'getCustomConceptValue'
+  );
+  watcher.targetArgument = concept.name;
+  watcher.update();
+
+  watcher.setPosition(stage.position().add(10));
+  others = stage.watchers(watcher.left());
+  if (others.length > 0) {
+    watcher.setTop(others[others.length - 1].bottom());
+  }
+  stage.add(watcher);
+  watcher.fixLayout();
+  watcher.keepWithin(stage);
+};
+
+SpriteMorph.prototype.showingCustomConceptWatcher = function (concept) {
+  var stage = this.parentThatIsA(StageMorph),
+    watcher;
+  if (stage === null) {
+    return false;
+  }
+  watcher = this.findCustomConceptWatcher(concept);
+  if (watcher) {
+    return watcher.isVisible;
+  }
+  return false;
+};
+
+SpriteMorph.prototype.deleteVariableWatcher = function (concept) {
+  var stage = this.parentThatIsA(StageMorph),
+    watcher;
+  if (stage === null) {
+    return null;
+  }
+  watcher = this.findCustomConceptWatcher(concept);
+  if (watcher !== null) {
+    watcher.destroy();
+  }
+};
+
+SpriteMorph.prototype.customConceptWatcher = function (concept) {
+  var myself = this;
+  return new ToggleMorph(
+    'checkbox',
+    this,
+    function () {
+      myself.toggleCustomConceptWatcher(concept);
+    },
+    null,
+    function () {
+      return myself.showingCustomConceptWatcher(concept);
+    },
+    null
+  );
+};
+
+SpriteMorph.prototype.customConceptGetBlock = function (concept) {
+  var block = new ReporterBlockMorph(false);
+  block.selector = 'doGetConceptValue';
+  block.color = this.blockColor.simulation;
+  block.category = 'simulation';
+  block.setSpec(concept.name + (concept.unit ? ' in ' + concept.unit : ''));
+  block.isDraggable = false;
+  block.isTemplate = true;
+  block.conceptName = concept.name;
+  return block;
+};
+
+SpriteMorph.prototype.customConceptSetBlock = function (concept) {
+  var block = new CommandBlockMorph();
+  block.selector = 'doSetConceptValue';
+  block.color = this.blockColor.simulation;
+  block.category = 'simulation';
+  block.setSpec('set ' + concept.name + ' to %n' +
+    (concept.unit ? ' ' + concept.unit : ''));
+  block.inputs()[0].setContents(0);
+  block.isDraggable = false;
+  block.isTemplate = true;
+  block.conceptName = concept.name;
+  return block;
+};
+
+SpriteMorph.prototype.customConceptChangeBlock = function (concept) {
+  var block = new CommandBlockMorph();
+  block.selector = 'doChangeConceptValue';
+  block.color = this.blockColor.simulation;
+  block.category = 'simulation';
+  block.setSpec('change ' + concept.name + ' by %n' +
+    (concept.unit ? ' ' + concept.unit : ''));
+  block.inputs()[0].setContents(0);
+  block.isDraggable = false;
+  block.isTemplate = true;
+  block.conceptName = concept.name;
+  return block;
+};
+
+SpriteMorph.prototype.getCustomConceptValue = function (name) {
+  if (typeof name === 'string') {
+    return this.customConceptValues[name] || 0;
+  }
+  return 0;
+};
+
+SpriteMorph.prototype.setCustomConceptValue = function (name, value) {
+  if (typeof name === 'string') {
+    this.customConceptValues[name] = +value;
+  }
+};
+
+SpriteMorph.prototype.changeConceptValue = function (name, value) {
+  this.setCustomConceptValue(name, this.getCustomConceptValue(name) + value);
+};
+
 // ------- HandMorph -------
 
 HandMorph.prototype.phyProcessMouseMove = HandMorph.prototype.processMouseMove;
@@ -1304,6 +1457,8 @@ StageMorph.prototype.init = function (globals) {
   } else {
     this.graphTable = new Table(0, 0);
   }
+
+  this.customConcepts = [];
 };
 
 StageMorph.prototype.hasPhysicsFloor = function () {
@@ -1671,7 +1826,14 @@ StageMorph.prototype.allHatBlocksForSimulation = SpriteMorph.prototype.allHatBlo
 
 StageMorph.prototype.physicsSaveToXML = function (serializer) {
   var world = this.physicsWorld,
-    material = world.defaultContactMaterial;
+    material = world.defaultContactMaterial,
+    children = '';
+
+  children = this.customConcepts.reduce(function (part, concept) {
+    var child = serializer.format('<concept name="@" unit="@"></concept>',
+      concept.name, concept.unit);
+    return children + child;
+  }, children);
 
   return serializer.format(
     "<physics" +
@@ -1683,19 +1845,21 @@ StageMorph.prototype.physicsSaveToXML = function (serializer) {
     " xorigin=\"@\"" +
     " yorigin=\"@\"" +
     " axisangle=\"@\"" +
-    "></physics>",
+    ">%</physics>",
     world.gravity[1],
     material.friction,
     material.restitution,
     this.physicsScale, !!this.physicsFloor,
     this.physicsOrigin.x,
     this.physicsOrigin.y,
-    this.physicsAxisAngle
+    this.physicsAxisAngle,
+    children
   );
 };
 
 StageMorph.prototype.physicsLoadFromXML = function (model) {
-  var attrs = model.attributes,
+  var myself = this,
+    attrs = model.attributes,
     world = this.physicsWorld,
     material = world.defaultContactMaterial;
 
@@ -1719,6 +1883,12 @@ StageMorph.prototype.physicsLoadFromXML = function (model) {
   if (attrs.floor) {
     this.setPhysicsFloor(attrs.floor === "true");
   }
+
+  model.children.forEach(function (child) {
+    if (child.tag === 'concept') {
+      myself.addCustomConcept([child.attributes.name, child.attributes.unit]);
+    }
+  });
 };
 
 StageMorph.prototype.refreshGraphViews = function () {
@@ -1770,6 +1940,49 @@ StageMorph.prototype.recordGraphData = function () {
 
 StageMorph.prototype.physicsDebug = function () {
   console.log(this.physicsWorld);
+};
+
+StageMorph.prototype.getCustomConcept = function (name) {
+  for (var i = 0; i < this.customConcepts.length; i++) {
+    if (this.customConcepts[i].name === name) {
+      return this.customConcepts[i];
+    }
+  }
+  return null;
+};
+
+StageMorph.prototype.addCustomConcept = function (pair) {
+  var ide = this.parentThatIsA(IDE_Morph),
+    name = pair[0],
+    unit = pair[1];
+
+  if (this.getCustomConcept(name)) {
+    this.inform('that name is already in use');
+  } else {
+    this.customConcepts.push({
+      name: name,
+      unit: unit
+    });
+
+    if (ide) {
+      ide.flushBlocksCache('simulation');
+      ide.refreshPalette();
+    }
+  }
+};
+
+StageMorph.prototype.deleteCustomConcept = function (name) {
+  var ide = this.parentThatIsA(IDE_Morph);
+  for (var i = 0; i < this.customConcepts.length; i++) {
+    if (this.customConcepts[i].name === name) {
+      this.customConcepts.splice(i, 1);
+      if (ide) {
+        ide.flushBlocksCache('simulation');
+        ide.refreshPalette();
+      }
+      return;
+    }
+  }
 };
 
 // ------- ProcessMorph -------
@@ -1861,6 +2074,35 @@ Process.prototype.setPhysicsAttrOf = function (attribute, name, value) {
           break;
       }
     }
+  }
+};
+
+Process.prototype.doGetConceptValue = function () {
+  var receiver = this.blockReceiver(),
+    name = this.context.expression.conceptName;
+
+  if (receiver.getCustomConceptValue && name) {
+    return receiver.getCustomConceptValue(name);
+  } else {
+    return 0;
+  }
+};
+
+Process.prototype.doSetConceptValue = function (value) {
+  var receiver = this.blockReceiver(),
+    name = this.context.expression.conceptName;
+
+  if (receiver.setCustomConceptValue && name) {
+    receiver.setCustomConceptValue(name, value);
+  }
+};
+
+Process.prototype.doChangeConceptValue = function (value) {
+  var receiver = this.blockReceiver(),
+    name = this.context.expression.conceptName;
+
+  if (receiver.changeConceptValue && name) {
+    receiver.changeConceptValue(name, value);
   }
 };
 
@@ -2500,7 +2742,6 @@ HatBlockMorph.prototype.show = function () {
   }
 };
 
-HatBlockMorph.prototype.phyToggleVisibility = HatBlockMorph.prototype.toggleVisibility;
 HatBlockMorph.prototype.toggleVisibility = function () {
   if (this.isVisible) {
     this.hide();
@@ -2531,4 +2772,86 @@ ActionManager.OwnerFor.setConceptLevel = function () {
 
 UndoManager.Invert.setConceptLevel = function (args) {
   return [args[0], args[1], args[3]];
+};
+
+// ------- ConceptDialogMorph -------
+
+ConceptDialogMorph.prototype = new DialogBoxMorph();
+ConceptDialogMorph.prototype.constructor = ConceptDialogMorph;
+ConceptDialogMorph.uber = DialogBoxMorph.prototype;
+
+function ConceptDialogMorph(target, action, environment) {
+  this.init(target, action, environment);
+}
+
+ConceptDialogMorph.prototype.init = function (target, action, environment) {
+  ConceptDialogMorph.uber.init.call(
+    this,
+    target,
+    action,
+    environment
+  );
+
+  this.unit = new InputFieldMorph();
+
+  this.unitRow = new AlignmentMorph('row', 4);
+  this.unitRow.add(new TextMorph(localize('physical unit') + ':', 12));
+  this.unitRow.add(this.unit);
+  this.add(this.unitRow);
+};
+
+ConceptDialogMorph.prototype.getInput = function () {
+  var name = this.normalizeSpaces(this.body.getValue()),
+    unit = this.normalizeSpaces(this.unit.getValue());
+  return [name, unit];
+};
+
+ConceptDialogMorph.prototype.fixLayout = function () {
+  var th = fontHeight(this.titleFontSize) + this.titlePadding * 2;
+
+  if (this.body) {
+    this.body.setPosition(this.position().add(new Point(
+      this.padding,
+      th + this.padding
+    )));
+    this.silentSetWidth(this.body.width() + this.padding * 2);
+    this.silentSetHeight(
+      this.body.height() +
+      this.padding * 2 +
+      th
+    );
+  }
+
+  if (this.label) {
+    this.label.setCenter(this.center());
+    this.label.setTop(this.top() + (th - this.label.height()) / 2);
+  }
+
+  if (this.unitRow) {
+    this.unitRow.fixLayout();
+    this.silentSetHeight(
+      this.height() +
+      this.unitRow.height() +
+      this.padding
+    );
+    this.silentSetWidth(Math.max(
+      this.width(),
+      this.unitRow.width() + this.padding * 2
+    ));
+    this.unitRow.setLeft(this.left() + this.padding);
+    if (this.body) {
+      this.unitRow.setTop(this.body.bottom() + this.padding);
+    }
+  }
+
+  if (this.buttons && (this.buttons.children.length > 0)) {
+    this.buttons.fixLayout();
+    this.silentSetHeight(
+      this.height() +
+      this.buttons.height() +
+      this.padding
+    );
+    this.buttons.setCenter(this.center());
+    this.buttons.setBottom(this.bottom() - this.padding);
+  }
 };

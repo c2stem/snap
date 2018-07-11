@@ -3659,19 +3659,21 @@ BlockMorph.prototype.ghost = function () {
 BlockMorph.prototype.fixLabelColor = function () {
     if (this.zebraContrast > 0 && this.category) {
         var clr = SpriteMorph.prototype.blockColor[this.category];
-        if (this.color.eq(clr)) {
-            this.setLabelColor(
-                new Color(255, 255, 255),
-                clr.darker(this.labelContrast),
-                MorphicPreferences.isFlat ? null : new Point(-1, -1)
-            );
-        } else {
-            this.setLabelColor(
-                new Color(0, 0, 0),
-                clr.lighter(this.zebraContrast)
-                    .lighter(this.labelContrast * 2),
-                MorphicPreferences.isFlat ? null : new Point(1, 1)
-            );
+        if (clr) {
+            if (this.color.eq(clr)) {
+                this.setLabelColor(
+                    new Color(255, 255, 255),
+                    clr.darker(this.labelContrast),
+                    MorphicPreferences.isFlat ? null : new Point(-1, -1)
+                );
+            } else {
+                this.setLabelColor(
+                    new Color(0, 0, 0),
+                    clr.lighter(this.zebraContrast)
+                        .lighter(this.labelContrast * 2),
+                    MorphicPreferences.isFlat ? null : new Point(1, 1)
+                );
+            }
         }
     }
 };

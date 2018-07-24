@@ -2,14 +2,14 @@
 
     byob.js
 
-    "build your own blocks" for SNAP!
+    "build your own blocks" for Snap!
     based on morphic.js, widgets.js blocks.js, threads.js and objects.js
     inspired by Scratch
 
     written by Jens Mönig
     jens@moenig.org
 
-    Copyright (C) 2016 by Jens Mönig
+    Copyright (C) 2017 by Jens Mönig
 
     This file is part of Snap!.
 
@@ -102,13 +102,12 @@ AlignmentMorph, ToggleMorph, InputFieldMorph, ReporterBlockMorph,
 StringMorph, nop, newCanvas, radians, BoxMorph, ArrowMorph, PushButtonMorph,
 contains, InputSlotMorph, ToggleButtonMorph, IDE_Morph, MenuMorph, copy,
 ToggleElementMorph, Morph, fontHeight, StageMorph, SyntaxElementMorph,
-SnapSerializer, CommentMorph, localize, CSlotMorph, SpeechBubbleMorph,
-MorphicPreferences, SymbolMorph, isNil, CursorMorph, VariableFrame,
-WatcherMorph, Variable*/
+SnapSerializer, CommentMorph, localize, CSlotMorph, MorphicPreferences,
+SymbolMorph, isNil, CursorMorph, VariableFrame, WatcherMorph, Variable*/
 
 // Global stuff ////////////////////////////////////////////////////////
 
-modules.byob = '2016-September-27';
+modules.byob = '2017-January-03';
 
 // Declarations
 
@@ -292,15 +291,29 @@ CustomBlockDefinition.prototype.inputOptionsOfIdx = function (idx) {
 };
 
 CustomBlockDefinition.prototype.dropDownMenuOf = function (inputName) {
-    var dict = {};
     if (this.declarations[inputName] && this.declarations[inputName][2]) {
-        this.declarations[inputName][2].split('\n').forEach(function (line) {
-            var pair = line.split('=');
-            dict[pair[0]] = isNil(pair[1]) ? pair[0] : pair[1];
-        });
-        return dict;
+        return this.parseChoices(this.declarations[inputName][2]);
     }
     return null;
+};
+
+CustomBlockDefinition.prototype.parseChoices = function (string) {
+    var dict = {},
+        stack = [dict];
+    string.split('\n').forEach(function (line) {
+        var pair = line.split('=');
+        if (pair[0] === '}') {
+            stack.pop();
+            dict = stack[stack.length - 1];
+        } else if (pair[1] === '{') {
+            dict = {};
+            stack[stack.length - 1][pair[0]] = dict;
+            stack.push(dict);
+        } else {
+            dict[pair[0]] = isNil(pair[1]) ? pair[0] : pair[1];
+        }
+    });
+    return dict;
 };
 
 CustomBlockDefinition.prototype.isReadOnlyInput = function (inputName) {
@@ -728,9 +741,7 @@ CustomCommandBlockMorph.prototype.edit = function () {
             null,
             function (definition) {
                 if (definition) { // temporarily update everything
-                    hat.blockCategory = definition.category;
-                    hat.type = definition.type;
-                    myself.refreshPrototype();
+                    SnapActions.setCustomBlockType(myself.definition, definition.category, definition.type);
                 }
             },
             myself
@@ -917,25 +928,7 @@ CustomCommandBlockMorph.prototype.deleteBlockDefinition = function () {
     new DialogBoxMorph(
         this,
         function () {
-            rcvr = myself.receiver();
-            rcvr.deleteAllBlockInstances(myself.definition);
-            if (myself.definition.isGlobal) {
-                stage = rcvr.parentThatIsA(StageMorph);
-                idx = stage.globalBlocks.indexOf(myself.definition);
-                if (idx !== -1) {
-                    stage.globalBlocks.splice(idx, 1);
-                }
-            } else {
-                idx = rcvr.customBlocks.indexOf(myself.definition);
-                if (idx !== -1) {
-                    rcvr.customBlocks.splice(idx, 1);
-                }
-            }
-            ide = rcvr.parentThatIsA(IDE_Morph);
-            if (ide) {
-                ide.flushPaletteCache();
-                ide.refreshPalette();
-            }
+            SnapActions.deleteCustomBlock(myself.definition);
         },
         this
     ).askYesNo(
@@ -944,42 +937,6 @@ CustomCommandBlockMorph.prototype.deleteBlockDefinition = function () {
         myself.world(),
         block.fullImage()
     );
-};
-
-// CustomCommandBlockMorph events:
-
-CustomCommandBlockMorph.prototype.mouseEnter = function () {
-    var comment, help;
-    if (this.isTemplate && this.definition.comment) {
-        comment = this.definition.comment.fullCopy();
-        comment.contents.parse();
-        help = '';
-        comment.contents.lines.forEach(function (line) {
-            help = help + '\n' + line;
-        });
-        this.popUpbubbleHelp(
-            help.substr(1),
-            this.definition.comment.color
-        );
-    }
-};
-
-CustomCommandBlockMorph.prototype.mouseLeave = function () {
-    if (this.isTemplate && this.definition.comment) {
-        this.world().hand.destroyTemporaries();
-    }
-};
-
-CustomCommandBlockMorph.prototype.popUpbubbleHelp = function (
-    contents,
-    color
-) {
-    new SpeechBubbleMorph(
-        contents,
-        color,
-        null,
-        1
-    ).popUp(this.world(), this.rightCenter().add(new Point(-8, 0)));
 };
 
 // CustomCommandBlockMorph relabelling
@@ -1127,11 +1084,14 @@ CustomReporterBlockMorph.prototype.deleteBlockDefinition
 
 // CustomReporterBlockMorph events:
 
+// hover help - commented out for now
+/*
 CustomReporterBlockMorph.prototype.mouseEnter
     = CustomCommandBlockMorph.prototype.mouseEnter;
 
 CustomReporterBlockMorph.prototype.mouseLeave
     = CustomCommandBlockMorph.prototype.mouseLeave;
+*/
 
 // CustomReporterBlockMorph bubble help:
 
@@ -1843,11 +1803,7 @@ BlockEditorMorph.prototype.init = function (definition, target) {
     scripts.scrollFrame = scriptsFrame;
 
     this.addBody(scriptsFrame);
-    this.addButton('ok', 'OK');
-    if (!isLive) {
-        this.addButton('updateDefinition', 'Apply');
-        this.addButton('cancel', 'Cancel');
-    }
+    this.addButton('ok', 'Done');
 
     this.setExtent(new Point(375, 300)); // normal initial extent
     this.fixLayout();
@@ -1858,12 +1814,26 @@ BlockEditorMorph.prototype.init = function (definition, target) {
     block.fixBlockColor(proto, true);
 };
 
-BlockEditorMorph.prototype.popUp = function () {
-    var world = this.target.world();
+BlockEditorMorph.prototype.mouseClickLeft = function() {
+    var ide = this.target.parentThatIsA(IDE_Morph);
+    ide.setActiveEditor(this);
+};
+
+BlockEditorMorph.prototype.onSetActive = function() {
+    this.body.contents.updateUndoControls();
+};
+
+BlockEditorMorph.prototype.onUnsetActive = function() {
+    this.body.contents.hideUndoControls();
+};
+
+BlockEditorMorph.prototype.popUp = function (silent) {
+    var world = this.target.world(),
+        ide;
 
     if (world) {
         BlockEditorMorph.uber.popUp.call(this, world);
-        this.setInitialDimensions();
+        this.setInitialDimensions(silent);
         this.handle = new HandleMorph(
             this,
             280,
@@ -1872,6 +1842,11 @@ BlockEditorMorph.prototype.popUp = function () {
             this.corner
         );
         world.keyboardReceiver = null;
+        // Set the undo focus
+        ide = this.target.parentThatIsA(IDE_Morph);
+        if (!silent) {
+            ide.setActiveEditor(this);
+        }
     }
 };
 
@@ -1903,6 +1878,13 @@ BlockEditorMorph.prototype.accept = function (origin) {
             }
         }
     }
+
+    // Update the focus
+    var ide = this.target.parentThatIsA(IDE_Morph);
+    if (ide && ide.activeEditor === this) {
+        ide.setActiveEditor();
+    }
+
     this.close();
 };
 
@@ -1977,7 +1959,7 @@ BlockEditorMorph.prototype.refreshAllBlockInstances = function () {
     }
 };
 
-BlockEditorMorph.prototype.updateDefinition = function () {
+BlockEditorMorph.prototype.updateDefinition = function (silent) {
     var head, ide,
         pos = this.body.contents.position(),
         element,
@@ -2015,11 +1997,14 @@ BlockEditorMorph.prototype.updateDefinition = function () {
     }
 
     this.definition.body = this.context(head);
-    this.refreshAllBlockInstances();
 
-    ide = this.target.parentThatIsA(IDE_Morph);
-    ide.flushPaletteCache();
-    ide.refreshPalette();
+    if (!silent) {
+        this.refreshAllBlockInstances();
+
+        ide = this.target.parentThatIsA(IDE_Morph);
+        ide.flushPaletteCache();
+        ide.refreshPalette();
+    }
 };
 
 BlockEditorMorph.prototype.context = function (prototypeHat) {
@@ -2074,24 +2059,43 @@ BlockEditorMorph.prototype.variableNames = function () {
 
 // BlockEditorMorph layout
 
-BlockEditorMorph.prototype.setInitialDimensions = function () {
+BlockEditorMorph.prototype.setInitialDimensions = function (silent) {
     var world = this.world(),
         mex = world.extent().subtract(new Point(this.padding, this.padding)),
         th = fontHeight(this.titleFontSize) + this.titlePadding * 2,
         bh = this.buttons.height();
 
-    if (this.definition.editorDimensions) {
-        this.setPosition(this.definition.editorDimensions.origin);
-        this.setExtent(this.definition.editorDimensions.extent().min(mex));
-        this.keepWithin(world);
-        return;
+    if (!silent) {
+        if (this.definition.editorDimensions) {
+            this.setPosition(this.definition.editorDimensions.origin);
+            this.setExtent(this.definition.editorDimensions.extent().min(mex));
+            this.keepWithin(world);
+            return;
+        }
+        this.setExtent(
+            this.body.contents.extent().add(
+                new Point(this.padding, this.padding + th + bh)
+            ).min(mex)
+        );
+        this.setCenter(this.world().center());
+    } else {
+        if (this.definition.editorDimensions) {
+            this.silentSetPosition(this.definition.editorDimensions.origin);
+            this.silentSetExtent(this.definition.editorDimensions.extent().min(mex));
+            this.keepWithin(world);
+            return;
+        }
+        this.silentSetExtent(
+            this.body.contents.extent().add(
+                new Point(this.padding, this.padding + th + bh)
+            ).min(mex)
+        );
+        this.silentSetPosition(
+            this.world().center().subtract(
+                this.extent().floorDivideBy(2)
+            )
+        );
     }
-    this.setExtent(
-        this.body.contents.extent().add(
-            new Point(this.padding, this.padding + th + bh)
-        ).min(mex)
-    );
-    this.setCenter(this.world().center());
 };
 
 BlockEditorMorph.prototype.fixLayout = function () {
@@ -2163,6 +2167,7 @@ PrototypeHatBlockMorph.prototype.init = function (definition) {
     proto.refreshPrototypeSlotTypes(); // show slot type indicators
     this.fixLayout();
     proto.fixBlockColor(this, true);
+    this.id = this.definition.id;
 };
 
 PrototypeHatBlockMorph.prototype.mouseClickLeft = function () {
@@ -2433,7 +2438,14 @@ BlockLabelFragmentMorph.prototype.mouseClickLeft = function () {
     new InputSlotDialogMorph(
         frag,
         null,
-        function () {myself.updateBlockLabel(frag); },
+        function () {
+
+            if (frag.isDeleted) {
+                SnapActions.deleteBlockLabel(myself.parent.definition, myself);
+            } else {
+                SnapActions.updateBlockLabel(myself.parent.definition, myself, frag);
+            }
+        },
         this,
         this.parent.definition.category
     ).open(
@@ -3247,8 +3259,9 @@ InputSlotDialogMorph.prototype.editSlotOptions = function () {
         myself.fragment.options,
         myself.world(),
         null,
-        localize('Enter one option per line.' +
-            'Optionally use "=" as key/value delimiter\n' +
+        localize('Enter one option per line.\n' +
+            'Optionally use "=" as key/value delimiter ' +
+            'and {} for submenus. ' +
             'e.g.\n   the answer=42')
     );
 };
@@ -3404,11 +3417,11 @@ BlockExportDialogMorph.prototype.key = 'blockExport';
 
 // BlockExportDialogMorph instance creation:
 
-function BlockExportDialogMorph(serializer, blocks) {
-    this.init(serializer, blocks);
+function BlockExportDialogMorph(serializer, blocks, stage) {
+    this.init(serializer, blocks, stage);
 }
 
-BlockExportDialogMorph.prototype.init = function (serializer, blocks) {
+BlockExportDialogMorph.prototype.init = function (serializer, blocks, stage) {
     var myself = this;
 
     // additional properties:
@@ -3419,13 +3432,13 @@ BlockExportDialogMorph.prototype.init = function (serializer, blocks) {
     // initialize inherited properties:
     BlockExportDialogMorph.uber.init.call(
         this,
-        null, // target
+        stage, // target
         function () {myself.exportBlocks(); },
         null // environment
     );
 
     // override inherited properites:
-    this.labelString = 'Export blocks';
+    this.labelString = 'Export blocks / message types';
     this.createLabel();
 
     // build contents
@@ -3435,6 +3448,7 @@ BlockExportDialogMorph.prototype.init = function (serializer, blocks) {
 BlockExportDialogMorph.prototype.buildContents = function () {
     var palette, x, y, block, checkBox, lastCat,
         myself = this,
+        stage = this.target,
         padding = 4;
 
     // create plaette
@@ -3493,6 +3507,44 @@ BlockExportDialogMorph.prototype.buildContents = function () {
         });
     });
 
+    // add message types
+    this.msgs = [];
+    for (var i = 0; i < stage.deletableMessageNames().length; i++) {
+        // assume that the user wants to export ALL message types at first
+        var msg = new ReporterBlockMorph();
+        msg.setSpec(stage.deletableMessageNames()[i]);
+        msg.setColor(new Color(217,77,17));
+        this.msgs.push(msg);
+    }
+
+    this.msgs.forEach(function (msg) {
+        checkBox = new ToggleMorph(
+            'checkbox',
+            myself,
+            function() {
+                if (myself.msgs.includes(msg)) {
+                    myself.msgs.splice(myself.msgs.indexOf(msg), 1);
+                } else {
+                    myself.msgs.push(msg);
+                }
+            },
+            null,
+            function() {
+                return myself.msgs.includes(msg);
+            },
+            null,
+            null,
+            null,
+            msg.fullImage()
+        );
+        checkBox.setPosition(new Point(
+            x,
+            y + (checkBox.top() - checkBox.toggleElement.top())
+        ));
+        palette.addContents(checkBox);
+        y += checkBox.fullBounds().height() + padding;
+    });
+
     palette.scrollX(padding);
     palette.scrollY(padding);
     this.addBody(palette);
@@ -3547,15 +3599,24 @@ BlockExportDialogMorph.prototype.selectNone = function () {
 
 BlockExportDialogMorph.prototype.exportBlocks = function () {
     var str = this.serializer.serialize(this.blocks),
-        ide = this.world().children[0];
+        ide = this.world().children[0],
+        stage = ide.stage,
+        msgs = '';
 
-    if (this.blocks.length > 0) {
+    for (var i = 0; i < this.msgs.length; i++) {
+        msgs += '<messageType>' +
+            stage.messageTypes.getMsgType(this.msgs[i].blockSpec).toXML(this.serializer) +
+            '</messageType>';
+    }
+
+    if (this.blocks.length > 0 || this.msgs.length > 0) {
         str = '<blocks app="'
             + this.serializer.app
             + '" version="'
             + this.serializer.version
             + '">'
             + str
+            + msgs
             + '</blocks>';
         ide.saveXMLAs(
             str,
@@ -3563,8 +3624,8 @@ BlockExportDialogMorph.prototype.exportBlocks = function () {
         );
     } else {
         new DialogBoxMorph().inform(
-            'Export blocks',
-            'no blocks were selected',
+            'Export blocks / message types',
+            'no blocks or message types were selected',
             this.world()
         );
     }
@@ -3642,17 +3703,7 @@ BlockImportDialogMorph.prototype.importBlocks = function (name) {
     var ide = this.target.parentThatIsA(IDE_Morph);
     if (!ide) {return; }
     if (this.blocks.length > 0) {
-        this.blocks.forEach(function (def) {
-            def.receiver = ide.stage;
-            ide.stage.globalBlocks.push(def);
-            ide.stage.replaceDoubleDefinitionsFor(def);
-        });
-        ide.flushPaletteCache();
-        ide.refreshPalette();
-        ide.showMessage(
-            'Imported Blocks Module' + (name ? ': ' + name : '') + '.',
-            2
-        );
+        ide.importCustomBlocks(this.blocks);
     } else {
         new DialogBoxMorph().inform(
             'Import blocks',
@@ -3732,14 +3783,11 @@ BlockRemovalDialogMorph.prototype.selectNone
 
 BlockRemovalDialogMorph.prototype.removeBlocks = function () {
     var ide = this.target.parentThatIsA(IDE_Morph);
+
     if (!ide) {return; }
     if (this.blocks.length > 0) {
-        this.blocks.forEach(function (def) {
-            var idx = ide.stage.globalBlocks.indexOf(def);
-            if (idx !== -1) {
-                ide.stage.globalBlocks.splice(idx, 1);
-            }
-        });
+        SnapActions.deleteCustomBlocks(this.blocks);
+
         ide.flushPaletteCache();
         ide.refreshPalette();
         ide.showMessage(

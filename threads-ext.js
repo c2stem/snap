@@ -197,9 +197,10 @@ NetsProcess.prototype.receiveSocketMessage = function (fields) {
 
 NetsProcess.prototype.createRPCUrl = function (rpc) {
     var ide = this.homeContext.receiver.parentThatIsA(IDE_Morph),
-        uuid = ide.sockets.uuid;
+        uuid = ide.sockets.uuid,
+        projectId = encodeURIComponent(SnapCloud.projectId);
 
-    return ensureFullUrl('/rpc/'+rpc+'?uuid='+uuid);
+    return ensureFullUrl('/rpc/'+rpc+'?uuid='+uuid+'&projectId='+projectId);
 };
 
 NetsProcess.prototype.callRPC = function (rpc, params, noCache) {
@@ -252,7 +253,11 @@ NetsProcess.prototype.callRPC = function (rpc, params, noCache) {
             this.rpcRequest = null;
             return response;
         }
+    } else if (this.readyToTerminate) {  // abort the RPC invocation
+        this.rpcRequest.abort();
+        this.rpcRequest = null;
     }
+
     this.pushContext('doYield');
     this.pushContext();
 };

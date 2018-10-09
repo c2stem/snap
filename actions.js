@@ -8,11 +8,11 @@ var logger = {
 
 // If not the leader, send operations to the leader for approval
 function ActionManager() {
-    this.id = null;
+    this.id = CLIENT_ID;
     this.rank = null;
     this.isLeader = false;
-    this._onAccept = {};
-    this._onReject = {};
+    this._pendingLocalActions = [];
+    this._attemptedLocalActions = [];
     this.initialize();
 }
 
@@ -86,6 +86,14 @@ ActionManager.prototype.addUserActions = function() {
     });
 };
 
+ActionManager.prototype._selectTab = function(tabString) {
+    return [tabString, this.ide().currentTab];
+};
+
+ActionManager.prototype._selectSprite = function(sprite) {
+    return [sprite.id, this.ide().currentSprite.id];
+};
+
 ActionManager.prototype.isUserAction = function(event) {
     return event.isUserAction;
 };
@@ -157,6 +165,10 @@ ActionManager.prototype.initializeEventMethods = function() {
     );
 
     this.addUserActions(
+        'selectTab',
+        'selectSprite',
+        'toggleWatcher',
+        'toggleVariableWatcher',
         'pressStart',
         'stopAllScripts',
         'startScript',
@@ -291,36 +303,17 @@ ActionManager.prototype.completeAction = function(err, result) {
         SnapUndo.record(action);
     }
 
-    // Call 'success' or 'reject', if relevant
-    var fn;
-    if (action.user === this.id) {
-        if (err) {
-            if (this._onReject[action.id]) {
-                fn = this._onReject[action.id];
-                delete this._onReject[action.id];
-                delete this._onAccept[action.id];
-                fn(err);
-            }
-        } else if (this._onAccept[action.id]){
-            fn = this._onAccept[action.id];
-            delete this._onAccept[action.id];
-            delete this._onReject[action.id];
-            fn(result);
-        }
-
+    // Resolve/reject actions
+    if (this.isOwnAction(action)) {
         // Ensure that the handlers are removed
-        delete this._onAccept[action.id];
-        delete this._onReject[action.id];
+        var localAction = this.rejectPredecessorsInQueue(this._pendingLocalActions, action);
 
-        // We can call reject for any ids less than the given id...
-        for (var i = action.id; i--;) {
-            if (this._onReject[i]) {
-                this._onReject[i](result);
-                delete this._onReject[i];
+        if (localAction) {
+            if (err) {
+                localAction.reject(err);
+            } else {
+                localAction.resolve(result);
             }
-        }
-        if (err && this._onReject[i]) {
-            this._onReject[action.id](result);
         }
     }
     this.afterActionApplied(action);
@@ -331,12 +324,20 @@ ActionManager.prototype.completeAction = function(err, result) {
     }
 };
 
+ActionManager.prototype.isOwnAction = function(action) {
+    return !action.user || action.user === this.id;
+};
+
 ActionManager.prototype.isNextAction = function(action) {
     return action.id === (this.lastSeen + 1);
 };
 
 ActionManager.prototype.isPreviousAction = function(action) {
     return action.id < (this.lastSeen + 1);
+};
+
+ActionManager.prototype.isAlwaysAllowed = function(action) {
+    return action.type === 'openProject';
 };
 
 ActionManager.prototype.joinSession = function(sessionId, error) {
@@ -368,19 +369,30 @@ ActionManager.prototype._joinSession = function(sessionId, error) {
     this.onconnect = null;
 };
 
-function Action(manager, event) {
-    this._manager = manager;
+function Action(event) {
     this.id = event.id;
+    this.data = event;
+    this.resolve = null;
+    this.reject = null;
+
+    var self = this;
+    this.promise = new Promise(function(resolve, reject) {
+        self.resolve = resolve;
+        self.reject = reject;
+    });
 }
 
-Action.prototype.accept = function(fn) {
-    this._manager._onAccept[this.id] = fn;
-    return this;
-};
+Action.prototype.equals = function(data) {
+    var self = this,
+        fieldsToCheck = ['id', 'user', 'time'];
 
-Action.prototype.reject = function(fn) {
-    this._manager._onReject[this.id] = fn;
-    return this;
+    if (data instanceof Action) {
+        data = data.data;
+    }
+
+    return fieldsToCheck.reduce(function(matches, field) {
+        return matches && data[field] === self.data[field];
+    }, true);
 };
 
 ActionManager.prototype.applyEvent = function(event) {
@@ -395,21 +407,24 @@ ActionManager.prototype.applyEvent = function(event) {
     }
 
     // if in replay mode, check that the event is a replay event
+    var action = new Action(event);
     if (this.isUserAction(event)) {
         this.submitAction(event);
     } else {
+        // Record that the action has been submitted
+        this._attemptedLocalActions.push(action);
         this.submitIfAllowed(event);
     }
 
-    return new Action(this, event);
+    return action.promise;
 };
 
 ActionManager.prototype.submitIfAllowed = function(event) {
     var myself = this,
         ide = this.ide();
 
-    if (event.type === 'openProject') {
-        this.submitAction(event);
+    if (this.isAlwaysAllowed(event)) {
+        return this.submitAction(event);
     } else if (ide.isReplayMode && !event.isReplay) {
         ide.promptExitReplay(function() {
             myself.submitIfAllowed(event);
@@ -443,15 +458,45 @@ ActionManager.prototype._isBatchEvent = function(msg) {
 };
 
 ActionManager.prototype.onReceiveAction = function(msg) {
-    if (this.isPreviousAction(msg)) return;
-    if (this.isUserAction(msg) && !SnapUndo.contains(msg)) {
-        return SnapUndo.record(msg);
+    if (this.isPreviousAction(msg) && !this.isAlwaysAllowed(msg)) return;
+    if (this.isUserAction(msg)) {
+        if (!SnapUndo.contains(msg)) {
+            SnapUndo.record(msg);
+        }
+        return;
     }
 
-    if (this.isNextAction(msg) && !this.isApplyingAction) {
+    // Record the action as pending and remove any earlier *submitted* actions
+    if (this.isOwnAction(msg)) {
+        var action = this.rejectPredecessorsInQueue(this._attemptedLocalActions, msg);
+
+        if (action) {
+            this._pendingLocalActions.push(action);
+        } else {
+            console.error('missing local action for', msg);
+        }
+    }
+
+    if ((this.isNextAction(msg) || this.isAlwaysAllowed(msg)) && !this.isApplyingAction) {
         this._applyEvent(msg);
     } else {
         this.addActionToQueue(msg);
+    }
+};
+
+ActionManager.prototype.rejectPredecessorsInQueue = function(queue, event) {
+    var action = queue.find(function(action) { return action.equals(event)});
+
+    // ensure that we found the given action
+    if (action) {
+        var next = queue.shift();
+        while (next !== action) {
+            next.reject();
+            next = queue.shift();
+        }
+        return action;
+    } else {
+        console.error('could not find local action in queue', event);
     }
 };
 
@@ -492,22 +537,25 @@ ActionManager.prototype._rawApplyEvent = function(event) {
         this[method].apply(this, event.args);
     } catch (e) {
         this.completeAction(e);
-        throw e;
     }
 };
 
-ActionManager.prototype.submitAction = function(action) {
-    if (this.isLeader || !this.isCollaborating() || action.type === 'openProject') {
-        return this.acceptEvent(action);
+ActionManager.prototype.submitAction = function(event) {
+
+    if (this.isLeader || !this.isCollaborating() || this.isAlwaysAllowed(event)) {
+        this.acceptEvent(event);
     } else {
-        return this.send(action);
+        this.send(event);
     }
 };
 
 ActionManager.prototype.send = function(json) {
     var canSend = this._ws && this._ws.readyState === WebSocket.OPEN;
     json.id = json.id || this.lastSeen + 1;
-    this.lastSent = json.id;
+
+    if (!this.isUserAction(json)) {
+        this.lastSent = json.id;
+    }
     if (this.isCollaborating() && json.type !== 'openProject' && canSend) {
         this._ws.send(JSON.stringify(json));
     }
@@ -1627,6 +1675,12 @@ ActionManager.prototype.onMoveBlock = function(id, rawTarget) {
         if (target instanceof RingMorph) {
             this.__clearBlockRecords(target.id);
         }
+        var isReplacingReporter = block instanceof ReporterBlockMorph &&
+            target instanceof ReporterBlockMorph;
+
+        if (isReplacingReporter) {
+            this.__recordTarget(block.id, this._getCurrentTarget(target));
+        }
     } else {
         logger.error('Unsupported "onMoveBlock":', block);
     }
@@ -2594,7 +2648,7 @@ ActionManager.prototype.onOpenProject = function(str) {
         }
 
     } else {
-        this.ide().newProject();
+        this.ide().newRole();
     }
 
     // Load the owners

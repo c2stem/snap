@@ -857,7 +857,7 @@ SyntaxElementMorph.prototype.labelPart = function (spec) {
 
         if ((spec.length > 6) && (spec.slice(0, 6) === '%mhint')) {
             var token = spec.slice(6);
-            part = new MultiHintArgMorph(token, null, 1);
+            part = new MultiHintArgMorph(token, null, 0); // third arg: min number of inputs
 
             part.isStatic = true;
             part.canBeEmpty = false;
@@ -2069,7 +2069,7 @@ SyntaxElementMorph.prototype.exportPictureWithResult = function (aBubble) {
     // request to open pic in new window.
     ide.saveCanvasAs(
         pic,
-        ide.projetName || localize('Untitled') + ' ' + localize('script pic'),
+        ide.projectName || localize('Untitled') + ' ' + localize('script pic'),
         true
     );
 };
@@ -2611,9 +2611,8 @@ BlockMorph.prototype.userMenu = function () {
             );
             ide.saveCanvasAs(
                 myself.topBlock().scriptPic(),
-                ide.projetName || localize('Untitled') + ' ' +
-                    localize('script pic'),
-                true // request new window
+                (ide.projectName || localize('Untitled')) + ' ' +
+                    localize('script pic')
             );
         },
         'open a new window\nwith a picture of this script'
@@ -3578,6 +3577,11 @@ BlockMorph.prototype.outline = function (color, border) {
 
 // BlockMorph zebra coloring
 
+BlockMorph.prototype.getCategoryColor = function (category) {
+    return SpriteMorph.prototype.blockColor[category] ||
+        SpriteMorph.prototype.blockColor.other;
+};
+
 BlockMorph.prototype.fixBlockColor = function (nearestBlock, isForced) {
     var nearest = nearestBlock,
         clr,
@@ -3605,7 +3609,7 @@ BlockMorph.prototype.fixBlockColor = function (nearestBlock, isForced) {
         }
     }
     if (!nearest) { // top block
-        clr = SpriteMorph.prototype.blockColor[this.category];
+        clr = this.getCategoryColor(this.category);
         if (!this.color.eq(clr)) {
             this.alternateBlockColor();
         }
@@ -3614,7 +3618,7 @@ BlockMorph.prototype.fixBlockColor = function (nearestBlock, isForced) {
             this.alternateBlockColor();
         }
     } else if (this.category && !this.color.eq(
-            SpriteMorph.prototype.blockColor[this.category]
+            this.getCategoryColor(this.category)
         )) {
         this.alternateBlockColor();
     }
@@ -3624,7 +3628,7 @@ BlockMorph.prototype.fixBlockColor = function (nearestBlock, isForced) {
 };
 
 BlockMorph.prototype.forceNormalColoring = function () {
-    var clr = SpriteMorph.prototype.blockColor[this.category];
+    var clr = this.getCategoryColor(this.category);
     this.setColor(clr, true); // silently
     this.setLabelColor(
         new Color(255, 255, 255),
@@ -3635,7 +3639,7 @@ BlockMorph.prototype.forceNormalColoring = function () {
 };
 
 BlockMorph.prototype.alternateBlockColor = function () {
-    var clr = SpriteMorph.prototype.blockColor[this.category];
+    var clr = this.getCategoryColor(this.category);
 
     if (this.color.eq(clr)) {
         this.setColor(
@@ -3652,13 +3656,13 @@ BlockMorph.prototype.alternateBlockColor = function () {
 
 BlockMorph.prototype.ghost = function () {
     this.setColor(
-        SpriteMorph.prototype.blockColor[this.category].lighter(35)
+        this.getCategoryColor(this.category).lighter(35)
     );
 };
 
 BlockMorph.prototype.fixLabelColor = function () {
     if (this.zebraContrast > 0 && this.category) {
-        var clr = SpriteMorph.prototype.blockColor[this.category];
+        var clr = this.getCategoryColor(this.category);
         if (this.color.eq(clr)) {
             this.setLabelColor(
                 new Color(255, 255, 255),
@@ -6127,7 +6131,7 @@ ScriptsMorph.prototype.userMenu = function () {
                     null,
                     function (definition) {
                         SnapActions.addCustomBlock(definition, obj)
-                            .accept(function(def) {
+                            .then(function(def) {
                                 var editor = new BlockEditorMorph(def, obj);
                                 editor.popUp();
                             });
@@ -6170,8 +6174,13 @@ ScriptsMorph.prototype.cleanUp = function () {
         if (!child.isVisible) {
             return; // skip hidden code
         }
-
         point = origin.add(new Point(myself.cleanUpMargin, y));
+        child.setPosition(point);
+        if (child instanceof BlockMorph) {
+            child.allComments().forEach(function (comment) {
+                comment.align(child, true); // ignore layer
+            });
+        }
         y += child.stackHeight() + myself.cleanUpSpacing;
         return point;
     });
@@ -6189,7 +6198,7 @@ ScriptsMorph.prototype.exportScriptsPicture = function () {
     if (pic) {
         ide.saveCanvasAs(
             pic,
-            ide.projetName || localize('Untitled') + ' ' +
+            ide.projectName || localize('Untitled') + ' ' +
                 localize('script pic'),
             true // request new window
         );
@@ -6428,8 +6437,8 @@ ScriptsMorph.prototype.moveBlock = function (block, target, hand) {
         hand.grabOrigin.origin.add(block);
         return SnapActions.moveBlock(dup, target)
             // if that succeeds, remove them from the current editor
-            .accept(function() {
-                SnapActions.removeBlock(block);
+            .then(function() {
+                return SnapActions.removeBlock(block);
             });
     } else {  // basic moveBlock
         SnapActions.moveBlock(block, target);
@@ -6471,8 +6480,8 @@ ScriptsMorph.prototype.setBlockPosition = function (block, hand) {
 
             return SnapActions.addBlock(dup, this, position, ownerId)
                 // if that succeeds, remove them from the current editor
-                .accept(function() {
-                    SnapActions.removeBlock(block);
+                .then(function() {
+                    return SnapActions.removeBlock(block);
                 });
         }
     }
@@ -9811,6 +9820,8 @@ SymbolMorph.prototype.symbolCanvasColored = function (aColor) {
         return this.drawSymbolTable(canvas, aColor);
     case 'coordinateAxes':
         return this.drawSymbolCoordinateAxes(canvas, aColor);
+    case 'magnifiyingGlass':
+        return this.drawSymbolMagnifyingGlass(canvas, aColor);
     default:
         return canvas;
     }
@@ -11124,48 +11135,6 @@ SymbolMorph.prototype.drawSymbolAtom = function (canvas, color) {
     return canvas;
 }
 
-SymbolMorph.prototype.drawSymbolMagnifyingGlass = function (canvas, color) {
-    // answer a canvas showing a magnifying glass
-    var ctx = canvas.getContext('2d'),
-        gradient,
-        w = canvas.width,
-        h = canvas.height,
-        r = w * 0.3,
-        x = w * 2 / 3 - Math.sqrt(r),
-        y = h / 3 + Math.sqrt(r),
-        l = Math.max(w / 5, 0.5);
-
-    ctx.strokeStyle = color.toString();
-
-    gradient = ctx.createRadialGradient(
-        x,
-        y,
-        0,
-        x + r,
-        y + r,
-        w
-    );
-    
-    gradient.addColorStop(0, color.inverted().lighter(50).toString());
-    gradient.addColorStop(1, color.inverted().darker(25).toString());
-    ctx.fillStyle = gradient;
-    ctx.arc(x, y, r, radians(0), radians(360), false);
-    ctx.fill();
-
-    ctx.lineWidth = l / 2;
-    ctx.arc(x, y, r, radians(0), radians(360), false);
-    ctx.stroke();
-    
-    ctx.lineWidth = l;
-    ctx.beginPath();
-    ctx.moveTo(l / 2, h - l / 2);
-    ctx.lineTo(x - Math.sqrt(r + l), y + Math.sqrt(r + l));
-    ctx.closePath();
-    ctx.stroke();
-
-    return canvas;
-};
-
 SymbolMorph.prototype.drawSymbolGraph = function (canvas, color) {
     // answer a canvas showing an atom
     var ctx = canvas.getContext('2d'),
@@ -11236,6 +11205,48 @@ SymbolMorph.prototype.drawSymbolCoordinateAxes = function (canvas, color) {
     ctx.moveTo(w / 2, l);
     ctx.lineTo(w / 2, h - l);
     ctx.stroke();
+    return canvas;
+};
+
+SymbolMorph.prototype.drawSymbolMagnifyingGlass = function (canvas, color) {
+    // answer a canvas showing a magnifying glass
+    var ctx = canvas.getContext('2d'),
+        gradient,
+        w = canvas.width,
+        h = canvas.height,
+        r = w * 0.3,
+        x = w * 2 / 3 - Math.sqrt(r),
+        y = h / 3 + Math.sqrt(r),
+        l = Math.max(w / 5, 0.5);
+
+    ctx.strokeStyle = color.toString();
+
+    gradient = ctx.createRadialGradient(
+        x,
+        y,
+        0,
+        x + r,
+        y + r,
+        w
+    );
+    
+    gradient.addColorStop(0, color.inverted().lighter(50).toString());
+    gradient.addColorStop(1, color.inverted().darker(25).toString());
+    ctx.fillStyle = gradient;
+    ctx.arc(x, y, r, radians(0), radians(360), false);
+    ctx.fill();
+
+    ctx.lineWidth = l / 2;
+    ctx.arc(x, y, r, radians(0), radians(360), false);
+    ctx.stroke();
+    
+    ctx.lineWidth = l;
+    ctx.beginPath();
+    ctx.moveTo(l / 2, h - l / 2);
+    ctx.lineTo(x - Math.sqrt(r + l), y + Math.sqrt(r + l));
+    ctx.closePath();
+    ctx.stroke();
+
     return canvas;
 };
 
@@ -11311,7 +11322,7 @@ ColorSlotMorph.prototype.getUserColor = function () {
     hand.processMouseUp = function () {
         if (myself.parentThatIsA(ScriptsMorph)) {
             SnapActions.setColorField(myself, myself.color)
-                .reject(function() {
+                .catch(function() {
                     myself.setColor(oldClr);
                 });
         } else {
@@ -13050,7 +13061,7 @@ CommentMorph.prototype.userMenu = function () {
             var ide = myself.parentThatIsA(IDE_Morph);
             ide.saveCanvasAs(
                 myself.fullImageClassic(),
-                ide.projetName || localize('Untitled') + ' ' +
+                ide.projectName || localize('Untitled') + ' ' +
                     localize('comment pic'),
                 true // request new window
             );
@@ -13371,7 +13382,7 @@ ScriptFocusMorph.prototype.trigger = function () {
     if (current instanceof MultiArgMorph) {
         if (current.arrows().children[1].isVisible) {
             SnapActions.addListInput(current)
-                .accept(function() {
+                .then(function() {
                     myself.fixLayout();
                 });
         }
@@ -13390,7 +13401,7 @@ ScriptFocusMorph.prototype.trigger = function () {
         current.updateFieldValue = function() {
             var action = oldFieldUpdate.apply(this, arguments);
             if (action) {
-                action.accept(function() {
+                action.then(function() {
                     myself.fixLayout();
                 });
             }
@@ -13435,7 +13446,7 @@ ScriptFocusMorph.prototype.deleteLastElement = function () {
     if (current.parent instanceof ScriptsMorph) {
         if (this.atEnd || current instanceof ReporterBlockMorph) {
             SnapActions.removeBlock(current)
-                .accept(function() {
+                .then(function() {
                     myself.element = myself.editor;
                     myself.atEnd = false;
                     myself.editor.adjustBounds();
@@ -13455,7 +13466,7 @@ ScriptFocusMorph.prototype.deleteLastElement = function () {
     } else if (current instanceof ReporterBlockMorph) {
         if (!current.isTemplate) {
             SnapActions.removeBlock(current)
-                .accept(function() {
+                .then(function() {
                     myself.lastElement();
                     myself.editor.adjustBounds();
                     myself.fixLayout();
@@ -13466,7 +13477,7 @@ ScriptFocusMorph.prototype.deleteLastElement = function () {
         if (this.atEnd) {
             newBlock = current.parent;
             SnapActions.removeBlock(current, true)
-                .accept(function() {
+                .then(function() {
                     myself.element = newBlock;
                     myself.editor.adjustBounds();
                     myself.fixLayout();
@@ -13480,7 +13491,7 @@ ScriptFocusMorph.prototype.deleteLastElement = function () {
     }
 
     if (action) {
-        action.accept(function() {
+        action.then(function() {
             myself.editor.adjustBounds();
             myself.fixLayout();
         });
@@ -13567,7 +13578,7 @@ ScriptFocusMorph.prototype.insertBlock = function (block) {
         }
     }
 
-    action.accept(function(block) {
+    action.then(function(block) {
         if (isAtEnd) {
             myself.atEnd = true;
         }
@@ -13797,7 +13808,7 @@ ScriptFocusMorph.prototype.shiftScript = function (deltaPoint) {
         if (tb && !(tb instanceof PrototypeHatBlockMorph)) {
             position = tb.topLeft().add(deltaPoint);
             SnapActions.setBlockPosition(tb, position)
-                .accept(function() {
+                .then(function() {
                     myself.editor.adjustBounds();
                     myself.fixLayout();
                 });

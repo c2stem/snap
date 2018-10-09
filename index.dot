@@ -15,11 +15,13 @@
         {{ if (it.url) { }} <meta property="og:url" content="{{= encodeURI(it.url) }}"/> {{ } }}
         <script type="text/javascript">
             var SERVER_URL = "{{= it.baseUrl}}" || window.location.origin,
-                SERVER_ADDRESS = SERVER_URL.replace(/^.*\/\//, '');
+                SERVER_ADDRESS = SERVER_URL.replace(/^.*\/\//, ''),
+                CLIENT_ID = '{{= it.clientId }}';
         </script>
         {{ if (it.isDevMode) { }}
 		<script type="text/javascript" src="Chart.min.js"></script>
         <script type="text/javascript" src="polyfill.js"></script>
+        <script type="text/javascript" src="p2.js"></script>
         <script type="text/javascript" src="morphic.js"></script>
         <script type="text/javascript" src="locale.js"></script>
         <script type="text/javascript" src="widgets.js"></script>
@@ -41,6 +43,7 @@
 		<script type="text/javascript" src="p2.js"></script>
 		<script type="text/javascript" src="physics.js"></script>
         <script type="text/javascript" src="FileSaver.min.js"></script>
+        <script type="text/javascript" src="physics.js"></script>
         <script type="text/javascript" src="message-inputs.js"></script>
         <script type="text/javascript" src="message-listeners.js"></script>
 

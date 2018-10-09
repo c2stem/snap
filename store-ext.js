@@ -8,7 +8,7 @@ NetsBloxSerializer.uber = SnapSerializer.prototype;
 SnapSerializer.prototype.isSavingHistory = true;
 
 NetsBloxSerializer.prototype.appName = 'NetsBlox';
-NetsBloxSerializer.prototype.version = '1.8.2';
+NetsBloxSerializer.prototype.version = '1.10.0';
 NetsBloxSerializer.prototype.app = NetsBloxSerializer.prototype.appName + ' ' +
     NetsBloxSerializer.prototype.version + ', http://netsblox.org';
 
@@ -35,6 +35,13 @@ NetsBloxSerializer.prototype.loadCustomBlock = function (element, isGlobal) {
         element.attributes.category = 'network';
     }
     return NetsBloxSerializer.uber.loadCustomBlock.call(this, element, isGlobal);
+};
+
+SnapSerializer.prototype.getInitialStageSpriteIds = function (model) {
+    var stageId = model.childNamed('stage').attributes.collabId,
+        firstSpriteId = stageId.split('_').slice(0, 2).join('_');
+
+    return [stageId, firstSpriteId];
 };
 
 MessageFrame.prototype.toXML = function (serializer) {

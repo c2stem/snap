@@ -1044,6 +1044,10 @@ SnapSerializer.prototype.loadCustomBlock = function (element, isGlobal) {
         i,
         names;
 
+    if (definition.category === 'physics') {
+        definition.category = 'simulation';
+    }
+
     definition.category = element.attributes.category || 'other';
     if (definition.category === 'physics') {
         definition.category = 'simulation';

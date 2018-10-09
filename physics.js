@@ -2387,6 +2387,7 @@ IDE_Morph.prototype.createSpriteEditor = function () {
 };
 
 IDE_Morph.prototype.openGraphDialog = function () {
+  SnapActions.graphDialog("open");
   if (!this.graphDialog) {
     this.graphDialog = new GraphDialogMorph(this.stage.graphTable);
   }
@@ -2395,6 +2396,7 @@ IDE_Morph.prototype.openGraphDialog = function () {
 };
 
 IDE_Morph.prototype.openTableDialog = function () {
+  SnapActions.tableDialog("open");
   if (!this.tableDialog) {
     this.tableDialog = new GraphDialogMorph(this.stage.graphTable, 'table');
   }
@@ -2613,7 +2615,21 @@ GraphDialogMorph.prototype.buildContents = function () {
   this.addButton('refresh', 'Refresh');
 };
 
+GraphDialogMorph.prototype.ok = function () {
+  if (this.mode === 'table') {
+    SnapActions.tableDialog("close");
+  } else {
+    SnapActions.graphDialog("close");
+  }
+  GraphDialogMorph.uber.ok.call(this);
+};
+
 GraphDialogMorph.prototype.exportTable = function () {
+  if (this.mode === 'table') {
+    SnapActions.tableDialog("export");
+  } else {
+    SnapActions.graphDialog("export");
+  }
   if (this.parent instanceof WorldMorph) {
     var ide = this.parent.children[0];
     ide.saveFileAs(this.table.toCSV(), 'text/csv;chartset=utf-8', 'simdata');
@@ -2754,6 +2770,11 @@ HatBlockMorph.prototype.toggleVisibility = function () {
 
 SnapActions.addActions(
   'setConceptLevel'
+);
+
+SnapActions.addUserActions(
+  'graphDialog',
+  'tableDialog'
 );
 
 ActionManager.prototype._setConceptLevel = function (sprite, concept, level) {

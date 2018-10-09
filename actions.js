@@ -434,10 +434,6 @@ ActionManager.prototype.submitIfAllowed = function(event) {
     }
 };
 
-ActionManager.prototype.mightRejectActions = function() {
-    return this.ide().isReplayMode || this.isCollaborating();
-};
-
 ActionManager.prototype._getMethodFor = function(action) {
     var method = 'on' + action.substring(0,1).toUpperCase() + action.substring(1);
 
@@ -574,9 +570,12 @@ ActionManager.prototype.newId = function() {
 };
 
 ActionManager.prototype.getId = function (block, index) {
-    var id = '';
+    var id = '',
+        isParentCodeElement;
+
     while (!block.id) {
-        if (block.parent === null) {  // template block
+        isParentCodeElement = block.parent instanceof SyntaxElementMorph;
+        if (!isParentCodeElement) {
             return null;
         }
         id = block.parent.inputs().indexOf(block) + '/' + id;
@@ -2674,6 +2673,11 @@ ActionManager.prototype.onOpenProject = function(str) {
         if (project && project.collabStartIndex !== undefined) {
             this.lastSeen = project.collabStartIndex;
         }
+
+        var roomName = this.ide().room.name,
+            roleName = this.ide().projectName;
+
+        SnapCloud.setClientState(roomName, roleName, this.lastSeen);
     }
 };
 
@@ -3067,6 +3071,17 @@ ActionManager.prototype.onMessage = function(msg) {
         }
     } else {
         this.onReceiveAction(msg);
+    }
+};
+
+ActionManager.prototype.onActionReject = function(action) {
+    var queue = this._attemptedLocalActions,
+        item = queue.find(function(item) { return item.equals(action)}),
+        index = queue.indexOf(item);
+
+    if (index > -1) {
+        queue.splice(index, 1);
+        item.reject();
     }
 };
 

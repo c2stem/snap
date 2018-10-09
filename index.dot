@@ -1,3 +1,4 @@
+/* Basic index file for netsblox editor. Uses minified Javascript for production. */
 <!DOCTYPE html>
 <html>
     <head>
@@ -77,12 +78,14 @@
                 world.worldCanvas.focus();
 				new NetsBloxMorph().openIn(world);
                 loop();
+                window.dispatchEvent(new CustomEvent("ideLoaded"));
 			};
 			function loop() {
                 requestAnimationFrame(loop);
 				world.doOneCycle();
 			}
 		</script>
+    <script type="text/javascript" src="on-message.js"></script>
     </head>
     <body style="margin: 0;">
         <canvas id="world" tabindex="1" style="position: absolute;" ></canvas>

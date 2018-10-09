@@ -160,10 +160,30 @@ SnapDriver.prototype.mouseUp = function(position) {
     hand.processMouseUp();
 };
 
-SnapDriver.prototype.dragAndDrop = function(srcMorph, position) {
-    this.mouseDown(srcMorph.center());
-    this.world().hand.grab(srcMorph);
-    this.mouseUp(position);
+/**
+ * Simulates mouse inputs to pick up a Morph and place it somewhere else.
+ * @param {Morph} srcMorph Morph to drag and drop
+ * @param {Point} position Position to drag center of srcMorph to 
+ * @param {Point=} start Position to initiate drag at, if not speficied middle of left side of srcMorph is used
+ */
+SnapDriver.prototype.dragAndDrop = function(srcMorph, position, start = null) {
+    const {MorphicPreferences, Point} = this.globals();
+    
+    // Drag from the upper left corner if not told otherwise
+    if(start == null)
+    {
+        start = srcMorph.topLeft().add(new Point(2, srcMorph.height() / 2));
+    }
+    
+    // If the Morph is not grabbed at center, final position will no longer be correct
+    let offset = start.subtract(srcMorph.center());
+    
+    this.mouseDown(start);
+    this.world().hand.processMouseMove({
+        pageY: start.y,
+        pageX: start.x + MorphicPreferences.grabThreshold + 1
+    });
+    this.mouseUp(position.add(offset));
 };
 
 SnapDriver.prototype.sleep = function(duration) {
@@ -204,7 +224,7 @@ SnapDriver.prototype.waitUntil = function(fn, maxWait) {
             setTimeout(check, 25);
         }
     };
-    maxWait = maxWait || 4000;
+    maxWait = maxWait || 6000;
     check();
 
     return deferred.promise;
@@ -284,6 +304,25 @@ SnapDriver.prototype.login = function(name, password='password') {
                 `Did not see connected message`
             );
         });
+};
+
+SnapDriver.prototype.logout = async function() {
+    const btn = this.ide().controlBar.cloudButton;
+    this.click(btn);
+
+    const dropdown = this.dialog();
+    const logoutBtn = dropdown.children.find(item => item.action === 'logout');
+    const isLoggedIn = !!logoutBtn;
+
+    if (isLoggedIn) {
+        this.click(logoutBtn);
+        await this.expect(
+            () => this.isShowingDialogTitle(title => title.includes('disconnected')),
+            `Did not see logout message`
+        );
+    } else {
+        throw new Error('no one is logged in');
+    }
 };
 
 SnapDriver.prototype.inviteCollaborator = function(username) {

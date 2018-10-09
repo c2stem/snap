@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>NetsBlox Manual Testing Client</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.1/css/materialize.min.css">
+    <link rel="stylesheet" href="main.css">
+    <link href="/test/lib/material-icons.css" rel="stylesheet">
+  </head>
+  <body>
+    <iframe id="user1"></iframe>
+    <footer id="footer">
+      <div>
+        WSMonkey:
+        <button  @click="toggleWsMonkey">{{ wsToggleBtn }}</button>
+        <!-- watch and update the state of ws -->
+      </div>
+
+    </footer>
+
+    <!-- load scripts -->
+    <script src="/test/lib/vue.min.js"></script>
+    <script src="/test/snap-driver.js"></script>
+    <script src="/test/ws-monkey.js"></script>
+    <script src="./main.js"></script>
+  </body>
+</html>

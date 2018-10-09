@@ -1,5 +1,5 @@
 /* global ThreadManager, ensureFullUrl, Process, Context, IDE_Morph, Costume, StageMorph,
-   List, SnapActions, isObject, newCanvas, Point */
+   List, SnapActions, isObject, newCanvas, Point, SnapCloud */
 
 // NetsProcess Overrides
 NetsProcess.prototype = new Process();
@@ -198,9 +198,10 @@ NetsProcess.prototype.receiveSocketMessage = function (fields) {
 NetsProcess.prototype.createRPCUrl = function (rpc) {
     var ide = this.homeContext.receiver.parentThatIsA(IDE_Morph),
         uuid = ide.sockets.uuid,
-        projectId = encodeURIComponent(SnapCloud.projectId);
+        projectId = encodeURIComponent(SnapCloud.projectId),
+        roleId = encodeURIComponent(SnapCloud.roleId);
 
-    return ensureFullUrl('/rpc/'+rpc+'?uuid='+uuid+'&projectId='+projectId);
+    return ensureFullUrl('/rpc/'+rpc+'?uuid='+uuid+'&projectId='+projectId + '&roleId=' + roleId);
 };
 
 NetsProcess.prototype.callRPC = function (rpc, params, noCache) {
@@ -357,6 +358,7 @@ function listToArray(list) {
     return combinedArray;
 }
 
+NetsProcess.prototype.doRunRPC =
 NetsProcess.prototype.getJSFromRPCStruct = function (rpc, methodSignature) {
     var action = methodSignature[0],
         argNames = methodSignature[1],

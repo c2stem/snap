@@ -697,7 +697,7 @@ SyntaxElementMorph.prototype.refactorVarInStack = function (
         this.setSpec(newName);
         this.fullChanged();
         this.fixLabelColor();
-    } 
+    }
 
     if (this.choices === 'getVarNamesDict'
             && this.contents().text === oldName) {
@@ -2069,8 +2069,7 @@ SyntaxElementMorph.prototype.exportPictureWithResult = function (aBubble) {
     // request to open pic in new window.
     ide.saveCanvasAs(
         pic,
-        ide.projectName || localize('Untitled') + ' ' + localize('script pic'),
-        true
+        ide.projectName || localize('Untitled') + ' ' + localize('script pic')
     );
 };
 
@@ -2615,7 +2614,7 @@ BlockMorph.prototype.userMenu = function () {
                     localize('script pic')
             );
         },
-        'open a new window\nwith a picture of this script'
+        'download a picture of this script'
     );
     if (this.topBlock().hideBlock) {
         menu.addItem(
@@ -3260,7 +3259,7 @@ BlockMorph.prototype.refactorThisVar = function (justTheTemplate) {
 
     function renameVarTo (newName) {
         var definer;
-        
+
         if (this.parent instanceof SyntaxElementMorph) {
             // script var
             if (justTheTemplate) {
@@ -3319,7 +3318,7 @@ BlockMorph.prototype.refactorThisVar = function (justTheTemplate) {
                     detect(
                         stage.children,
                         function (any) {
-                            return any instanceof SpriteMorph && 
+                            return any instanceof SpriteMorph &&
                                 any.hasSpriteVariable(newName);
                         })
                     ) {
@@ -3379,7 +3378,7 @@ BlockMorph.prototype.refactorThisVar = function (justTheTemplate) {
 
     function varExistsError (where) {
         ide.inform(
-            'Variable exists', 
+            'Variable exists',
             'A variable with this name already exists ' +
                 (where || 'in this context') + '.'
             );
@@ -4827,6 +4826,87 @@ HatBlockMorph.prototype.init = function () {
     this.setExtent(new Point(300, 150));
 };
 
+// finds the readout child morph
+HatBlockMorph.prototype.readout = function () {
+    for (var i=0; i<this.children.length; i++) {
+        if (this.children[i] instanceof SpeechBubbleMorph) return this.children[i];
+    }
+};
+
+// finds and returns the msg queue for this hatblock
+HatBlockMorph.prototype._msgQueue = function () {
+    var queues = this.world().children[0].sockets.processes;
+    for (var i=0; i<queues.length; i++) {
+        var procs = queues[i];
+        if (procs.length && procs[0].block === this) return procs;
+    }
+};
+
+// clears the msg que for this  hatblock
+HatBlockMorph.prototype.clearMessages = function () {
+    var queues = this.world().children[0].sockets.processes;
+    var curQueue = this._msgQueue();
+    // delete it from the main queue
+    for (var i = 0; i < queues.length; i++) {
+        if (queues[i] === curQueue) {
+            queues.splice(i, 1);
+            this.updateReadout();
+            return;
+        }
+    }
+};
+
+// creates, updates and destroys the readout as necessary
+HatBlockMorph.prototype.updateReadout = function () {
+    // forked from snap/dd4fd6190c
+    var myself = this,
+        world = this.world(),
+        readColor = new Color(242, 119, 68);
+    if (!world) return;
+    var msgQ = this._msgQueue();
+    this.msgCount =  msgQ ? msgQ.length : 0;
+    var readout = this.readout();
+    if (this.msgCount < 1) {
+        if (readout) {
+            readout.destroy();
+        }
+        return;
+    }
+    if (readout) { // just update the value
+        readout.contents = this.msgCount.toString();
+        readout.fullChanged();
+        readout.drawNew();
+        readout.fullChanged();
+    } else { // create the readout
+        readout = new SpeechBubbleMorph(
+            this.msgCount.toString(),
+            readColor, // color,
+            null, // edge,
+            null, // border,
+            readColor.darker(), // borderColor,
+            null, // padding,
+            1 // isThought - don't draw a hook
+        );
+        readout.mouseClickLeft = function() {
+            var dialog = new DialogBoxMorph();
+            dialog.askYesNo('Clear Message Queue', 'Do you want to clear the message queue for this block?', world);
+            dialog.ok = function() {
+                myself.clearMessages();
+                this.destroy();
+            };
+        };
+        this.add(readout);
+    }
+
+    // compute and set the bubble position
+    var padding = 5;
+    var bubblePos = this.position() // hatblock pos
+        .add(new Point(this.width(), 0)) // all the way to the right
+        .add(new Point(padding, -2*padding)); // add a padding (same for x & y)
+    readout.setPosition(bubblePos);
+
+};
+
 // HatBlockMorph enumerating:
 
 HatBlockMorph.prototype.blockSequence = function () {
@@ -6199,8 +6279,7 @@ ScriptsMorph.prototype.exportScriptsPicture = function () {
         ide.saveCanvasAs(
             pic,
             ide.projectName || localize('Untitled') + ' ' +
-                localize('script pic'),
-            true // request new window
+                localize('script pic')
         );
     }
 };
@@ -6457,21 +6536,16 @@ ScriptsMorph.prototype.addBlock = function (block) {
 
 ScriptsMorph.prototype.setBlockPosition = function (block, hand) {
     var position = block.position(),
-        originPosition;
+        originPosition,
+        revertPosition;
+
+    originPosition = hand.grabOrigin.position.add(hand.grabOrigin.origin.position());
+    revertPosition = function() {
+        block.setPosition(originPosition);
+    };
 
     if (hand) {
-        if (hand.grabOrigin.origin === this) {  // on the same script
-            if (SnapActions.mightRejectActions()) {
-                originPosition = hand.grabOrigin.position.add(hand.grabOrigin.origin.position());
-                block.setPosition(originPosition);
-            }
-        } else {  // move between scripts!
-
-            if (SnapActions.mightRejectActions()) {
-                // Revert the block back to the origin in case this fails
-                originPosition = hand.grabOrigin.position.add(hand.grabOrigin.origin.position());
-                block.setPosition(originPosition);
-            }
+        if (hand.grabOrigin.origin !== this) {  // move between scripts morph
             hand.grabOrigin.origin.add(block);
 
             // copy the blocks and add them to the new editor
@@ -6483,10 +6557,13 @@ ScriptsMorph.prototype.setBlockPosition = function (block, hand) {
                 .then(function() {
                     return SnapActions.removeBlock(block);
                 });
+        } else if (SnapActions.isReadOnly()) {
+            revertPosition();
         }
     }
 
-    SnapActions.setBlockPosition(block, position);
+    return SnapActions.setBlockPosition(block, position)
+        .catch(revertPosition);
 };
 
 // ScriptsMorph events
@@ -11229,7 +11306,7 @@ SymbolMorph.prototype.drawSymbolMagnifyingGlass = function (canvas, color) {
         y + r,
         w
     );
-    
+
     gradient.addColorStop(0, color.inverted().lighter(50).toString());
     gradient.addColorStop(1, color.inverted().darker(25).toString());
     ctx.fillStyle = gradient;
@@ -11239,7 +11316,7 @@ SymbolMorph.prototype.drawSymbolMagnifyingGlass = function (canvas, color) {
     ctx.lineWidth = l / 2;
     ctx.arc(x, y, r, radians(0), radians(360), false);
     ctx.stroke();
-    
+
     ctx.lineWidth = l;
     ctx.beginPath();
     ctx.moveTo(l / 2, h - l / 2);
@@ -13062,11 +13139,10 @@ CommentMorph.prototype.userMenu = function () {
             ide.saveCanvasAs(
                 myself.fullImageClassic(),
                 ide.projectName || localize('Untitled') + ' ' +
-                    localize('comment pic'),
-                true // request new window
+                    localize('comment pic')
             );
         },
-        'open a new window\nwith a picture of this comment'
+        'download a picture of this comment'
     );
     return menu;
 };

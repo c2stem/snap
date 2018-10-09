@@ -169,6 +169,7 @@ SnapActions.submitIfAllowed = function(event) {
             function () {
                 ide.sockets.sendMessage({
                     type: 'permission-elevation-request',
+                    projectId: SnapCloud.projectId,
                     guest: SnapCloud.username
                 });
             }
@@ -178,8 +179,12 @@ SnapActions.submitIfAllowed = function(event) {
     }
 };
 
-SnapActions.mightRejectActions = function() {
+SnapActions.isReadOnly = function() {
     var room = this.ide().room;
-    return !(room.isEditable() && !room.isCapturingTrace() &&
-        !ActionManager.prototype.mightRejectActions.call(this));
+    var isEditable = room.isEditable() &&
+        !room.isCapturingTrace() &&
+        !room.isReplayingTrace() &&
+        !this.ide().isReplayMode;
+
+    return !isEditable;
 };

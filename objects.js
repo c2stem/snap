@@ -2027,6 +2027,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         blocks.push('-');
 
         blocks.push(block('getJSFromRPCStruct'));
+        blocks.push(block('doRunRPC'));
         blocks.push(watcherToggle('reportRPCError'));
         blocks.push(block('reportRPCError'));
         blocks.push('-');
@@ -2424,6 +2425,7 @@ SpriteMorph.prototype.blockTemplates = function (category) {
         button.showHelp = BlockMorph.prototype.showHelp;
         blocks.push(button);
     }
+
     return blocks;
 };
 
@@ -2653,32 +2655,34 @@ SpriteMorph.prototype.freshPalette = function (category) {
 
     // global custom blocks:
 
-    if (category === 'custom') {
-        if (stage) {
-            y += unit * 1.6;
+    if (stage) {
+        y += unit * 1.6;
 
-            stage.globalBlocks.forEach(function (definition) {
+        stage.globalBlocks.forEach(function (definition) {
+            if (category === 'custom' || definition.category === category) {
                 var block = definition.templateInstance();
                 y += unit * 0.3;
                 block.setPosition(new Point(x, y));
                 palette.addContents(block);
                 x = 0;
                 y += block.height();
-            });
-        }
+            }
+        });
+    }
 
-        // local custom blocks:
+    // local custom blocks:
 
-        y += unit * 1.6;
-        this.customBlocks.forEach(function (definition) {
+    y += unit * 1.6;
+    this.customBlocks.forEach(function (definition) {
+        if (category === 'custom' || definition.category === category) {
             var block = definition.templateInstance();
             y += unit * 0.3;
             block.setPosition(new Point(x, y));
             palette.addContents(block);
             x = 0;
             y += block.height();
-        });
-    }
+        }
+    });
 
     palette.scrollX(palette.padding);
     palette.scrollY(palette.padding);
@@ -6260,8 +6264,9 @@ StageMorph.prototype.editScripts = function () {
     var ide = this.parentThatIsA(IDE_Morph),
         scripts,
         sorted;
+
     if (ide.isAppMode || !ScriptsMorph.prototype.enableKeyboard) {return; }
-    scripts = this.parentThatIsA(IDE_Morph).currentSprite.scripts;
+    scripts = ide.getActiveScripts();
     scripts.edit(scripts.position());
     sorted = scripts.focus.sortedScripts();
     if (sorted.length) {
@@ -6471,6 +6476,7 @@ StageMorph.prototype.blockTemplates = function (category) {
         blocks.push('-');
 
         blocks.push(block('getJSFromRPCStruct'));
+        blocks.push(block('doRunRPC'));
         blocks.push(watcherToggle('reportRPCError'));
         blocks.push(block('reportRPCError'));
         blocks.push('-');
@@ -6865,11 +6871,10 @@ StageMorph.prototype.userMenu = function () {
         function () {
             ide.saveCanvasAs(
                 myself.fullImageClassic(),
-                myself.name,
-                true // open as new window
+                myself.name
             );
         },
-        'open a new window\nwith a picture of the stage'
+        'download a picture of stage'
     );
     if (shiftClicked) {
         menu.addLine();

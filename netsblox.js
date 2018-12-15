@@ -692,7 +692,7 @@ NetsBloxMorph.prototype.save = function () {
     // NetsBlox changes - start
     if (this.room.name) {
     // NetsBlox changes - end
-        if (this.source === 'local') { // as well as 'examples'
+        if (this.source === 'local' && !this.stage.isSaveToCloud) { // as well as 'examples'
             // NetsBlox changes - start
             this.saveProject(this.room.name);
             // NetsBlox changes - end

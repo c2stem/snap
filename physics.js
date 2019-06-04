@@ -2297,7 +2297,7 @@ PhysicsTabMorph.prototype.init = function (aSprite, sliderColor) {
     this.physicsRestitution = this.addInputField("restitution",
       aSprite, "physicsRestitution", "setPhysicsRestitution", 0, 1);
     this.physicsScale = this.addInputField("scale",
-      aSprite, "physicsScale", "setPhysicsScale", 0.01, 100, "pixel/m");
+      aSprite, "physicsScale", "setPhysicsScale", 0.01, 200, "pixel/m");
     this.physicsXOrigin = this.addInputField("origin x",
       aSprite, "physicsXOrigin", "setPhysicsXOrigin", -1000, 1000, "pixel");
     this.physicsYOrigin = this.addInputField("origin y",
